@@ -17,7 +17,7 @@ export class MessageLengthExceededError extends Error {
 
 type MessageInformation = {
   message_type_id: number;
-  message_stream_id: number
+  message_stream_id: number;
   message_length: number;
   timestamp: number;
   timestamp_delta: number | null;

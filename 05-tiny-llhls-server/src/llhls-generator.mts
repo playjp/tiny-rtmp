@@ -46,7 +46,7 @@ const timestamp_from_rtmp_to_hls = (timestamp: number): number => {
 
 export type LLHLSGeneratorOption = {
   liveWindowLength: number;
-  partialSegmentDuration: number
+  partialSegmentDuration: number;
 };
 
 export const LLHLSGeneratorOption = {

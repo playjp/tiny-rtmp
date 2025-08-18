@@ -30,12 +30,12 @@ export const FrameType = {
 } as const;
 
 export type AVCData = {
-  codec: 'AVC',
+  codec: 'AVC';
 } & ({
-  packetType: 0,
+  packetType: 0;
   avcDecoderConfigurationRecord: Buffer;
 } | {
-  packetType: 1,
+  packetType: 1;
   compositionTimeOffset: number;
   data: Buffer;
 });
@@ -46,7 +46,7 @@ export type VideoData = AVCData & {
 };
 
 export type AACData = {
-  codec: 'AAC',
+  codec: 'AAC';
 } & ({
   packetType: 0;
   audioSpecificConfig: Buffer;
@@ -61,7 +61,7 @@ export type AudioData = AACData & {
 
 export type ActionScriptData = {
   timestamp: number;
-  kind: 'Data',
+  kind: 'Data';
   values: any[];
 };
 

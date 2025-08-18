@@ -28,6 +28,7 @@ export default [
       "@stylistic/generator-star-spacing": ["error", { "before": false, "after": true, "method": { "before": true, "after": false }, "anonymous": { "before": true, "after": false }}],
       "@stylistic/type-annotation-spacing": ["error", { "before": true, "after": true, "overrides": { "colon": { "before": false, "after": true }}}],
       "@stylistic/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+      "@stylistic/member-delimiter-style": ["error", { "multiline": { "delimiter": "semi", "requireLast": true }, "singleline": { "delimiter": "semi", "requireLast": true }}],
     }
   }
 ]
