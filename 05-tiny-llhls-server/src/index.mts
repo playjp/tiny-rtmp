@@ -70,8 +70,7 @@ const handle = async (connection: Duplex) => {
   }
 };
 
-const rtmp_server = net.createServer(async (connection) => {
-  connection.setNoDelay(true);
+const rtmp_server = net.createServer({ noDelay: true }, async (connection) => {
   await handle(connection);
 });
 rtmp_server.listen(port);
