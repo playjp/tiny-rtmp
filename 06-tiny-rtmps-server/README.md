@@ -1,6 +1,6 @@
-# RTMPS配信受信サーバ
+# RTMPS受信サーバ
 
-[RTMPサーバ](../01-tiny-rtmp-server/)にTLS暗号化を追加したRTMPS（RTMP over TLS）サーバの実装です。
+[RTMPサーバ](../01-tiny-rtmp-server/)にTLS暗号化を追加したRTMPS(RTMP over TLS)サーバの実装です。
 
 ## 主要コンポーネント
 
