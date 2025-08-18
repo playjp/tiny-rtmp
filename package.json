@@ -13,7 +13,8 @@
     "02-tiny-http-flv-server",
     "03-tiny-http-ts-server",
     "04-tiny-hls-server",
-    "05-tiny-llhls-server"
+    "05-tiny-llhls-server",
+    "06-tiny-rtmps-server"
   ],
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.2.0",

@@ -7,6 +7,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'node:net',
+        'node:tls',
         'node:crypto',
         'node:stream',
         'node:fs',
