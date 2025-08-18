@@ -14,6 +14,8 @@
     * 実装する機能: MPEG-TSのセグメンテーション, HLS配信
 5. [LL-HLS配信](./05-tiny-llhls-server/)
     * 実装する機能: LL-HLS配信
+6. [RTMPS対応](./06-tiny-rtmps-server/)
+    * 実装する機能: RTMPのSSL/TLS対応
 
 ## 必要環境
 
