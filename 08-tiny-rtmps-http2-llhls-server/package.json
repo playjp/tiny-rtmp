@@ -1,0 +1,10 @@
+{
+  "name": "tiny-rtmps-http2-llhls-server",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "tsc": "tsc --noEmit",
+    "build": "vite build"
+  }
+}
