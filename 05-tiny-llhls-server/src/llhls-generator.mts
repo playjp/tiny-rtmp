@@ -99,15 +99,6 @@ export default class LLHLSGenerator {
   }
 
   public feed(message: Message): void {
-    if (this.last_emit_PSI_timestamp != null && (message.timestamp - this.last_emit_PSI_timestamp) >= emit_PSI_interval) {
-      this.playlist.feed([
-        ... this.patPacketizer.packetize(write_pat(PAT_DATA)),
-        ... this.pmtPacketizer.packetize(write_pmt(PMT_DATA)),
-        this.pcrPacketizer.packetize(timestamp_from_rtmp_to_mpegts(message.timestamp)),
-      ], timestamp_from_rtmp_to_hls(message.timestamp));
-      this.last_emit_PSI_timestamp = message.timestamp;
-    }
-
     const payload = handle_rtmp_payload(message);
     if (payload == null) { return; }
 
@@ -137,6 +128,15 @@ export default class LLHLSGenerator {
         break;
       default:
         return;
+    }
+
+    if (this.last_emit_PSI_timestamp != null && (message.timestamp - this.last_emit_PSI_timestamp) >= emit_PSI_interval) {
+      this.playlist.feed([
+        ... this.patPacketizer.packetize(write_pat(PAT_DATA)),
+        ... this.pmtPacketizer.packetize(write_pmt(PMT_DATA)),
+        this.pcrPacketizer.packetize(timestamp_from_rtmp_to_mpegts(message.timestamp)),
+      ], timestamp_from_rtmp_to_hls(message.timestamp));
+      this.last_emit_PSI_timestamp = message.timestamp;
     }
 
     switch (payload.kind) {
