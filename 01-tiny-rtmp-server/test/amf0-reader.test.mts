@@ -87,7 +87,7 @@ describe('Regression Test (AMF0Command)', () => {
       0x00, 0x00, 0x00, 0x05, 0x00, 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ]);
 
-    const expected: unknown = [
+    const expected = [
       "_result",
       4,
       null,
@@ -108,7 +108,7 @@ describe('Regression Test (AMF0Command)', () => {
       0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x00, 0x00, 0x09
     ]);
 
-    const expected: unknown = [
+    const expected = [
       "onStatus",
       5,
       null,
@@ -205,7 +205,7 @@ describe('Regression Test (FFmpeg)', () => {
       0x65
     ]);
 
-    const expected: unknown = [
+    const expected = [
       "publish",
       5,
       null,
@@ -349,7 +349,7 @@ describe('Regression Test (OBS)', () => {
       0x65,
     ]);
 
-    const expected: unknown = [
+    const expected = [
       "publish",
       5,
       null,
