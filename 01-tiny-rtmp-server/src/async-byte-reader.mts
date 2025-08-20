@@ -7,7 +7,7 @@ export default class AsyncByteReader {
   private offset = 0;
   private totals = 0;
   private eof = false;
-  private promises: [byteLenght: number, resolve: (result: Buffer) => void, reject: (error: Error) => void][] = [];
+  private promises: [byteLength: number, resolve: (result: Buffer) => void, reject: (error: Error) => void][] = [];
   private signal: AbortSignal | null;
 
   public constructor(option?: Partial<AsyncByteReaderOption>) {
