@@ -241,7 +241,7 @@ describe('Unit Test', () => {
     ['Write single 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
     const target = new ByteBuilder();
-    const buffer = Buffer.from(Array.from({ length }, (_, i) => i))
+    const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
     target.write(buffer);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
@@ -260,7 +260,7 @@ describe('Unit Test', () => {
     ['Write twice 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
     const target = new ByteBuilder();
-    const buffer = Buffer.from(Array.from({ length }, (_, i) => i))
+    const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
     const concat = Buffer.concat([buffer, buffer]);
     target.write(concat);
 

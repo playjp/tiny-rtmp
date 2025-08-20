@@ -224,7 +224,7 @@ describe('Unit Test', () => {
     ['Read single 128-bytes buffer',  { length:  128 }],
     ['Read single 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
-    const buffer = Buffer.from(Array.from({ length }, (_, i) => i))
+    const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
     const target = new ByteReader(buffer);
 
     expect((target.read(buffer.byteLength)).equals(buffer)).toStrictEqual(true);
@@ -241,7 +241,7 @@ describe('Unit Test', () => {
     ['Read twice 128-bytes buffer',  { length:  128 }],
     ['Read twice 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
-    const buffer = Buffer.from(Array.from({ length }, (_, i) => i))
+    const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
     const target = new ByteReader(Buffer.concat([buffer, buffer]));
 
     expect((target.read(buffer.byteLength)).equals(buffer)).toStrictEqual(true);
