@@ -26,6 +26,9 @@ const options = {
   bandwidth: {
     type: 'string',
   },
+  maxage: {
+    type: 'string',
+  },
 } as const satisfies ParseArgsOptionsConfig;
 const { values: args } = parseArgs({ options, tokens: true });
 if (Number.isNaN(Number.parseInt(args.rtmp, 10))) {
@@ -43,11 +46,15 @@ if (args.streamKey == null) {
 if (args.bandwidth != null && Number.isNaN(Number.parseInt(args.bandwidth, 10))) {
   console.error('Please Specify valid bandwidth'); process.exit(1);
 }
+if (args.maxage != null && Number.isNaN(Number.parseInt(args.maxage, 10))) {
+  console.error('Please Specify valid maxage'); process.exit(1);
+}
 const port = Number.parseInt(args.rtmp, 10);
 const web = Number.parseInt(args.web, 10);
 const app = args.app;
 const streamKey = args.streamKey;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
+const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
 
 let rtmp_to_hls: HLSGenerator | null = null;
 const handle = async (connection: Duplex) => {
@@ -99,6 +106,7 @@ const web_server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       'content-type': 'application/vnd.apple.mpegurl',
       'access-control-allow-origin': '*',
+      'cache-control': 'maxage=0',
     });
     res.write(rtmp_to_hls.m3u8());
     res.end();
@@ -111,12 +119,14 @@ const web_server = http.createServer(async (req, res) => {
       if (!found) {
         res.writeHead(404, {
           'access-control-allow-origin': '*',
+          'cache-control': 'maxage=0',
         });
         res.end();
       } else {
         res.writeHead(200, {
           'content-type': 'video/mp2t',
           'access-control-allow-origin': '*',
+          'cache-control': `maxage=${maxage}`,
         });
       }
     });

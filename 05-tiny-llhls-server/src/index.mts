@@ -26,6 +26,9 @@ const options = {
   bandwidth: {
     type: 'string',
   },
+  maxage: {
+    type: 'string',
+  },
   partDuration: {
     type: 'string',
   },
@@ -46,6 +49,9 @@ if (args.streamKey == null) {
 if (args.bandwidth != null && Number.isNaN(Number.parseInt(args.bandwidth, 10))) {
   console.error('Please Specify valid bandwidth'); process.exit(1);
 }
+if (args.maxage != null && Number.isNaN(Number.parseInt(args.maxage, 10))) {
+  console.error('Please Specify valid maxage'); process.exit(1);
+}
 if (args.partDuration != null && Number.isNaN(Number.parseFloat(args.partDuration))) {
   console.error('Please Specify valid partDuration'); process.exit(1);
 }
@@ -54,6 +60,7 @@ const web = Number.parseInt(args.web, 10);
 const app = args.app;
 const streamKey = args.streamKey;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
+const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
 const partDuration = args.partDuration != null ? Number.parseFloat(args.partDuration) : undefined;
 
 let rtmp_to_llhls: LLHLSGenerator | null = null;
@@ -109,6 +116,7 @@ const web_server = http.createServer(async (req, res) => {
       res.writeHead(200, {
         'content-type': 'application/vnd.apple.mpegurl',
         'access-control-allow-origin': '*',
+        'cache-control': 'maxage=0',
       });
       res.write(rtmp_to_llhls.m3u8());
       res.end();
@@ -118,6 +126,7 @@ const web_server = http.createServer(async (req, res) => {
       res.writeHead(200, {
         'content-type': 'application/vnd.apple.mpegurl',
         'access-control-allow-origin': '*',
+        'cache-control': 'maxage=0',
       });
       res.write(rtmp_to_llhls.m3u8());
       res.end();
@@ -129,6 +138,7 @@ const web_server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       'content-type': 'application/vnd.apple.mpegurl',
       'access-control-allow-origin': '*',
+      'cache-control': `maxage=${maxage}`,
     });
     await rtmp_to_llhls.block(msn, part);
     res.write(rtmp_to_llhls.m3u8());
@@ -143,11 +153,13 @@ const web_server = http.createServer(async (req, res) => {
       if (!found) {
         res.writeHead(404, {
           'access-control-allow-origin': '*',
+          'cache-control': 'maxage=0',
         });
       } else {
         res.writeHead(200, {
           'content-type': 'video/mp2t',
           'access-control-allow-origin': '*',
+          'cache-control': `maxage=${maxage}`,
         });
       }
     };
