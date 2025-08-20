@@ -52,11 +52,11 @@ describe('Regression Test', () => {
         'connect',
         1,
         {
-          app: "app",
-          flashVer: "FMLE/3.0 (compatible; Lavf61.7.100)",
-          tcUrl: "rtmp://localhost:1935/app",
-          type: "nonprivate"
-        }
+          app: 'app',
+          flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
+          tcUrl: 'rtmp://localhost:1935/app',
+          type: 'nonprivate',
+        },
       ]);
     }
     {
@@ -69,7 +69,7 @@ describe('Regression Test', () => {
         'releaseStream',
         2,
         null,
-        'key'
+        'key',
       ]);
     }
     {
@@ -82,7 +82,7 @@ describe('Regression Test', () => {
         'FCPublish',
         3,
         null,
-        'key'
+        'key',
       ]);
     }
     {
@@ -163,12 +163,12 @@ describe('Regression Test', () => {
         'connect',
         1,
         {
-          app: "app",
-          flashVer: "FMLE/3.0 (compatible; FMSc/1.0)",
-          swfUrl: "rtmp://localhost:1935/app",
-          tcUrl: "rtmp://localhost:1935/app",
-          type: "nonprivate"
-        }
+          app: 'app',
+          flashVer: 'FMLE/3.0 (compatible; FMSc/1.0)',
+          swfUrl: 'rtmp://localhost:1935/app',
+          tcUrl: 'rtmp://localhost:1935/app',
+          type: 'nonprivate',
+        },
       ]);
     }
     {
@@ -181,7 +181,7 @@ describe('Regression Test', () => {
         'releaseStream',
         2,
         null,
-        'key'
+        'key',
       ]);
     }
     {
@@ -194,7 +194,7 @@ describe('Regression Test', () => {
         'FCPublish',
         3,
         null,
-        'key'
+        'key',
       ]);
     }
     {

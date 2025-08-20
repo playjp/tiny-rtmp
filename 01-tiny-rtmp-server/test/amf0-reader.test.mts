@@ -3,7 +3,7 @@ import read_amf0 from '../src/amf0-reader.mts';
 
 describe('Unit Test', () => {
   test.each([
-    ['Type: 0 (number)', { value: Buffer.from('00409e3c0000000000', 'hex'), expected: [1935], }],
+    ['Type: 0 (number)', { value: Buffer.from('00409e3c0000000000', 'hex'), expected: [1935] }],
     ['Type: 1 (boolean: true)', { value: Buffer.from('0101', 'hex'), expected: [true] }],
     ['Type: 1 (boolean: false)', { value: Buffer.from('0100', 'hex'), expected: [false] }],
     ['Type: 2 (string)', { value: Buffer.from('02000974696e792d72746d70', 'hex'), expected: ['tiny-rtmp'] }],
@@ -21,13 +21,13 @@ describe('Unit Test', () => {
     ['Type: 4 (MovieClip)', { value: Buffer.from('04', 'hex') }],
     ['Type: 7 (Reference)', { value: Buffer.from('07', 'hex') }],
   ])('%s Throw Error', (_, { value }) => {
-    expect(() => read_amf0(value)).toThrowError()
+    expect(() => read_amf0(value)).toThrowError();
   });
 
   test('Type: 9 (ObjectEnd)', () => {
     const target = Buffer.from('09', 'hex');
 
-    const result = read_amf0(target)
+    const result = read_amf0(target);
     expect(result).length(1);
     expect(result[0]).toBeTypeOf('symbol');
   });
@@ -35,7 +35,7 @@ describe('Unit Test', () => {
   test('Type: 11 (Date)', () => {
     const target = Buffer.from('0b00000000000000000000', 'hex');
 
-    const result = read_amf0(target)
+    const result = read_amf0(target);
     expect(result).length(1);
     expect(result[0]).instanceOf(Date);
     expect(result[0].getTime()).toStrictEqual(0);
@@ -84,11 +84,11 @@ describe('Regression Test (AMF0Command)', () => {
   test('createStream _result', () => {
     const target = Buffer.from([
       0x02, 0x00, 0x07, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x00, 0x40, 0x10, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x05, 0x00, 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+      0x00, 0x00, 0x00, 0x05, 0x00, 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ]);
 
     const expected = [
-      "_result",
+      '_result',
       4,
       null,
       1,
@@ -105,17 +105,17 @@ describe('Regression Test (AMF0Command)', () => {
       0x2e, 0x53, 0x74, 0x61, 0x72, 0x74, 0x00, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
       0x69, 0x6f, 0x6e, 0x02, 0x00, 0x10, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x20, 0x41, 0x63,
       0x63, 0x65, 0x70, 0x74, 0x65, 0x64, 0x00, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x02, 0x00, 0x06,
-      0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x00, 0x00, 0x09
+      0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x00, 0x00, 0x09,
     ]);
 
     const expected = [
-      "onStatus",
+      'onStatus',
       5,
       null,
       {
-        "code": "NetStream.Publish.Start",
-        "description": "Publish Accepted",
-        "level": "status",
+        'code': 'NetStream.Publish.Start',
+        'description': 'Publish Accepted',
+        'level': 'status',
       },
     ];
 
@@ -144,8 +144,8 @@ describe('Regression Test (FFmpeg)', () => {
         app: 'app',
         type: 'nonprivate',
         flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
-        tcUrl: 'rtmp://localhost:1935/app'
-      }
+        tcUrl: 'rtmp://localhost:1935/app',
+      },
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -186,13 +186,13 @@ describe('Regression Test (FFmpeg)', () => {
   test('createStream', () => {
     const target = Buffer.from([
       0x02, 0x00, 0x0c, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x00,
-      0x40, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05
+      0x40, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05,
     ]);
 
     const expected = [
-      "createStream",
+      'createStream',
       4,
-      null
+      null,
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -202,15 +202,15 @@ describe('Regression Test (FFmpeg)', () => {
     const target = Buffer.from([
       0x02, 0x00, 0x07, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x00, 0x40, 0x14, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x05, 0x02, 0x00, 0x03, 0x6b, 0x65, 0x79, 0x02, 0x00, 0x04, 0x6c, 0x69, 0x76,
-      0x65
+      0x65,
     ]);
 
     const expected = [
-      "publish",
+      'publish',
       5,
       null,
-      "key",
-      "live",
+      'key',
+      'live',
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -256,8 +256,8 @@ describe('Regression Test (FFmpeg)', () => {
         stereo: true,
         audiocodecid: 10,
         encoder: 'Lavf61.7.100',
-        filesize: 0
-      }
+        filesize: 0,
+      },
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -286,10 +286,10 @@ describe('Regression Test (OBS)', () => {
       {
         app: 'app',
         type: 'nonprivate',
-        flashVer: "FMLE/3.0 (compatible; FMSc/1.0)",
-        swfUrl: "rtmp://localhost:1935/app",
-        tcUrl: 'rtmp://localhost:1935/app'
-      }
+        flashVer: 'FMLE/3.0 (compatible; FMSc/1.0)',
+        swfUrl: 'rtmp://localhost:1935/app',
+        tcUrl: 'rtmp://localhost:1935/app',
+      },
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -334,9 +334,9 @@ describe('Regression Test (OBS)', () => {
     ]);
 
     const expected = [
-      "createStream",
+      'createStream',
       4,
-      null
+      null,
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -350,11 +350,11 @@ describe('Regression Test (OBS)', () => {
     ]);
 
     const expected = [
-      "publish",
+      'publish',
       5,
       null,
-      "key",
-      "live",
+      'key',
+      'live',
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);
@@ -406,15 +406,15 @@ describe('Regression Test (OBS)', () => {
         audiochannels: 2,
         stereo: true,
         audiocodecid: 10,
-        "2.1": false,
-        "3.1": false,
-        "4.0": false,
-        "4.1": false,
-        "5.1": false,
-        "7.1": false,
+        '2.1': false,
+        '3.1': false,
+        '4.0': false,
+        '4.1': false,
+        '5.1': false,
+        '7.1': false,
         encoder: 'obs-output module (libobs version 31.1.0-beta2)',
         fileSize: 0,
-      }
+      },
     ];
 
     expect(read_amf0(target)).toStrictEqual(expected);

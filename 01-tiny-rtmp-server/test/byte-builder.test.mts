@@ -203,7 +203,7 @@ describe('Unit Test', () => {
   ])('%s', (_, { length }) => {
     const buffer = Buffer.from({ length });
     buffer.writeUIntBE(length, 0, length);
-    const target = new ByteBuilder()
+    const target = new ByteBuilder();
     target.writeUIntBE(length, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
@@ -211,18 +211,18 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Write single signed 1-byte plus value',   { length: 1, sign:  1 }],
-    ['Write single signed 2-bytes plus value',  { length: 2, sign:  1 }],
-    ['Write single signed 3-bytes plus value',  { length: 3, sign:  1 }],
-    ['Write single signed 4-bytes plus value',  { length: 4, sign:  1 }],
+    ['Write single signed 1-byte plus value',   { length: 1, sign: 1 }],
+    ['Write single signed 2-bytes plus value',  { length: 2, sign: 1 }],
+    ['Write single signed 3-bytes plus value',  { length: 3, sign: 1 }],
+    ['Write single signed 4-bytes plus value',  { length: 4, sign: 1 }],
     ['Write single signed 1-byte minus value',  { length: 1, sign: -1 }],
     ['Write single signed 2-bytes minus value', { length: 2, sign: -1 }],
     ['Write single signed 3-bytes minus value', { length: 3, sign: -1 }],
-    ['Write single signed 4-bytes minus value', { length: 4, sign: -1 }]
+    ['Write single signed 4-bytes minus value', { length: 4, sign: -1 }],
   ])('%s', (_, { length, sign }) => {
     const buffer = Buffer.from({ length });
     buffer.writeIntBE(length * sign, 0, length);
-    const target = new ByteBuilder()
+    const target = new ByteBuilder();
     target.writeIntBE(length * sign, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
@@ -230,14 +230,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Write single empty buffer',      { length:    0 }],
-    ['Write single 1-byte buffer',     { length:    1 }],
-    ['Write single 2-bytes buffer',    { length:    2 }],
-    ['Write single 3-bytes buffer',    { length:    3 }],
-    ['Write single 4-bytes buffer',    { length:    4 }],
-    ['Write single 8-bytes buffer',    { length:    8 }],
-    ['Write single 16-bytes buffer',   { length:   16 }],
-    ['Write single 128-bytes buffer',  { length:  128 }],
+    ['Write single empty buffer',      { length: 0 }],
+    ['Write single 1-byte buffer',     { length: 1 }],
+    ['Write single 2-bytes buffer',    { length: 2 }],
+    ['Write single 3-bytes buffer',    { length: 3 }],
+    ['Write single 4-bytes buffer',    { length: 4 }],
+    ['Write single 8-bytes buffer',    { length: 8 }],
+    ['Write single 16-bytes buffer',   { length: 16 }],
+    ['Write single 128-bytes buffer',  { length: 128 }],
     ['Write single 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
     const target = new ByteBuilder();
@@ -249,14 +249,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Write twice empty buffer',      { length:    0 }],
-    ['Write twice 1-byte buffer',     { length:    1 }],
-    ['Write twice 2-bytes buffer',    { length:    2 }],
-    ['Write twice 3-bytes buffer',    { length:    3 }],
-    ['Write twice 4-bytes buffer',    { length:    4 }],
-    ['Write twice 8-bytes buffer',    { length:    8 }],
-    ['Write twice 16-bytes buffer',   { length:   16 }],
-    ['Write twice 128-bytes buffer',  { length:  128 }],
+    ['Write twice empty buffer',      { length: 0 }],
+    ['Write twice 1-byte buffer',     { length: 1 }],
+    ['Write twice 2-bytes buffer',    { length: 2 }],
+    ['Write twice 3-bytes buffer',    { length: 3 }],
+    ['Write twice 4-bytes buffer',    { length: 4 }],
+    ['Write twice 8-bytes buffer',    { length: 8 }],
+    ['Write twice 16-bytes buffer',   { length: 16 }],
+    ['Write twice 128-bytes buffer',  { length: 128 }],
     ['Write twice 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
     const target = new ByteBuilder();
@@ -281,7 +281,7 @@ describe('Unit Test', () => {
     buffer.writeInt32BE(-1, 3);
     buffer.writeFloatBE(3.14, 7);
 
-    expect(target.byteLength()).toStrictEqual(buffer.byteLength)
+    expect(target.byteLength()).toStrictEqual(buffer.byteLength);
     expect(target.build().equals(buffer)).toStrictEqual(true);
   });
 
@@ -294,7 +294,7 @@ describe('Unit Test', () => {
       target.writeU16BE(0x0203);
       buffer1.writeUInt8(0x01, 0);
       buffer1.writeUInt16BE(0x0203, 1);
-      expect(target.byteLength()).toStrictEqual(buffer1.byteLength)
+      expect(target.byteLength()).toStrictEqual(buffer1.byteLength);
       expect(target.build().equals(buffer1)).toStrictEqual(true);
     }
     {
@@ -305,7 +305,7 @@ describe('Unit Test', () => {
       buffer2.writeUInt16BE(0x0203, 1);
       buffer2.writeInt32BE(-1, 3);
       buffer2.writeFloatBE(3.14, 7);
-      expect(target.byteLength()).toStrictEqual(buffer2.byteLength)
+      expect(target.byteLength()).toStrictEqual(buffer2.byteLength);
       expect(target.build().equals(buffer2)).toStrictEqual(true);
     }
   });

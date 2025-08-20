@@ -196,14 +196,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read single signed 1-byte plus value',   { length: 1, sign:  1 }],
-    ['Read single signed 2-bytes plus value',  { length: 2, sign:  1 }],
-    ['Read single signed 3-bytes plus value',  { length: 3, sign:  1 }],
-    ['Read single signed 4-bytes plus value',  { length: 4, sign:  1 }],
+    ['Read single signed 1-byte plus value',   { length: 1, sign: 1 }],
+    ['Read single signed 2-bytes plus value',  { length: 2, sign: 1 }],
+    ['Read single signed 3-bytes plus value',  { length: 3, sign: 1 }],
+    ['Read single signed 4-bytes plus value',  { length: 4, sign: 1 }],
     ['Read single signed 1-byte minus value',  { length: 1, sign: -1 }],
     ['Read single signed 2-bytes minus value', { length: 2, sign: -1 }],
     ['Read single signed 3-bytes minus value', { length: 3, sign: -1 }],
-    ['Read single signed 4-bytes minus value', { length: 4, sign: -1 }]
+    ['Read single signed 4-bytes minus value', { length: 4, sign: -1 }],
   ])('%s', (_, { length, sign }) => {
     const value = length * sign;
     const buffer = Buffer.from({ length });
@@ -214,14 +214,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read single empty buffer',      { length:    0 }],
-    ['Read single 1-byte buffer',     { length:    1 }],
-    ['Read single 2-bytes buffer',    { length:    2 }],
-    ['Read single 3-bytes buffer',    { length:    3 }],
-    ['Read single 4-bytes buffer',    { length:    4 }],
-    ['Read single 8-bytes buffer',    { length:    8 }],
-    ['Read single 16-bytes buffer',   { length:   16 }],
-    ['Read single 128-bytes buffer',  { length:  128 }],
+    ['Read single empty buffer',      { length: 0 }],
+    ['Read single 1-byte buffer',     { length: 1 }],
+    ['Read single 2-bytes buffer',    { length: 2 }],
+    ['Read single 3-bytes buffer',    { length: 3 }],
+    ['Read single 4-bytes buffer',    { length: 4 }],
+    ['Read single 8-bytes buffer',    { length: 8 }],
+    ['Read single 16-bytes buffer',   { length: 16 }],
+    ['Read single 128-bytes buffer',  { length: 128 }],
     ['Read single 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
     const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
@@ -231,14 +231,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read twice empty buffer',      { length:    0 }],
-    ['Read twice 1-byte buffer',     { length:    1 }],
-    ['Read twice 2-bytes buffer',    { length:    2 }],
-    ['Read twice 3-bytes buffer',    { length:    3 }],
-    ['Read twice 4-bytes buffer',    { length:    4 }],
-    ['Read twice 8-bytes buffer',    { length:    8 }],
-    ['Read twice 16-bytes buffer',   { length:   16 }],
-    ['Read twice 128-bytes buffer',  { length:  128 }],
+    ['Read twice empty buffer',      { length: 0 }],
+    ['Read twice 1-byte buffer',     { length: 1 }],
+    ['Read twice 2-bytes buffer',    { length: 2 }],
+    ['Read twice 3-bytes buffer',    { length: 3 }],
+    ['Read twice 4-bytes buffer',    { length: 4 }],
+    ['Read twice 8-bytes buffer',    { length: 8 }],
+    ['Read twice 16-bytes buffer',   { length: 16 }],
+    ['Read twice 128-bytes buffer',  { length: 128 }],
     ['Read twice 1024-bytes buffer', { length: 1024 }],
   ])('%s', (_, { length }) => {
     const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));

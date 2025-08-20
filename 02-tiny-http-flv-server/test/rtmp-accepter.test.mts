@@ -10,7 +10,7 @@ import write_message from '../../01-tiny-rtmp-server/src/message-writer.mts';
 const handle_rtmp_import = async () => {
   vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
   return (await import('../src/rtmp-accepter.mts')).default;
-}
+};
 
 describe('Regression Test', () => {
   test('Publish Success', async () => {
@@ -34,7 +34,7 @@ describe('Regression Test', () => {
       const c1_random = Buffer.alloc(1536 - 8);
       const c1 = Buffer.concat([Buffer.alloc(8), c1_random]);
       input.write(c1);
-      const s0 = await reader.read(1)
+      const s0 = await reader.read(1);
       expect(s0.equals(Buffer.from([0x03]))).toStrictEqual(true);
       // C1/S1
       const s1 = await reader.read(1536); // read S1
@@ -60,8 +60,8 @@ describe('Regression Test', () => {
           app: 'app',
           type: 'nonprivate',
           flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
-          tcUrl: 'rtmp://localhost:1935/app'
-        }
+          tcUrl: 'rtmp://localhost:1935/app',
+        },
       );
       input.write(write_message({
         message_type_id: MessageType.CommandAMF0,
@@ -79,9 +79,9 @@ describe('Regression Test', () => {
           description: 'Connection succeeded.',
           data: { version: '3,5,7,7009' },
           objectEncoding: 0,
-          level: 'status'
-        }
-      ]
+          level: 'status',
+        },
+      ];
       expect(data).toStrictEqual(expected);
     }
     // createStream
@@ -89,7 +89,7 @@ describe('Regression Test', () => {
       const connect = write_amf0(
         'createStream',
         4,
-        null
+        null,
       );
       input.write(write_message({
         message_type_id: MessageType.CommandAMF0,
@@ -103,7 +103,7 @@ describe('Regression Test', () => {
         4,
         null,
         1,
-      ]
+      ];
       expect(data).toStrictEqual(expected);
     }
     // publish
@@ -131,7 +131,7 @@ describe('Regression Test', () => {
           description: 'Publish Accepted',
           level: 'status',
         },
-      ]
+      ];
       expect(data).toStrictEqual(expected);
     }
   });
@@ -172,7 +172,7 @@ describe('Regression Test', () => {
         const c1_random = Buffer.alloc(1536 - 8);
         const c1 = Buffer.concat([Buffer.alloc(8), c1_random]);
         input.write(c1);
-        const s0 = await reader.read(1)
+        const s0 = await reader.read(1);
         expect(s0.equals(Buffer.from([0x03]))).toStrictEqual(true);
         // C1/S1
         const s1 = await reader.read(1536); // read S1
@@ -198,8 +198,8 @@ describe('Regression Test', () => {
             app: 'app',
             type: 'nonprivate',
             flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
-            tcUrl: 'rtmp://localhost:1935/app'
-          }
+            tcUrl: 'rtmp://localhost:1935/app',
+          },
         );
         input.write(write_message({
           message_type_id: MessageType.CommandAMF0,
@@ -217,9 +217,9 @@ describe('Regression Test', () => {
             description: 'Connection succeeded.',
             data: { version: '3,5,7,7009' },
             objectEncoding: 0,
-            level: 'status'
-          }
-        ]
+            level: 'status',
+          },
+        ];
         expect(data).toStrictEqual(expected);
       }
       // createStream
@@ -227,7 +227,7 @@ describe('Regression Test', () => {
         const connect = write_amf0(
           'createStream',
           4,
-          null
+          null,
         );
         input.write(write_message({
           message_type_id: MessageType.CommandAMF0,
@@ -241,7 +241,7 @@ describe('Regression Test', () => {
           4,
           null,
           1,
-        ]
+        ];
         expect(data).toStrictEqual(expected);
       }
       // publish
@@ -273,7 +273,7 @@ describe('Regression Test', () => {
             description: 'Publish Failed',
             level: 'error',
           },
-        ]
+        ];
         expect(data).toStrictEqual(expected);
       }
     }
@@ -300,7 +300,7 @@ describe('Regression Test', () => {
       const c1_random = Buffer.alloc(1536 - 8);
       const c1 = Buffer.concat([Buffer.alloc(8), c1_random]);
       input.write(c1);
-      const s0 = await reader.read(1)
+      const s0 = await reader.read(1);
       expect(s0.equals(Buffer.from([0x03]))).toStrictEqual(true);
       // C1/S1
       const s1 = await reader.read(1536); // read S1
@@ -326,8 +326,8 @@ describe('Regression Test', () => {
           app: 'app',
           type: 'nonprivate',
           flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
-          tcUrl: 'rtmp://localhost:1935/app'
-        }
+          tcUrl: 'rtmp://localhost:1935/app',
+        },
       );
       input.write(write_message({
         message_type_id: MessageType.CommandAMF0,
@@ -345,9 +345,9 @@ describe('Regression Test', () => {
           description: 'Connection succeeded.',
           data: { version: '3,5,7,7009' },
           objectEncoding: 0,
-          level: 'status'
-        }
-      ]
+          level: 'status',
+        },
+      ];
       expect(data).toStrictEqual(expected);
     }
     // createStream
@@ -355,7 +355,7 @@ describe('Regression Test', () => {
       const connect = write_amf0(
         'createStream',
         4,
-        null
+        null,
       );
       input.write(write_message({
         message_type_id: MessageType.CommandAMF0,
@@ -369,7 +369,7 @@ describe('Regression Test', () => {
         4,
         null,
         1,
-      ]
+      ];
       expect(data).toStrictEqual(expected);
     }
     // publish
@@ -397,7 +397,7 @@ describe('Regression Test', () => {
           description: 'Publish Failed',
           level: 'error',
         },
-      ]
+      ];
       expect(data).toStrictEqual(expected);
     }
   });
@@ -423,7 +423,7 @@ describe('Regression Test', () => {
       const c1_random = Buffer.alloc(1536 - 8);
       const c1 = Buffer.concat([Buffer.alloc(8), c1_random]);
       input.write(c1);
-      const s0 = await reader.read(1)
+      const s0 = await reader.read(1);
       expect(s0.equals(Buffer.from([0x03]))).toStrictEqual(true);
       // C1/S1
       const s1 = await reader.read(1536); // read S1
@@ -449,8 +449,8 @@ describe('Regression Test', () => {
           app: 'invalid',
           type: 'nonprivate',
           flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
-          tcUrl: 'rtmp://localhost:1935/app'
-        }
+          tcUrl: 'rtmp://localhost:1935/app',
+        },
       );
       input.write(write_message({
         message_type_id: MessageType.CommandAMF0,
@@ -466,9 +466,9 @@ describe('Regression Test', () => {
         {
           code: 'NetConnection.Connect.Rejected',
           description: 'Connection rejected.',
-          level: 'error'
-        }
-      ]
+          level: 'error',
+        },
+      ];
       expect(data).toStrictEqual(expected);
     }
   });

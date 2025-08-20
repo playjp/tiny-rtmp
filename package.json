@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "test": "vitest",
-    "lint": "eslint */src/**.mts --ext mts",
-    "lint:fix": "eslint */src/**.mts --ext mts --fix"
+    "lint": "eslint */src/**.mts */test/**.mts --ext mts",
+    "lint:fix": "eslint */src/**.mts */test/**.mts --ext mts --fix"
   },
   "workspaces": [
     "01-tiny-rtmp-server",

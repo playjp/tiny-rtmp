@@ -21,7 +21,7 @@ describe('Unit Test', () => {
 
   test('Read non-empty bytes in initial state and reach EOF should reject', async () => {
     const reader = new AsyncByteReader();
-    const promise = reader.read(1)
+    const promise = reader.read(1);
     reader.feedEOF();
 
     await expect(promise).rejects.toThrow();
@@ -30,7 +30,7 @@ describe('Unit Test', () => {
   test('Read non-empty bytes in EOF should reject', async () => {
     const reader = new AsyncByteReader();
     reader.feedEOF();
-    const promise = reader.read(1)
+    const promise = reader.read(1);
 
     await expect(promise).rejects.toThrow();
   });
@@ -39,7 +39,7 @@ describe('Unit Test', () => {
     const controller = new AbortController();
     const reader = new AsyncByteReader({ signal: controller.signal });
     controller.abort();
-    const promise = reader.read(1)
+    const promise = reader.read(1);
 
     await expect(promise).rejects.toThrow();
   });
@@ -115,14 +115,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read single empty buffer',      { length:    0 }],
-    ['Read single 1-byte buffer',     { length:    1 }],
-    ['Read single 2-bytes buffer',    { length:    2 }],
-    ['Read single 3-bytes buffer',    { length:    3 }],
-    ['Read single 4-bytes buffer',    { length:    4 }],
-    ['Read single 8-bytes buffer',    { length:    8 }],
-    ['Read single 16-bytes buffer',   { length:   16 }],
-    ['Read single 128-bytes buffer',  { length:  128 }],
+    ['Read single empty buffer',      { length: 0 }],
+    ['Read single 1-byte buffer',     { length: 1 }],
+    ['Read single 2-bytes buffer',    { length: 2 }],
+    ['Read single 3-bytes buffer',    { length: 3 }],
+    ['Read single 4-bytes buffer',    { length: 4 }],
+    ['Read single 8-bytes buffer',    { length: 8 }],
+    ['Read single 16-bytes buffer',   { length: 16 }],
+    ['Read single 128-bytes buffer',  { length: 128 }],
     ['Read single 1024-bytes buffer', { length: 1024 }],
   ])('%s', async (_, { length }) => {
     const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
@@ -133,14 +133,14 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read twice empty buffer',      { length:    0 }],
-    ['Read twice 1-byte buffer',     { length:    1 }],
-    ['Read twice 2-bytes buffer',    { length:    2 }],
-    ['Read twice 3-bytes buffer',    { length:    3 }],
-    ['Read twice 4-bytes buffer',    { length:    4 }],
-    ['Read twice 8-bytes buffer',    { length:    8 }],
-    ['Read twice 16-bytes buffer',   { length:   16 }],
-    ['Read twice 128-bytes buffer',  { length:  128 }],
+    ['Read twice empty buffer',      { length: 0 }],
+    ['Read twice 1-byte buffer',     { length: 1 }],
+    ['Read twice 2-bytes buffer',    { length: 2 }],
+    ['Read twice 3-bytes buffer',    { length: 3 }],
+    ['Read twice 4-bytes buffer',    { length: 4 }],
+    ['Read twice 8-bytes buffer',    { length: 8 }],
+    ['Read twice 16-bytes buffer',   { length: 16 }],
+    ['Read twice 128-bytes buffer',  { length: 128 }],
     ['Read twice 1024-bytes buffer', { length: 1024 }],
   ])('%s', async (_, { length }) => {
     const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
@@ -152,13 +152,13 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read twice 1-byte buffer and reach EOF',     { length:    1 }],
-    ['Read twice 2-bytes buffer and reach EOF',    { length:    2 }],
-    ['Read twice 3-bytes buffer and reach EOF',    { length:    3 }],
-    ['Read twice 4-bytes buffer and reach EOF',    { length:    4 }],
-    ['Read twice 8-bytes buffer and reach EOF',    { length:    8 }],
-    ['Read twice 16-bytes buffer and reach EOF',   { length:   16 }],
-    ['Read twice 128-bytes buffer and reach EOF',  { length:  128 }],
+    ['Read twice 1-byte buffer and reach EOF',     { length: 1 }],
+    ['Read twice 2-bytes buffer and reach EOF',    { length: 2 }],
+    ['Read twice 3-bytes buffer and reach EOF',    { length: 3 }],
+    ['Read twice 4-bytes buffer and reach EOF',    { length: 4 }],
+    ['Read twice 8-bytes buffer and reach EOF',    { length: 8 }],
+    ['Read twice 16-bytes buffer and reach EOF',   { length: 16 }],
+    ['Read twice 128-bytes buffer and reach EOF',  { length: 128 }],
     ['Read twice 1024-bytes buffer and reach EOF', { length: 1024 }],
   ])('%s', async (_, { length }) => {
     const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
@@ -172,13 +172,13 @@ describe('Unit Test', () => {
   });
 
   test.each([
-    ['Read twice 1-byte buffer in reach EOF',     { length:    1 }],
-    ['Read twice 2-bytes buffer in reach EOF',    { length:    2 }],
-    ['Read twice 3-bytes buffer in reach EOF',    { length:    3 }],
-    ['Read twice 4-bytes buffer in reach EOF',    { length:    4 }],
-    ['Read twice 8-bytes buffer in reach EOF',    { length:    8 }],
-    ['Read twice 16-bytes buffer in reach EOF',   { length:   16 }],
-    ['Read twice 128-bytes buffer in reach EOF',  { length:  128 }],
+    ['Read twice 1-byte buffer in reach EOF',     { length: 1 }],
+    ['Read twice 2-bytes buffer in reach EOF',    { length: 2 }],
+    ['Read twice 3-bytes buffer in reach EOF',    { length: 3 }],
+    ['Read twice 4-bytes buffer in reach EOF',    { length: 4 }],
+    ['Read twice 8-bytes buffer in reach EOF',    { length: 8 }],
+    ['Read twice 16-bytes buffer in reach EOF',   { length: 16 }],
+    ['Read twice 128-bytes buffer in reach EOF',  { length: 128 }],
     ['Read twice 1024-bytes buffer in reach EOF', { length: 1024 }],
   ])('%s', async (_, { length }) => {
     const buffer = Buffer.from(Array.from({ length }, (_, i) => i % 256));
