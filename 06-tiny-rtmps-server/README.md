@@ -2,6 +2,40 @@
 
 [RTMPサーバ](../01-tiny-rtmp-server/)にTLS暗号化を追加したRTMPS(RTMP over TLS)サーバの実装です。
 
+[RTMPサーバ](../01-tiny-rtmp-server/)からの変更点は以下になります。
+```diff
+-import net from 'node:net';
++import tls from 'node:tls';
+-import handle_rtmp from './rtmp-handler.mts';
++import handle_rtmp from '../../01-tiny-rtmp-server/src/rtmp-handler.mts';
+
+const options = {
+// 省略
++  key: {
++    type: 'string',
++  },
++  cert: {
++    type: 'string',
++  },
+// 省略
+}
+
++if (args.key == null) {
++  console.error('Please Specify Valid SSL/TLS key');
++  process.exit(1);
++}
++if (args.cert == null) {
++  console.error('Please Specify Valid SSL/TLS cert');
++  process.exit(1);
++}
+
++const key = fs.readFileSync(args.key);
++const cert = fs.readFileSync(args.cert);
+
+-const server = net.createServer({ noDelay: true }, async (connection) => {
++const server = tls.createServer({ noDelay: true, key, cert }, async (connection) => {
+```
+
 ## 主要コンポーネント
 
 - index.mts - node:net の代わりに node:tls を利用してRTMPSに対応
