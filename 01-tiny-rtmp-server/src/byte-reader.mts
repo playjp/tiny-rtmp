@@ -12,6 +12,9 @@ export default class ByteReader {
 
   public read(length?: number): Buffer {
     length = Math.max(0, length ?? (this.buffer.byteLength - this.offset));
+    if (this.offset + length > this.buffer.byteLength) {
+      throw new RangeError('Attempt to access memory outside buffer bounds');
+    }
     const value = this.buffer.subarray(this.offset, this.offset + length);
     this.offset += length;
     return value;

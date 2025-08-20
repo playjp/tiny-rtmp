@@ -41,6 +41,10 @@ export default class ByteBuilder {
     this.writeUIntBE(value, 4);
   }
 
+  public writeI8(value: number) {
+    this.writeIntBE(value, 1);
+  }
+
   public writeI16BE(value: number) {
     this.writeIntBE(value, 2);
   }
