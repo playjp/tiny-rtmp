@@ -187,11 +187,12 @@ describe('Unit Test', () => {
     ['Read single unsigned 3-bytes value', { length: 3 }],
     ['Read single unsigned 4-bytes value', { length: 4 }],
   ])('%s', (_, { length }) => {
+    const value = length;
     const buffer = Buffer.from({ length });
-    buffer.writeUintBE(length, 0, length);
+    buffer.writeUintBE(value, 0, length);
     const target = new ByteReader(buffer);
 
-    expect(target.readUIntBE(length)).toStrictEqual(length);
+    expect(target.readUIntBE(length)).toStrictEqual(value);
   });
 
   test.each([
@@ -204,11 +205,12 @@ describe('Unit Test', () => {
     ['Read single signed 3-bytes minus value', { length: 3, sign: -1 }],
     ['Read single signed 4-bytes minus value', { length: 4, sign: -1 }]
   ])('%s', (_, { length, sign }) => {
+    const value = length * sign;
     const buffer = Buffer.from({ length });
-    buffer.writeIntBE(length * sign, 0, length);
+    buffer.writeIntBE(value, 0, length);
     const target = new ByteReader(buffer);
 
-    expect(target.readIntBE(length)).toStrictEqual(length * sign);
+    expect(target.readIntBE(length)).toStrictEqual(value);
   });
 
   test.each([
