@@ -13,6 +13,8 @@ export default defineConfig({
         'node:fs',
         'node:util',
         'node:http',
+        'node:https',
+        'node:http2',
       ],
     },
   },

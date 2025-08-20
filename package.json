@@ -14,7 +14,9 @@
     "03-tiny-http-ts-server",
     "04-tiny-hls-server",
     "05-tiny-llhls-server",
-    "06-tiny-rtmps-server"
+    "06-tiny-rtmps-server",
+    "07-tiny-rtmps-https-hls-server",
+    "08-tiny-rtmps-http2-llhls-server"
   ],
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.2.0",
