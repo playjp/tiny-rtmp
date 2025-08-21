@@ -5,8 +5,10 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "tsc": "yarn workspaces run tsc",
     "lint": "eslint */src/**.mts */test/**.mts --ext mts",
-    "lint:fix": "eslint */src/**.mts */test/**.mts --ext mts --fix"
+    "lint:fix": "eslint */src/**.mts */test/**.mts --ext mts --fix",
+    "build": "yarn workspaces run build"
   },
   "workspaces": [
     "01-tiny-rtmp-server",
