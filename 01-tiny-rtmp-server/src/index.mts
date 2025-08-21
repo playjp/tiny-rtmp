@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from './rtmp-handler.mts';
+import handle_rtmp from './rtmp-session.mts';
 
 const options = {
   port: {
