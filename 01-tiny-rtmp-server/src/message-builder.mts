@@ -1,7 +1,90 @@
 import ByteBuilder from './byte-builder.mts';
 import type { Message } from './message-reader.mts';
+import { MessageType } from './message-reader.mts';
 
 type LengthOmittedMessage = Omit<Message, 'message_length'>;
+
+export type SetChunkSize = LengthOmittedMessage & {
+  message_type_id: typeof MessageType.SetChunkSize;
+  message_stream_id: 0;
+};
+export const SetChunkSize = {
+  from(size: number, timestamp: number): SetChunkSize {
+    const builder = new ByteBuilder();
+    builder.writeU32BE(size % (2 ** 31));
+    return {
+      message_type_id: MessageType.SetChunkSize,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export type Abort = LengthOmittedMessage & {
+  message_type_id: typeof MessageType.Abort;
+  message_stream_id: 0;
+};
+export const Abort = {
+  from(cs_id: number, timestamp: number): Abort {
+    const builder = new ByteBuilder();
+    builder.writeU32BE(cs_id);
+    return {
+      message_type_id: MessageType.Abort,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export type Acknowledgement = LengthOmittedMessage & {
+  message_type_id: typeof MessageType.Acknowledgement;
+  message_stream_id: 0;
+};
+export const Acknowledgement = {
+  from(sequence: number, timestamp: number): Acknowledgement {
+    const builder = new ByteBuilder();
+    builder.writeU32BE(sequence);
+    return {
+      message_type_id: MessageType.Acknowledgement,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export type WindowAcknowledgementSize = LengthOmittedMessage & {
+  message_type_id: typeof MessageType.WindowAcknowledgementSize;
+  message_stream_id: 0;
+};
+export const WindowAcknowledgementSize = {
+  from(window: number, timestamp: number): WindowAcknowledgementSize {
+    const builder = new ByteBuilder();
+    builder.writeU32BE(window);
+    return {
+      message_type_id: MessageType.WindowAcknowledgementSize,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export type SetPeerBandwidth = LengthOmittedMessage & {
+  message_type_id: typeof MessageType.SetPeerBandwidth;
+  message_stream_id: 0;
+};
+export const SetPeerBandwidth = {
+  from(window: number, limit: number, timestamp: number): SetPeerBandwidth {
+    const builder = new ByteBuilder();
+    builder.writeU32BE(window);
+    builder.writeU8(limit);
+    return {
+      message_type_id: MessageType.SetPeerBandwidth,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
 
 type TimestampInformation = {
   timestamp: number;
