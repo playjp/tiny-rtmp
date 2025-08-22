@@ -7,12 +7,6 @@ export default class ByteBuilder {
     this.buffers.push(buffer);
   }
 
-  public writes(buffers: Iterable<Buffer>): void {
-    for (const buffer of buffers) {
-      this.write(buffer);
-    }
-  }
-
   public writeUIntBE(value: number, length: number): void {
     const buffer = Buffer.alloc(length);
     buffer.writeUIntBE(value, 0, length);
