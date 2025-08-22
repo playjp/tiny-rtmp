@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:coverage": "vitest --coverage",
     "tsc": "yarn workspaces run tsc",
     "lint": "eslint */src/**.mts */test/**.mts --ext mts",
     "lint:fix": "eslint */src/**.mts */test/**.mts --ext mts --fix",
@@ -24,9 +25,10 @@
     "@stylistic/eslint-plugin": "^4.2.0",
     "@types/node": "^24.0.1",
     "@typescript-eslint/parser": "^8.31.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.25.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
-    "vitest": "^3.2.3"
+    "vitest": "^3.2.4"
   }
 }

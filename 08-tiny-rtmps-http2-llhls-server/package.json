@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:coverage": "vitest --coverage",
     "tsc": "tsc --noEmit",
     "lint": "eslint ./src/**.mts ./test/**.mts  --ext mts",
     "lint:fix": "eslint ./src/**.mts ./test/**.mts --ext mts --fix",
