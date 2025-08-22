@@ -16,13 +16,24 @@ export default class MessageBuilder {
   private static cs_id_hash({ message_stream_id, message_type_id }: LengthOmittedMessage): number {
     return message_stream_id * 128 + message_type_id;
   }
+  private static use_system_cs_id({ message_type_id }: LengthOmittedMessage): number | null {
+    switch (message_type_id) {
+      case 1:
+      case 2:
+      case 3:
+      case 5:
+      case 6:
+        return 2;
+    }
+    return null;
+  }
 
   private get_cs_id(message: LengthOmittedMessage): number {
     const hash = MessageBuilder.cs_id_hash(message);
     if (this.cs_id_map.has(hash)) {
       return this.cs_id_map.get(hash)!;
     }
-    const cs_id = this.next_cs_id++;
+    const cs_id = MessageBuilder.use_system_cs_id(message) ?? this.next_cs_id++;
     this.cs_id_map.set(hash, cs_id);
     return cs_id;
   }
