@@ -166,18 +166,18 @@ export default class MessageBuilder {
           builder.writeU8(message.message_type_id);
         }
         if (is_extended_timestamp) {
-          builder.writeU32BE(timestamp)
+          builder.writeU32BE(timestamp);
         }
         builder.write(chunk);
         continue;
       }
 
-      builder.writeU24BE(is_extended_timestamp ? 0xFFFFFF : timestamp)
+      builder.writeU24BE(is_extended_timestamp ? 0xFFFFFF : timestamp);
       builder.writeU24BE(message.data.byteLength);
       builder.writeU8(message.message_type_id);
       builder.writeU32LE(message.message_stream_id);
       if (is_extended_timestamp) {
-        builder.writeU32BE(timestamp)
+        builder.writeU32BE(timestamp);
       }
       builder.write(chunk);
     }
