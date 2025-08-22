@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto';
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import write_message from '../../01-tiny-rtmp-server/src/message-writer.mts';
+import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 import read_amf0, { isAMF0Number, isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 
@@ -57,7 +57,7 @@ const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message)
   }
 };
 const TRANSITION = {
-  [STATE.WAITING_CONNECT]: (message: Message, connection: Duplex, option: Option) => {
+  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CONNECT; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CONNECT; }
     const command = read_amf0(message.data);
@@ -92,7 +92,7 @@ const TRANSITION = {
       },
       info,
     );
-    connection.write(write_message({
+    connection.write(builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
@@ -102,7 +102,7 @@ const TRANSITION = {
     if (!connectAccepted) { return STATE.DISCONNECTED; }
     return STATE.WAITING_CREATESTREAM;
   },
-  [STATE.WAITING_CREATESTREAM]: (message: Message, connection: Duplex, option: Option) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CREATESTREAM; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CREATESTREAM; }
     const command = read_amf0(message.data);
@@ -114,7 +114,7 @@ const TRANSITION = {
 
     // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
     const result = write_amf0('_result', transaction_id, null, MESSAGE_STREAM);
-    connection.write(write_message({
+    connection.write(builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
@@ -123,7 +123,7 @@ const TRANSITION = {
 
     return STATE.WAITING_PUBLISH;
   },
-  [STATE.WAITING_PUBLISH]: (message: Message, connection: Duplex, option: Option) => {
+  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
     if (message.message_stream_id !== MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
     const command = read_amf0(message.data);
@@ -146,7 +146,7 @@ const TRANSITION = {
     };
 
     const result = write_amf0('onStatus', transaction_id, null, info);
-    connection.write(write_message({
+    connection.write(builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
@@ -157,7 +157,7 @@ const TRANSITION = {
     lock = option.id;
     return STATE.PUBLISHED;
   },
-  [STATE.PUBLISHED]: (message: Message, connection: Duplex, option: Option) => {
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
     if (message.message_stream_id !== 0) { return STATE.PUBLISHED; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.PUBLISHED; }
     const command = read_amf0(message.data);
@@ -169,10 +169,10 @@ const TRANSITION = {
 
     return STATE.DISCONNECTED;
   },
-  [STATE.DISCONNECTED]: (message: Message, connection: Duplex, option: Option) => {
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
     return STATE.DISCONNECTED;
   },
-} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, connection: Duplex, option: Option) => (typeof STATE)[keyof typeof STATE]>;
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => (typeof STATE)[keyof typeof STATE]>;
 
 export class DisconnectError extends Error {
   constructor(message: string, option?: ErrorOptions) {
@@ -189,6 +189,7 @@ export default async function* handle_rtmp(connection: Duplex, app: string, key:
   } satisfies Option;
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
+  const builder = new MessageBuilder();
   using estimator = new BandwidthEstimator(limit ?? Number.POSITIVE_INFINITY, controller);
   connection.pipe(new Writable({
     write(data, _, cb) { reader.feed(data); estimator.feed(data.byteLength); cb(); },
@@ -212,7 +213,7 @@ export default async function* handle_rtmp(connection: Duplex, app: string, key:
       if (need_yield(state, message)) { yield message; }
 
       // 個別のメッセージによる状態遷移
-      state = TRANSITION[state](message, connection, option);
+      state = TRANSITION[state](message, builder, connection, option);
       if (state === STATE.DISCONNECTED) { return; }
     }
   } catch (e) {

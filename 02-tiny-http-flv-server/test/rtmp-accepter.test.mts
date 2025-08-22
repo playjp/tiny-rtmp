@@ -5,7 +5,7 @@ import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import write_message from '../../01-tiny-rtmp-server/src/message-writer.mts';
+import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 
 const handle_rtmp_import = async () => {
   vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
@@ -19,6 +19,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
+    const builder = new MessageBuilder();
 
     const handle_rtmp = await handle_rtmp_import();
     const handler = handle_rtmp(connection, 'app', 'key');
@@ -63,7 +64,7 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
@@ -91,7 +92,7 @@ describe('Regression Test', () => {
         4,
         null,
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
@@ -115,7 +116,7 @@ describe('Regression Test', () => {
         'key',
         'live',
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 1,
         timestamp: 0,
@@ -145,6 +146,7 @@ describe('Regression Test', () => {
     const connection_1 = Duplex.from({ readable: input_1, writable: output_1 });
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
+    const builder_1 = new MessageBuilder();
 
     const handler_1 = handle_rtmp(connection_1, 'app', 'key');
     (async () => { for await (const _ of handler_1) {} })(); // do background
@@ -155,14 +157,15 @@ describe('Regression Test', () => {
     const connection_2 = Duplex.from({ readable: input_2, writable: output_2 });
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
+    const builder_2 = new MessageBuilder();
 
     const handler_2 = handle_rtmp(connection_2, 'app', 'key');
     (async () => { for await (const _ of handler_2) {} })(); // do background
 
-    const inout = [[input_1, reader_1], [input_2, reader_2]] as [PassThrough, AsyncByteReader][];
+    const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
 
     for (let i = 0; i < inout.length; i++) {
-      const [input, reader] = inout[i];
+      const [input, reader, builder] = inout[i];
       /*
       * Simple handshake
       */
@@ -201,7 +204,7 @@ describe('Regression Test', () => {
             tcUrl: 'rtmp://localhost:1935/app',
           },
         );
-        input.write(write_message({
+        input.write(builder.build({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 0,
           timestamp: 0,
@@ -229,7 +232,7 @@ describe('Regression Test', () => {
           4,
           null,
         );
-        input.write(write_message({
+        input.write(builder.build({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 0,
           timestamp: 0,
@@ -253,7 +256,7 @@ describe('Regression Test', () => {
           'key',
           'live',
         );
-        input.write(write_message({
+        input.write(builder.build({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 1,
           timestamp: 0,
@@ -285,6 +288,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
+    const builder = new MessageBuilder();
 
     const handle_rtmp = await handle_rtmp_import();
     const handler = handle_rtmp(connection, 'app', 'key');
@@ -329,7 +333,7 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
@@ -357,7 +361,7 @@ describe('Regression Test', () => {
         4,
         null,
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
@@ -381,7 +385,7 @@ describe('Regression Test', () => {
         'inavlid',
         'live',
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 1,
         timestamp: 0,
@@ -408,6 +412,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     const reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
+    const builder = new MessageBuilder();
 
     const handle_rtmp = await handle_rtmp_import();
     const handler = handle_rtmp(connection, 'app', 'key');
@@ -452,7 +457,7 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      input.write(write_message({
+      input.write(builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,

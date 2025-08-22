@@ -4,10 +4,10 @@ import type { Duplex } from 'node:stream';
 
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message, { MessageType } from './message-reader.mts';
-import write_message from './message-writer.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import FLVWriter from './flv-writer.mts';
+import MessageBuilder from './message-builder.mts';
 
 const STATE = {
   WAITING_CONNECT: 'WAITING_CONNECT',
@@ -23,6 +23,7 @@ export default async (connection: Duplex, output?: Writable) => {
     destroy(err, cb) { reader.feedEOF(); cb(err); },
   }));
   using writer = output != null ? new FLVWriter(output) : null;
+  const builder = new MessageBuilder();
 
   try {
     /*
@@ -83,7 +84,7 @@ export default async (connection: Duplex, output?: Writable) => {
               level: 'status', // 正常系
             },
           );
-          connection.write(write_message({
+          connection.write(builder.build({
             message_type_id: MessageType.CommandAMF0,
             message_stream_id: 0,
             timestamp: 0,
@@ -105,7 +106,7 @@ export default async (connection: Duplex, output?: Writable) => {
 
           // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
           const result = write_amf0('_result', transaction_id, null, 1);
-          connection.write(write_message({
+          connection.write(builder.build({
             message_type_id: MessageType.CommandAMF0,
             message_stream_id: 0,
             timestamp: 0,
@@ -134,7 +135,7 @@ export default async (connection: Duplex, output?: Writable) => {
             level: 'status', // 正常系
           };
           const result = write_amf0('onStatus', transaction_id, null, info);
-          connection.write(write_message({
+          connection.write(builder.build({
             message_type_id: MessageType.CommandAMF0,
             message_stream_id: message.message_stream_id,
             timestamp: 0,

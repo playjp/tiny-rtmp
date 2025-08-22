@@ -63,6 +63,42 @@ describe('Unit Test', () => {
     expect(target.build().equals(buffer)).toStrictEqual(true);
   });
 
+  test('Write unsigned int 16-bit Little Endian', () => {
+    const length = 2;
+    const value = 0x0102;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    target.writeU16LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write unsigned int 24-bit Little Endian', () => {
+    const length = 3;
+    const value = 0x010203;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    target.writeU24LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write unsigned int 32-bit Little Endian', () => {
+    const length = 4;
+    const value = 0x01020304;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    target.writeU32LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
   test('Write signed int 8-bit', () => {
     const length = 1;
     const value = 0x01;
@@ -106,6 +142,42 @@ describe('Unit Test', () => {
     const buffer = Buffer.from({ length });
     buffer.writeIntBE(value, 0, length);
     target.writeI32BE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write signed int 16-bit Little Endian', () => {
+    const length = 2;
+    const value = 0x0102;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    target.writeI16LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write signed int 24-bit Little Endian', () => {
+    const length = 3;
+    const value = 0x010203;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    target.writeI24LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write signed int 32-bit Little Endian', () => {
+    const length = 4;
+    const value = 0x01020304;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    target.writeI32LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
     expect(target.build().equals(buffer)).toStrictEqual(true);
