@@ -40,7 +40,7 @@ const value = (dst: ByteBuilder, data: unknown): void => {
   if (data === null) { dst.writeU8(0x05); return; }
   if (data === undefined){ dst.writeU8(0x06); return; }
   if (Array.isArray(data)) { dst.writeU8(0x0a); array(dst, data); return; }
-  if (data instanceof Date) { date(dst, data); return; }
+  if (data instanceof Date) { dst.writeU8(0x0b); date(dst, data); return; }
   switch (typeof data) {
     case 'number': dst.writeU8(0x00); number(dst, data); return;
     case 'boolean': dst.writeU8(0x01); boolean(dst, data); return;

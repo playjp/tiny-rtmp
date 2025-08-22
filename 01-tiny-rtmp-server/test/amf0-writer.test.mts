@@ -11,6 +11,7 @@ describe('Unit Test', () => {
     ['Type: 5 (null)', { value: null, expected: Buffer.from('05', 'hex') }],
     ['Type: 6 (undefined)', { value: undefined, expected: Buffer.from('06', 'hex') }],
     ['type: 10 (strict array)', { value: [], expected: Buffer.from('0a00000000', 'hex') }],
+    ['type: 11 (Date)', { value: new Date(0), expected: Buffer.from('0b00000000000000000000', 'hex') }],
   ])('%s', (_, { value, expected }) => {
     expect(write_amf0(value)).toStrictEqual(expected);
   });
