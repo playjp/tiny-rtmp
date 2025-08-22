@@ -5,7 +5,7 @@ import type { Duplex } from 'node:stream';
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message, { MessageType } from './message-reader.mts';
 import write_message from './message-writer.mts';
-import read_amf0 from './amf0-reader.mts';
+import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import FLVWriter from './flv-writer.mts';
 
@@ -63,8 +63,11 @@ export default async (connection: Duplex, output?: Writable) => {
 
           const name = command[0];
           if (name !== 'connect') { continue; }
+          if (!isAMF0Number(command[1])) { continue; }
           const transaction_id = command[1];
+          if (!isAMF0Object(command[2])) { continue; }
           const appName = command[2]['app'];
+          if (!isAMF0String(appName)) { continue; }
           console.error(`appName: ${appName}`);
 
           const result = write_amf0('_result', transaction_id,
@@ -97,6 +100,7 @@ export default async (connection: Duplex, output?: Writable) => {
 
           const name = command[0];
           if (name !== 'createStream') { continue; }
+          if (!isAMF0Number(command[1])) { continue; }
           const transaction_id = command[1];
 
           // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
@@ -118,7 +122,9 @@ export default async (connection: Duplex, output?: Writable) => {
 
           const name = command[0];
           if (name !== 'publish') { continue; }
+          if (!isAMF0Number(command[1])) { continue; }
           const transaction_id = command[1];
+          if (!isAMF0String(command[3])) { continue; }
           const streamKey = command[3];
           console.error(`streamKey: ${streamKey}`);
 

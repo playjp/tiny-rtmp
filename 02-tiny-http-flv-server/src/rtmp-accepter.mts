@@ -6,7 +6,7 @@ import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import write_message from '../../01-tiny-rtmp-server/src/message-writer.mts';
-import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
+import read_amf0, { isAMF0Number, isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 
 import BandwidthEstimator from './bandwidth-estimator.mts';
@@ -64,7 +64,9 @@ const TRANSITION = {
 
     const name = command[0];
     if (name !== 'connect') { return STATE.WAITING_CONNECT; }
+    if (!isAMF0Number(command[1])) { return STATE.WAITING_CONNECT; }
     const transaction_id = command[1];
+    if (!isAMF0Object(command[2])) { return STATE.WAITING_CONNECT; }
     const appName = command[2]['app'];
     const connectAccepted = appName === option.app;
 
@@ -107,6 +109,7 @@ const TRANSITION = {
 
     const name = command[0];
     if (name !== 'createStream') { return STATE.WAITING_CREATESTREAM; }
+    if (!isAMF0Number(command[1])) { return STATE.WAITING_CREATESTREAM; }
     const transaction_id = command[1];
 
     // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
@@ -127,6 +130,7 @@ const TRANSITION = {
 
     const name = command[0];
     if (name !== 'publish') { return STATE.WAITING_PUBLISH; }
+    if (!isAMF0Number(command[1])) { return STATE.WAITING_PUBLISH; }
     const transaction_id = command[1];
     const streamKey = command[3];
     const publishAccepted = streamKey === option.streamKey && lock == null; // streamKey が合致していて、配信されてない場合は配信を許可する

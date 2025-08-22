@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream';
 import { MessageType } from './message-reader.mts';
 import type { Message } from './message-reader.mts';
-import read_amf0 from './amf0-reader.mts';
+import read_amf0, { isAMF0Object } from './amf0-reader.mts';
 
 export default class FLVWriter {
   private output: Writable;
@@ -38,7 +38,7 @@ export default class FLVWriter {
     if (!this.initialized) {
       const scriptdata = message.message_type_id === MessageType.DataAMF0 ? read_amf0(message.data) : undefined;
       const is_metadata = scriptdata?.length === 2 && scriptdata?.[0] === 'onMetaData';
-      this.write_flv_header(is_metadata ? scriptdata[1] : undefined);
+      this.write_flv_header(is_metadata && isAMF0Object(scriptdata?.[1]) ? scriptdata[1] : undefined);
     }
 
     const header = Buffer.alloc(11);

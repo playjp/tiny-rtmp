@@ -38,7 +38,7 @@ describe('Unit Test', () => {
     const result = read_amf0(target);
     expect(result).length(1);
     expect(result[0]).instanceOf(Date);
-    expect(result[0].getTime()).toStrictEqual(0);
+    expect((result[0] as Date).getTime()).toStrictEqual(0);
   });
 });
 
