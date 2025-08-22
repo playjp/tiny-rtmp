@@ -8,6 +8,7 @@ export default defineConfig({
         ...coverageConfigDefaults.exclude,
         '**/*.js',
         '**/*.mjs',
+        '**/index.mts',
       ],
     },
   },
