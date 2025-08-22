@@ -43,7 +43,7 @@ export default class BandwidthEstimator {
   }
 
   public estimate(): number {
-    return this.estimates.reduce((sum, curr) => sum + curr, 0) / this.movingAverageLength;
+    return this.estimates.reduce((sum, curr) => sum + curr, 0) / Math.min(this.estimates.length, this.movingAverageLength);
   }
 
   public measure(): void {
