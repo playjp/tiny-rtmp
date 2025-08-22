@@ -99,6 +99,18 @@ export default class ByteBuilder {
     this.write(buffer);
   }
 
+  public writeF32LE(float: number): void {
+    const buffer = Buffer.alloc(4);
+    buffer.writeFloatLE(float, 0);
+    this.write(buffer);
+  }
+
+  public writeF64LE(double: number): void {
+    const buffer = Buffer.alloc(8);
+    buffer.writeDoubleLE(double, 0);
+    this.write(buffer);
+  }
+
   public byteLength(): number {
     return this.length;
   }

@@ -28,6 +28,14 @@ export default class ByteReader {
     return this.read(length).readIntBE(0, length);
   }
 
+  public readUIntLE(length: number): number {
+    return this.read(length).readUIntLE(0, length);
+  }
+
+  public readIntLE(length: number): number {
+    return this.read(length).readIntLE(0, length);
+  }
+
   public readU8(): number {
     return this.readUIntBE(1);
   }
@@ -42,6 +50,18 @@ export default class ByteReader {
 
   public readU32BE(): number {
     return this.readUIntBE(4);
+  }
+
+  public readU16LE(): number {
+    return this.readUIntLE(2);
+  }
+
+  public readU24LE(): number {
+    return this.readUIntLE(3);
+  }
+
+  public readU32LE(): number {
+    return this.readUIntLE(4);
   }
 
   public readI8(): number {
@@ -60,11 +80,31 @@ export default class ByteReader {
     return this.readIntBE(4);
   }
 
+  public readI16LE(): number {
+    return this.readIntLE(2);
+  }
+
+  public readI24LE(): number {
+    return this.readIntLE(3);
+  }
+
+  public readI32LE(): number {
+    return this.readIntLE(4);
+  }
+
   public readF32BE(): number {
     return this.read(4).readFloatBE(0);
   }
 
   public readF64BE(): number {
     return this.read(8).readDoubleBE(0);
+  }
+
+  public readF32LE(): number {
+    return this.read(4).readFloatLE(0);
+  }
+
+  public readF64LE(): number {
+    return this.read(8).readDoubleLE(0);
   }
 }

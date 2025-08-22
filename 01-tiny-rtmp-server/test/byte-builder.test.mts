@@ -267,11 +267,95 @@ describe('Unit Test', () => {
     expect(target.build().equals(buffer)).toStrictEqual(true);
   });
 
+  test('Write float 32-bit Little Endian', () => {
+    const length = 4;
+    const value = 0.3;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeFloatLE(value, 0);
+    target.writeF32LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write double 64-bit Little Endian', () => {
+    const length = 8;
+    const value = 0.6;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    target.writeF64LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write double 64-bit Little Endian (NaN)', () => {
+    const length = 8;
+    const value = Number.NaN;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    target.writeF64LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write double 64-bit Little Endian (POSITIVE_INFINITY)', () => {
+    const length = 8;
+    const value = Number.POSITIVE_INFINITY;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    target.writeF64LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write double 64-bit Little Endian (NEGATIVE_INFINITY)', () => {
+    const length = 8;
+    const value = Number.NEGATIVE_INFINITY;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    target.writeF64LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write double 64-bit Little Endian (MAX_VALUE)', () => {
+    const length = 8;
+    const value = Number.MAX_VALUE;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    target.writeF64LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test('Write double 64-bit Little Endian (MIN_VALUE)', () => {
+    const length = 8;
+    const value = Number.MIN_VALUE;
+    const target = new ByteBuilder();
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    target.writeF64LE(value);
+
+    expect(target.byteLength()).toStrictEqual(length);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
   test.each([
     ['Write single unsigned 1-byte value',  { length: 1 }],
-    ['Write single unsigned 2-bytes value', { length: 2 }],
-    ['Write single unsigned 3-bytes value', { length: 3 }],
-    ['Write single unsigned 4-bytes value', { length: 4 }],
+    ['Write single unsigned 2-bytes Big Endian value', { length: 2 }],
+    ['Write single unsigned 3-bytes Big Endian value', { length: 3 }],
+    ['Write single unsigned 4-bytes Big Endian value', { length: 4 }],
   ])('%s', (_, { length }) => {
     const buffer = Buffer.from({ length });
     buffer.writeUIntBE(length, 0, length);
@@ -283,19 +367,50 @@ describe('Unit Test', () => {
   });
 
   test.each([
+    ['Write single unsigned 2-bytes Little Endian value', { length: 2 }],
+    ['Write single unsigned 3-bytes Little value', { length: 3 }],
+    ['Write single unsigned 4-bytes Little value', { length: 4 }],
+  ])('%s', (_, { length }) => {
+    const buffer = Buffer.from({ length });
+    buffer.writeUIntLE(length, 0, length);
+    const target = new ByteBuilder();
+    target.writeUIntLE(length, length);
+
+    expect(target.byteLength()).toStrictEqual(buffer.byteLength);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test.each([
     ['Write single signed 1-byte plus value',   { length: 1, sign: 1 }],
-    ['Write single signed 2-bytes plus value',  { length: 2, sign: 1 }],
-    ['Write single signed 3-bytes plus value',  { length: 3, sign: 1 }],
-    ['Write single signed 4-bytes plus value',  { length: 4, sign: 1 }],
+    ['Write single signed 2-bytes Big Endian plus value',  { length: 2, sign: 1 }],
+    ['Write single signed 3-bytes Big Endian plus value',  { length: 3, sign: 1 }],
+    ['Write single signed 4-bytes Big Endian plus value',  { length: 4, sign: 1 }],
     ['Write single signed 1-byte minus value',  { length: 1, sign: -1 }],
-    ['Write single signed 2-bytes minus value', { length: 2, sign: -1 }],
-    ['Write single signed 3-bytes minus value', { length: 3, sign: -1 }],
-    ['Write single signed 4-bytes minus value', { length: 4, sign: -1 }],
+    ['Write single signed 2-bytes Big Endian minus value', { length: 2, sign: -1 }],
+    ['Write single signed 3-bytes Big Endian minus value', { length: 3, sign: -1 }],
+    ['Write single signed 4-bytes Big Endian minus value', { length: 4, sign: -1 }],
   ])('%s', (_, { length, sign }) => {
     const buffer = Buffer.from({ length });
     buffer.writeIntBE(length * sign, 0, length);
     const target = new ByteBuilder();
     target.writeIntBE(length * sign, length);
+
+    expect(target.byteLength()).toStrictEqual(buffer.byteLength);
+    expect(target.build().equals(buffer)).toStrictEqual(true);
+  });
+
+  test.each([
+    ['Write single signed 2-bytes Little Endian plus value',  { length: 2, sign: 1 }],
+    ['Write single signed 3-bytes Little Endian plus value',  { length: 3, sign: 1 }],
+    ['Write single signed 4-bytes Little Endian plus value',  { length: 4, sign: 1 }],
+    ['Write single signed 2-bytes Little Endian minus value', { length: 2, sign: -1 }],
+    ['Write single signed 3-bytes Little Endian minus value', { length: 3, sign: -1 }],
+    ['Write single signed 4-bytes Little Endian minus value', { length: 4, sign: -1 }],
+  ])('%s', (_, { length, sign }) => {
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(length * sign, 0, length);
+    const target = new ByteBuilder();
+    target.writeIntLE(length * sign, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
     expect(target.build().equals(buffer)).toStrictEqual(true);

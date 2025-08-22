@@ -16,6 +16,21 @@ describe('Unit Test', () => {
     expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
+  test('EOF if empty', () => {
+    const buffer = Buffer.from([]);
+    const target = new ByteReader(buffer);
+
+    expect(target.isEOF()).toStrictEqual(true);
+  });
+
+  test('EOF if read all buffer', () => {
+    const buffer = Buffer.from(Array.from({ length: 1000 }, (_, i) => i));
+    const target = new ByteReader(buffer);
+    target.read(1000);
+
+    expect(target.isEOF()).toStrictEqual(true);
+  });
+
   test('Read unsigned int 8-bit', () => {
     const length = 1;
     const value = 0x01;
@@ -56,6 +71,36 @@ describe('Unit Test', () => {
     expect(target.readU32BE()).toStrictEqual(value);
   });
 
+  test('Read unsigned int 16-bit Little Endian', () => {
+    const length = 2;
+    const value = 0x0102;
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readU16LE()).toStrictEqual(value);
+  });
+
+  test('Read unsigned int 24-bit Little Endian', () => {
+    const length = 3;
+    const value = 0x010203;
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readU24LE()).toStrictEqual(value);
+  });
+
+  test('Read unsigned int 32-bit Little Endian', () => {
+    const length = 4;
+    const value = 0x01020304;
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readU32LE()).toStrictEqual(value);
+  });
+
   test('Read signed int 8-bit', () => {
     const length = 1;
     const value = 0x01;
@@ -94,6 +139,36 @@ describe('Unit Test', () => {
     const target = new ByteReader(buffer);
 
     expect(target.readI32BE()).toStrictEqual(value);
+  });
+
+  test('Read signed int 16-bit Little Endian', () => {
+    const length = 2;
+    const value = 0x0102;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readI16LE()).toStrictEqual(value);
+  });
+
+  test('Read signed int 24-bit Little Endian', () => {
+    const length = 3;
+    const value = 0x010203;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readI24LE()).toStrictEqual(value);
+  });
+
+  test('Read signed int 32-bit Little Endian', () => {
+    const length = 4;
+    const value = 0x01020304;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readI32LE()).toStrictEqual(value);
   });
 
   test('Read float 32-bit Big Endian', () => {
@@ -166,6 +241,76 @@ describe('Unit Test', () => {
     expect(target.readF64BE()).toStrictEqual(value);
   });
 
+  test('Read float 32-bit Little Endian', () => {
+    const length = 4;
+    const value = 0.5;
+    const buffer = Buffer.from({ length });
+    buffer.writeFloatLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF32LE()).toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian', () => {
+    const length = 8;
+    const value = 0.25;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF64LE()).toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (NaN)', () => {
+    const length = 8;
+    const value = Number.NaN;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF64LE()).toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (POSITIVE_INFINITY)', () => {
+    const length = 8;
+    const value = Number.POSITIVE_INFINITY;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF64LE()).toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (NEGATIVE_INFINITY)', () => {
+    const length = 8;
+    const value = Number.NEGATIVE_INFINITY;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF64LE()).toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (MAX_VALUE)', () => {
+    const length = 8;
+    const value = Number.MAX_VALUE;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF64LE()).toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (MIN_VALUE)', () => {
+    const length = 8;
+    const value = Number.MIN_VALUE;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const target = new ByteReader(buffer);
+
+    expect(target.readF64LE()).toStrictEqual(value);
+  });
+
   test('Read beyond buffer boundary throw Error', () => {
     const target = new ByteReader(Buffer.from([]));
     expect(() => target.read(1)).toThrow();
@@ -183,9 +328,9 @@ describe('Unit Test', () => {
 
   test.each([
     ['Read single unsigned 1-byte value',  { length: 1 }],
-    ['Read single unsigned 2-bytes value', { length: 2 }],
-    ['Read single unsigned 3-bytes value', { length: 3 }],
-    ['Read single unsigned 4-bytes value', { length: 4 }],
+    ['Read single unsigned 2-bytes Big Endian value', { length: 2 }],
+    ['Read single unsigned 3-bytes Big Endian value', { length: 3 }],
+    ['Read single unsigned 4-bytes Big Endian value', { length: 4 }],
   ])('%s', (_, { length }) => {
     const value = length;
     const buffer = Buffer.from({ length });
@@ -196,14 +341,27 @@ describe('Unit Test', () => {
   });
 
   test.each([
+    ['Read single unsigned 2-bytes Big Endian value', { length: 2 }],
+    ['Read single unsigned 3-bytes Big Endian value', { length: 3 }],
+    ['Read single unsigned 4-bytes Big Endian value', { length: 4 }],
+  ])('%s', (_, { length }) => {
+    const value = length;
+    const buffer = Buffer.from({ length });
+    buffer.writeUintLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readUIntLE(length)).toStrictEqual(value);
+  });
+
+  test.each([
     ['Read single signed 1-byte plus value',   { length: 1, sign: 1 }],
-    ['Read single signed 2-bytes plus value',  { length: 2, sign: 1 }],
-    ['Read single signed 3-bytes plus value',  { length: 3, sign: 1 }],
-    ['Read single signed 4-bytes plus value',  { length: 4, sign: 1 }],
+    ['Read single signed 2-bytes Big Eidian plus value',  { length: 2, sign: 1 }],
+    ['Read single signed 3-bytes Big Eidian plus value',  { length: 3, sign: 1 }],
+    ['Read single signed 4-bytes Big Eidian plus value',  { length: 4, sign: 1 }],
     ['Read single signed 1-byte minus value',  { length: 1, sign: -1 }],
-    ['Read single signed 2-bytes minus value', { length: 2, sign: -1 }],
-    ['Read single signed 3-bytes minus value', { length: 3, sign: -1 }],
-    ['Read single signed 4-bytes minus value', { length: 4, sign: -1 }],
+    ['Read single signed 2-bytes Big Eidian minus value', { length: 2, sign: -1 }],
+    ['Read single signed 3-bytes Big Eidian minus value', { length: 3, sign: -1 }],
+    ['Read single signed 4-bytes Big Eidian minus value', { length: 4, sign: -1 }],
   ])('%s', (_, { length, sign }) => {
     const value = length * sign;
     const buffer = Buffer.from({ length });
@@ -211,6 +369,22 @@ describe('Unit Test', () => {
     const target = new ByteReader(buffer);
 
     expect(target.readIntBE(length)).toStrictEqual(value);
+  });
+
+  test.each([
+    ['Read single signed 2-bytes Little Eidian plus value',  { length: 2, sign: 1 }],
+    ['Read single signed 3-bytes Little Eidian plus value',  { length: 3, sign: 1 }],
+    ['Read single signed 4-bytes Little Eidian plus value',  { length: 4, sign: 1 }],
+    ['Read single signed 2-bytes Little Eidian minus value', { length: 2, sign: -1 }],
+    ['Read single signed 3-bytes Little Eidian minus value', { length: 3, sign: -1 }],
+    ['Read single signed 4-bytes Little Eidian minus value', { length: 4, sign: -1 }],
+  ])('%s', (_, { length, sign }) => {
+    const value = length * sign;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const target = new ByteReader(buffer);
+
+    expect(target.readIntLE(length)).toStrictEqual(value);
   });
 
   test.each([
