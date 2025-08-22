@@ -1,76 +1,72 @@
-function* number(data: number): Iterable<Buffer> {
+import { doubleBE, insert, uint16BE, uint32BE, uint8 } from "./byte-utils.mts";
+
+const number = (dst: number[], data: number): void => {
   const buffer = Buffer.alloc(8);
   buffer.writeDoubleBE(data, 0);
-  yield buffer;
+  insert(dst, buffer);
 }
 
-function* boolean(bool: boolean): Iterable<Buffer> {
-  const buffer = Buffer.alloc(1);
-  buffer.writeUInt8(bool ? 1 : 0, 0);
-  yield buffer;
+const boolean = (dst: number[], data: boolean): void => {
+  insert(dst, [data ? 1 : 0]);
 }
 
-function* string(data: string): Iterable<Buffer> {
-  const utf8 = Buffer.from(data, 'utf-8');
-  const length = Buffer.alloc(2);
-  length.writeUInt16BE(utf8.byteLength);
-  yield length;
-  yield utf8;
-};
+const string = (dst: number[], data: string): void => {
+  const bytes = Buffer.from(data, 'utf-8');
+  insert(dst, uint16BE(bytes.byteLength));
+  insert(dst, bytes);
+}
 
-function* object(obj: Record<string, any>): Iterable<Buffer> {
-  for (const [k, v] of Object.entries(obj)) {
-    yield* string(k);
-    yield* value(v);
+const object = (dst: number[], data: Record<string, any>): void => {
+  for (const [k, v] of Object.entries(data)) {
+    string(dst, k);
+    value(dst, v);
   }
-  yield Buffer.from([0x00, 0x00, 0x09]);
-};
+  insert(dst, [0x00, 0x00, 0x09]);
+}
 
-function* array(data: any[]): Iterable<Buffer> {
-  const length = Buffer.alloc(4);
-  length.writeUInt32BE(data.length);
-  yield length;
-  for (const datum of data) { yield* value(datum); }
-};
+const array = (dst: number[], data: any[]): void => {
+  insert(dst, uint32BE(data.length));
+  for (const datum of data) {
+    value(dst, datum);
+  }
+}
 
-function* date(data: Date): Iterable<Buffer> {
-  const buffer = Buffer.alloc(10);
-  buffer.writeDoubleBE(data.getTime(), 0);
-  buffer.writeInt16BE(0, 8); // reseved
-  yield buffer;
-};
+const date = (dst: number[], data: Date): void => {
+  insert(dst, doubleBE(data.getTime()));
+  insert(dst, uint16BE(0));
+}
 
-function* value(data: any): Iterable<Buffer> {
-  if (data === null) { yield Buffer.from([0x05]); return; }
-  if (data === undefined) { yield Buffer.from([0x06]); return; }
-  if (Array.isArray(data)) { yield Buffer.from([0x0a]); yield* array(data); return; }
-  if (data instanceof Date) { yield Buffer.from([0x0b]); yield* date(data); return; }
+const value = (dst: number[], data: any): void => {
+  if (data === null) { insert(dst, uint8(0x05)); return; }
+  if (data === undefined){ insert(dst, uint8(0x06)); return; }
+  if (Array.isArray(data)) { insert(dst, uint8(0x0a)); array(dst, data); return; }
+  if (data instanceof Date) { date(dst, data); return; }
   switch (typeof data) {
-    case 'number': yield Buffer.from([0x00]); yield* number(data); return;
-    case 'boolean': yield Buffer.from([0x01]); yield* boolean(data); return;
-    case 'string': { // Buffer.from([0x02]); yield* string(data); return;
+    case 'number': insert(dst, uint8(0x00)); number(dst, data); return;
+    case 'boolean': insert(dst, uint8(0x01)); boolean(dst, data); return;
+    case 'string': {
       const buffer = Buffer.from(data, 'utf-8');
       if (buffer.byteLength < 2 ** 16) {
-        const length = Buffer.alloc(2);
-        length.writeUInt16BE(buffer.byteLength);
-        yield Buffer.from([0x02]); yield length; yield buffer; return;
+        insert(dst, uint8(0x02));
+        insert(dst, uint16BE(buffer.byteLength));
+        insert(dst, buffer);
+        return;
       } else {
-        const length = Buffer.alloc(4);
-        length.writeUInt32BE(buffer.byteLength);
-        yield Buffer.from([0x0c]); yield length; yield buffer; return;
+        insert(dst, uint8(0x0c));
+        insert(dst, uint32BE(buffer.byteLength));
+        insert(dst, buffer);
+        return;
       }
     }
-    case 'object': yield Buffer.from([0x03]); yield* object(data); return;
+    case 'object': insert(dst, uint8(0x03)); object(dst, data); return;
     default: return;
   }
-};
+}
 
 export default (... data: any[]): Buffer => {
-  const buffers: Buffer[] = [];
+  const result: number[] = [];
   for (const datum of data) {
-    for (const buffer of value(datum)) {
-      buffers.push(buffer);
-    }
+    value(result, datum);
   }
-  return Buffer.concat(buffers);
+  return Buffer.from(result);
 };
