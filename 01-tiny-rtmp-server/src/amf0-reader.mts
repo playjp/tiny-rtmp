@@ -3,27 +3,27 @@ import ByteReader from './byte-reader.mts';
 const scriptend: unique symbol = Symbol();
 export type AMF0Object = {
   [key: string]: AMF0Value;
-}
+};
 export type AMF0Value = number | boolean | string | null | undefined | typeof scriptend | Date | AMF0Object | AMF0Value[];
 export const isAMF0Number = (data: AMF0Value): data is number => {
   return typeof data === 'number';
-}
+};
 export const isAMF0String = (data: AMF0Value): data is string => {
   return typeof data === 'string';
-}
+};
 export const isAMF0Array = (data: AMF0Value): data is AMF0Value[] => {
   return Array.isArray(data);
-}
+};
 export const isAMF0Date = (data: AMF0Value): data is Date => {
   return data instanceof Date;
-}
+};
 export const isAMF0Object = (data: AMF0Value): data is AMF0Object => {
   if (data == null) { return false; }
   if (data instanceof Date) { return false; }
   if (Array.isArray(data)) { return false; }
   if (typeof data === 'object') { return true; }
   return false;
-}
+};
 const string = (reader: ByteReader): string => {
   const length = reader.readU16BE();
   return reader.read(length).toString('utf-8');
