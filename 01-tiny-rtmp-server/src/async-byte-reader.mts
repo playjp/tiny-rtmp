@@ -79,6 +79,14 @@ export default class AsyncByteReader {
     return (await this.read(length)).readUIntLE(0, length);
   }
 
+  public async readIntBE(length: number): Promise<number> {
+    return (await this.read(length)).readIntBE(0, length);
+  }
+
+  public async readIntLE(length: number): Promise<number> {
+    return (await this.read(length)).readIntLE(0, length);
+  }
+
   public readU8(): Promise<number> {
     return this.readUIntBE(1);
   }
@@ -105,5 +113,49 @@ export default class AsyncByteReader {
 
   public readU32LE(): Promise<number> {
     return this.readUIntLE(4);
+  }
+
+  public readI8(): Promise<number> {
+    return this.readIntBE(1);
+  }
+
+  public readI16BE(): Promise<number> {
+    return this.readIntBE(2);
+  }
+
+  public readI24BE(): Promise<number> {
+    return this.readIntBE(3);
+  }
+
+  public readI32BE(): Promise<number> {
+    return this.readIntBE(4);
+  }
+
+  public readI16LE(): Promise<number> {
+    return this.readIntLE(2);
+  }
+
+  public readI24LE(): Promise<number> {
+    return this.readIntLE(3);
+  }
+
+  public readI32LE(): Promise<number> {
+    return this.readIntLE(4);
+  }
+
+  public async readF32BE(): Promise<number> {
+    return (await this.read(4)).readFloatBE(0);
+  }
+
+  public async readF64BE(): Promise<number> {
+    return (await this.read(8)).readDoubleBE(0);
+  }
+
+  public async readF32LE(): Promise<number> {
+    return (await this.read(4)).readFloatLE(0);
+  }
+
+  public async readF64LE(): Promise<number> {
+    return (await this.read(8)).readDoubleLE(0);
   }
 }

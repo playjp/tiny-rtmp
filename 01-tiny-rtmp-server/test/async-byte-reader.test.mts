@@ -114,6 +114,266 @@ describe('Unit Test', () => {
     await expect(reader.readU32LE()).resolves.toStrictEqual(value);
   });
 
+  test('Read signed int 8-bit', async () => {
+    const length = 1;
+    const value = 0x01;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntBE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI8()).resolves.toStrictEqual(value);
+  });
+
+  test('Read signed int 16-bit Big Endian', async () => {
+    const length = 2;
+    const value = 0x0102;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntBE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI16BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read signed int 24-bit Big Endian', async () => {
+    const length = 3;
+    const value = 0x010203;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntBE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI24BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read signed int 32-bit Big Endian', async () => {
+    const length = 4;
+    const value = 0x01020304;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntBE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI32BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read unsigned int 16-bit Little Endian', async () => {
+    const length = 2;
+    const value = 0x0102;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI16LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read unsigned int 24-bit Little Endian', async () => {
+    const length = 3;
+    const value = 0x010203;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI24LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read signed int 32-bit Little Endian', async () => {
+    const length = 4;
+    const value = 0x01020304;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+    await expect(reader.readI32LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read float 32-bit Big Endian', async () => {
+    const length = 4;
+    const value = 0.5;
+    const buffer = Buffer.from({ length });
+    buffer.writeFloatBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF32BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Big Endian', async () => {
+    const length = 8;
+    const value = 0.25;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Big Endian (NaN)', async () => {
+    const length = 8;
+    const value = Number.NaN;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Big Endian (POSITIVE_INFINITY)', async () => {
+    const length = 8;
+    const value = Number.POSITIVE_INFINITY;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Big Endian (NEGATIVE_INFINITY)', async () => {
+    const length = 8;
+    const value = Number.NEGATIVE_INFINITY;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Big Endian (MAX_VALUE)', async () => {
+    const length = 8;
+    const value = Number.MAX_VALUE;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Big Endian (MIN_VALUE)', async () => {
+    const length = 8;
+    const value = Number.MIN_VALUE;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleBE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64BE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read float 32-bit Little Endian', async () => {
+    const length = 4;
+    const value = 0.5;
+    const buffer = Buffer.from({ length });
+    buffer.writeFloatLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF32LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian', async () => {
+    const length = 8;
+    const value = 0.25;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (NaN)', async () => {
+    const length = 8;
+    const value = Number.NaN;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (POSITIVE_INFINITY)', async () => {
+    const length = 8;
+    const value = Number.POSITIVE_INFINITY;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (NEGATIVE_INFINITY)', async () => {
+    const length = 8;
+    const value = Number.NEGATIVE_INFINITY;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (MAX_VALUE)', async () => {
+    const length = 8;
+    const value = Number.MAX_VALUE;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64LE()).resolves.toStrictEqual(value);
+  });
+
+  test('Read double 64-bit Little Endian (MIN_VALUE)', async () => {
+    const length = 8;
+    const value = Number.MIN_VALUE;
+    const buffer = Buffer.from({ length });
+    buffer.writeDoubleLE(value, 0);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readF64LE()).resolves.toStrictEqual(value);
+  });
+
+  test.each([
+    ['Read single signed 1-byte plus value',   { length: 1, sign: 1 }],
+    ['Read single signed 2-bytes Big Endian plus value',  { length: 2, sign: 1 }],
+    ['Read single signed 3-bytes Big Endian plus value',  { length: 3, sign: 1 }],
+    ['Read single signed 4-bytes Big Endian plus value',  { length: 4, sign: 1 }],
+    ['Read single signed 1-byte minus value',  { length: 1, sign: -1 }],
+    ['Read single signed 2-bytes Big Endian minus value', { length: 2, sign: -1 }],
+    ['Read single signed 3-bytes Big Endian minus value', { length: 3, sign: -1 }],
+    ['Read single signed 4-bytes Big Endian minus value', { length: 4, sign: -1 }],
+  ])('%s', async (_, { length, sign }) => {
+    const value = length * sign;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntBE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readIntBE(length)).resolves.toStrictEqual(value);
+  });
+
+  test.each([
+    ['Read single signed 2-bytes Little Endian plus value',  { length: 2, sign: 1 }],
+    ['Read single signed 3-bytes Little Endian plus value',  { length: 3, sign: 1 }],
+    ['Read single signed 4-bytes Little Endian plus value',  { length: 4, sign: 1 }],
+    ['Read single signed 2-bytes Little Endian minus value', { length: 2, sign: -1 }],
+    ['Read single signed 3-bytes Little Endian minus value', { length: 3, sign: -1 }],
+    ['Read single signed 4-bytes Little Endian minus value', { length: 4, sign: -1 }],
+  ])('%s', async (_, { length, sign }) => {
+    const value = length * sign;
+    const buffer = Buffer.from({ length });
+    buffer.writeIntLE(value, 0, length);
+    const reader = new AsyncByteReader();
+    reader.feed(buffer);
+
+    await expect(reader.readIntLE(length)).resolves.toStrictEqual(value);
+  });
+
   test.each([
     ['Read single empty buffer',      { length: 0 }],
     ['Read single 1-byte buffer',     { length: 1 }],
