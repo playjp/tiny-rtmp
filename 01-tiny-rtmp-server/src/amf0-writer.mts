@@ -36,7 +36,7 @@ const date = (dst: ByteBuilder, data: Date): void => {
   dst.writeU16BE(0); // Not-Used
 };
 
-const value = (dst: ByteBuilder, data: any): void => {
+const value = (dst: ByteBuilder, data: unknown): void => {
   if (data === null) { dst.writeU8(0x05); return; }
   if (data === undefined){ dst.writeU8(0x06); return; }
   if (Array.isArray(data)) { dst.writeU8(0x0a); array(dst, data); return; }
@@ -63,7 +63,7 @@ const value = (dst: ByteBuilder, data: any): void => {
   }
 };
 
-export default (... data: any[]): Buffer => {
+export default (... data: unknown[]): Buffer => {
   const builder = new ByteBuilder();
   for (const datum of data) {
     value(builder, datum);
