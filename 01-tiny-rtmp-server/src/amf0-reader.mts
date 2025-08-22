@@ -1,6 +1,10 @@
 import ByteReader from './byte-reader.mts';
 
 const scriptend: unique symbol = Symbol();
+type AMF0Object = {
+  [key: string]: AMF0Value;
+}
+type AMF0Value = number | boolean | string | null | undefined | typeof scriptend | Date | AMF0Object | AMF0Value[];
 
 const string = (reader: ByteReader): string => {
   const length = reader.readU16BE();
@@ -12,8 +16,8 @@ const longstring = (reader: ByteReader): string => {
   return reader.read(length).toString('utf-8');
 };
 
-const object = (reader: ByteReader): Record<string, any> => {
-  const object: Record<string, any> = {};
+const object = (reader: ByteReader): AMF0Object => {
+  const object: AMF0Object = {};
   while (true) {
     const name = string(reader);
     const val = value(reader);
@@ -22,12 +26,12 @@ const object = (reader: ByteReader): Record<string, any> => {
   }
 };
 
-const mixedarray = (reader: ByteReader): Record<string, any>  => {
+const mixedarray = (reader: ByteReader): AMF0Object  => {
   reader.readU32BE(); // length
   return object(reader);
 };
 
-const strictarray = (reader: ByteReader): any[] => {
+const strictarray = (reader: ByteReader): AMF0Value[] => {
   const length = reader.readU32BE();
   const array = [];
   for (let i = 0; i < length; i++) {
@@ -42,7 +46,7 @@ const date = (reader: ByteReader): Date => {
   return new Date(timestamp);
 };
 
-const value = (reader: ByteReader): any => {
+const value = (reader: ByteReader): AMF0Value => {
   const tag = reader.readU8();
   switch (tag) {
     case 0: return reader.readF64BE();
@@ -64,7 +68,7 @@ const value = (reader: ByteReader): any => {
 
 export default (data: Buffer): any[] => {
   const reader = new ByteReader(data);
-  const result = [];
+  const result: any[] = [];
   while (!reader.isEOF()) {
     result.push(value(reader));
   }
