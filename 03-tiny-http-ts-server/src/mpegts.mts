@@ -101,14 +101,14 @@ export const write_pmt = (pmt: PMT) => {
   builder.writeBits(pmt.pcr_pid, 13); // PCR_PID
   builder.writeBits(0b1111, 4); // reserved
   builder.writeBits(pmt.program_info?.byteLength ?? 0, 12); // program_info_length
-  builder.writeBuffer(pmt.program_info ?? Buffer.from([])); // program_info
+  builder.writeBytes(pmt.program_info ?? Buffer.from([])); // program_info
   for (const { stream_type, elementary_PID, ES_info } of pmt.streams) {
     builder.writeBits(stream_type, 8); // stream_type
     builder.writeBits(0b111, 3); // reserved
     builder.writeBits(elementary_PID, 13); // elementary_PID
     builder.writeBits(0b1111, 4); // reserved
     builder.writeBits(ES_info?.byteLength ?? 0, 12); // ES_info_length
-    builder.writeBuffer(ES_info ?? Buffer.from([])); // ES_info
+    builder.writeBytes(ES_info ?? Buffer.from([])); // ES_info
   }
   builder.writeBits(0, 32); // CRC32
   const section = builder.build();

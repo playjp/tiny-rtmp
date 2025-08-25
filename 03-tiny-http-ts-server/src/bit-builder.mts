@@ -47,7 +47,7 @@ export default class BitBuilder {
     return (this.bits.length % 8) === 0;
   }
 
-  public writeBuffer(value: Buffer): void {
+  public writeBytes(value: Iterable<number>): void {
     for (const byte of value) { this.writeByte(byte); }
   }
 
