@@ -55,4 +55,16 @@ export default class BitReader {
   public readBool(): boolean {
     return this.readBits(1) === 1;
   }
+
+  public readUEG(): number {
+    let lz = 0;
+    while (this.readBits(1) === 0) { lz++; }
+    return ((2 ** lz) - 1) + this.readBits(lz);
+  }
+
+  public readSEG(): number {
+    const ueg = this.readUEG();
+    if (ueg === 0) { return 0; }
+    return ueg % 2 === 0 ? -(ueg / 2) : (ueg + 1) / 2;
+  }
 }
