@@ -19,6 +19,18 @@ export default class BitBuilder {
     this.fill();
   }
 
+  public writeUEG(value: number): void {
+    value += 1;
+    let bits = 0;
+    for (let v = value; v > 0; v = Math.floor(v / 2)) { bits++; }
+    this.writeBits(0, bits - 1);
+    this.writeBits(value, bits);
+  }
+
+  public writeSEG(value: number): void {
+    this.writeUEG(value < 0 ? -2 * value : 2 * value - 1);
+  }
+
   public writeByte(value: number): void {
     this.writeBits(value, 8);
   }
