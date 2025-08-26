@@ -19,6 +19,10 @@ export default class BitBuilder {
     this.fill();
   }
 
+  public writeBool(value: boolean): void {
+    this.writeBits(value ? 1 : 0, 1);
+  }
+
   public writeUEG(value: number): void {
     value += 1;
     let bits = 0;

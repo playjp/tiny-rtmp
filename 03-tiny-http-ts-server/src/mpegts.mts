@@ -188,8 +188,8 @@ export class SectionPacketizer {
       builder.writeBits(0, 1); // transport_priority
       builder.writeBits(this.pid, 13);
       builder.writeBits(0, 2); // transport_scrambling_control
-      builder.writeBits(0, 1); // adaptation_field_control (adaptation_field present)
-      builder.writeBits(1, 1); // adaptation_field_control (payload present)
+      builder.writeBool(false); // adaptation_field_control (adaptation_field present)
+      builder.writeBool(true); // adaptation_field_control (payload present)
       builder.writeBits(this.continuity_counter, 4); // continiuty_counter
       if (i === 0) { builder.writeBits(0, 8); } // pointer_field
 
@@ -224,8 +224,8 @@ export class PESPacketizer {
       builder.writeBits(0, 1); // transport_priority
       builder.writeBits(this.pid, 13);
       builder.writeBits(0, 2); // transport_scrambling_control
-      builder.writeBits(filler > 0 ? 1 : 0, 1); // adaptation_field_control (adaptation_field present)
-      builder.writeBits(1, 1); // adaptation_field_control (payload present)
+      builder.writeBool(filler > 0); // adaptation_field_control (adaptation_field present)
+      builder.writeBool(true); // adaptation_field_control (payload present)
       builder.writeBits(this.continuity_counter, 4); // continiuty_counter
       if (filler > 0) { builder.writeBits(filler - 1, 8); }
       if (filler > 1) { builder.writeBits(0, 8); }
@@ -257,8 +257,8 @@ export class PCRPacketizer {
     builder.writeBits(0, 1); // transport_priority
     builder.writeBits(this.pid, 13);
     builder.writeBits(0, 2); // transport_scrambling_control
-    builder.writeBits(1, 1); // adaptation_field_control (adaptation_field_present)
-    builder.writeBits(0, 1); // adaptation_field_control (payload present)
+    builder.writeBool(true); // adaptation_field_control (adaptation_field_present)
+    builder.writeBool(false); // adaptation_field_control (payload present)
     builder.writeBits(0, 4); // continiuty_counter
     builder.writeBits(PACKET_SIZE - HEADER_SIZE - 1, 8); // adaptation field length
     builder.writeBits(0x10, 8); // PCR is Present
