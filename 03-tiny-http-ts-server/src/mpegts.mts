@@ -124,7 +124,7 @@ export const write_pes = (data: Buffer, stream_id: number, pts: number | null, d
   const builder = new BitBuilder();
   const PES_header_data_length = (pts != null ? 5 : 0) + (dts != null ? 5 : 0);
 
-  builder.writeBits(1, 24); // start_code_prefix
+  builder.writeBits(0x000001, 24); // start_code_prefix
   builder.writeBits(stream_id, 8); // stream_id
   builder.writeBits(0, 16); // pes_length
   if (pes_has_flags(stream_id)) {
