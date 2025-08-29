@@ -56,6 +56,10 @@ export default class BitReader {
     return this.readBits(1) === 1;
   }
 
+  public skipBool(): void {
+    this.skipBits(1);
+  }
+
   public readUEG(): number {
     let lz = 0;
     while (this.readBits(1) === 0) { lz++; }
