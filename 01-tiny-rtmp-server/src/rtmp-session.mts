@@ -45,7 +45,7 @@ export default async (connection: Duplex, output?: Writable) => {
       const c2 = await reader.read(1536); // read C2
       const c2_random_echo = c2.subarray(8);
       // Check Random Echo
-      if (s1_random.byteLength !== c2_random_echo.byteLength || !s1_random.equals(c2_random_echo)) {
+      if (!s1_random.equals(c2_random_echo)) {
         throw new Error('Invalid Random Echo');
       }
     }
