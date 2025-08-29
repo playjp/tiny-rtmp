@@ -15,4 +15,27 @@ describe('Unit Test', () => {
   ])('%s', (_, { value, expected }) => {
     expect(write_amf0(value)).toStrictEqual(expected);
   });
+
+  test('invalid object', () => {
+    expect(() => write_amf0(Symbol())).toThrow();
+  });
+
+  test('strict array (complex)', () => {
+    expect(write_amf0([1 ,'1', {}, true])).toStrictEqual(Buffer.from('0a00000004003ff000000000000002000131030000090101', 'hex'))
+  });
+
+  test('object (complex)', () => {
+    expect(write_amf0({value: 'key', test: 'ok' })).toStrictEqual(Buffer.from('03000576616c75650200036b65790004746573740200026f6b000009', 'hex'))
+  });
+
+  test('string (complex)', () => {
+    const value = 'string1'.repeat(10000)
+    const encoder = new TextEncoder();
+    const array = encoder.encode(value);
+    const buffer = Buffer.alloc(5 + array.length);
+    buffer.writeUInt8(0xc, 0);
+    buffer.writeUInt32BE(array.byteLength, 1);
+    buffer.set(array, 5);
+    expect(write_amf0(value)).toStrictEqual(buffer);
+  });
 });

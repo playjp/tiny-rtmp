@@ -59,8 +59,8 @@ const value = (dst: ByteBuilder, data: unknown): void => {
       }
     }
     case 'object': dst.writeU8(0x03); object(dst, data); return;
-    default: return;
   }
+  throw new Error(`Invalid AMF0 Data`);
 };
 
 export default (... data: unknown[]): Buffer => {

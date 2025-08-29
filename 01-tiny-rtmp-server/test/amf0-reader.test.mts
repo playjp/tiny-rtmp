@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import read_amf0 from '../src/amf0-reader.mts';
+import read_amf0, { isAMF0Array, isAMF0Boolean, isAMF0Date, isAMF0Number, isAMF0Object, isAMF0String } from '../src/amf0-reader.mts';
 
 describe('Unit Test', () => {
   test.each([
@@ -20,6 +20,7 @@ describe('Unit Test', () => {
   test.each([
     ['Type: 4 (MovieClip)', { value: Buffer.from('04', 'hex') }],
     ['Type: 7 (Reference)', { value: Buffer.from('07', 'hex') }],
+    ['Type: 100 (Invalid Value)', { value: Buffer.from([100])}],
   ])('%s Throw Error', (_, { value }) => {
     expect(() => read_amf0(value)).toThrowError();
   });
@@ -32,6 +33,12 @@ describe('Unit Test', () => {
     expect(result[0]).toBeTypeOf('symbol');
   });
 
+  test('Type: 10 (strict array)', () => {
+    const target = Buffer.from('0a000000010101', 'hex');
+
+    expect(read_amf0(target)).toStrictEqual([[true]]);
+  });
+
   test('Type: 11 (Date)', () => {
     const target = Buffer.from('0b00000000000000000000', 'hex');
 
@@ -39,6 +46,57 @@ describe('Unit Test', () => {
     expect(result).length(1);
     expect(result[0]).instanceOf(Date);
     expect((result[0] as Date).getTime()).toStrictEqual(0);
+  });
+
+  test('isAMF0Boolean returns true if value is boolean', () => {
+    expect(isAMF0Boolean(false)).toStrictEqual(true);
+  });
+
+  test('isAMF0Number returns false if value is not boolean', () => {
+    expect(isAMF0Boolean('test')).toStrictEqual(false);
+  });
+
+  test('isAMF0Number returns true if value is number', () => {
+    expect(isAMF0Number(0)).toStrictEqual(true);
+  });
+
+  test('isAMF0Number returns false if value is not number', () => {
+    expect(isAMF0Number('test')).toStrictEqual(false);
+  });
+
+  test('isAMF0String returns true if value is string', () => {
+    expect(isAMF0String('str')).toStrictEqual(true);
+  });
+
+  test('isAMF0String returns false if value is not string', () => {
+    expect(isAMF0String(true)).toStrictEqual(false);
+  });
+
+  test('isAMF0Array returns true if value is array', () => {
+    expect(isAMF0Array([])).toStrictEqual(true);
+  });
+
+  test('isAMF0Array returns false if value is not array', () => {
+    expect(isAMF0Array('test')).toStrictEqual(false);
+  });
+
+  test('isAFM0Date returns true if value is date', () => {
+    expect(isAMF0Date(new Date())).toStrictEqual(true);
+  });
+
+  test('isAMF0Array returns false if value is not date', () => {
+    expect(isAMF0Date('test')).toStrictEqual(false);
+  });
+
+  test('isAFM0Object returns true if value is object', () => {
+    expect(isAMF0Object({})).toStrictEqual(true);
+  });
+
+  test('isAMF0Array returns false if value is not object', () => {
+    expect(isAMF0Object(null)).toStrictEqual(false);
+    expect(isAMF0Object('{}')).toStrictEqual(false);
+    expect(isAMF0Object(new Date())).toStrictEqual(false);
+    expect(isAMF0Object([])).toStrictEqual(false);
   });
 });
 
