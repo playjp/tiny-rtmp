@@ -16,7 +16,7 @@ const string = (dst: ByteBuilder, data: string): void => {
   dst.write(bytes);
 };
 
-const object = (dst: ByteBuilder, data: Record<string, any>): void => {
+const object = (dst: ByteBuilder, data: object): void => {
   for (const [k, v] of Object.entries(data)) {
     string(dst, k);
     value(dst, v);
@@ -24,7 +24,7 @@ const object = (dst: ByteBuilder, data: Record<string, any>): void => {
   dst.writeU24BE(0x000009); // ObjectEnd
 };
 
-const array = (dst: ByteBuilder, data: any[]): void => {
+const array = (dst: ByteBuilder, data: unknown[]): void => {
   dst.writeU32BE(data.length);
   for (const datum of data) {
     value(dst, datum);
