@@ -5,21 +5,21 @@ describe('Unit Test', () => {
   test('Build empty buffer in initial state', () => {
     const target = new ByteVector();
     expect(target.byteLength()).toStrictEqual(0);
-    expect(target.build().equals(Buffer.from([]))).toStrictEqual(true);
+    expect(target.read().equals(Buffer.from([]))).toStrictEqual(true);
   });
 
   test('Build non-empty buffer in initial state', () => {
     const buffer = Buffer.from([0x01, 0x02, 0x03]);
     const target = ByteVector.from(buffer);
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Build twice also empty buffer in initial state', () => {
     const target = new ByteVector();
     expect(target.byteLength()).toStrictEqual(0);
-    expect(target.build().equals(Buffer.from([]))).toStrictEqual(true);
-    expect(target.build().equals(Buffer.from([]))).toStrictEqual(true);
+    expect(target.read().equals(Buffer.from([]))).toStrictEqual(true);
+    expect(target.read().equals(Buffer.from([]))).toStrictEqual(true);
   });
 
   test('Write unsigned int 8-bit', () => {
@@ -31,7 +31,7 @@ describe('Unit Test', () => {
     target.writeU8(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write unsigned int 16-bit Big Endian', () => {
@@ -43,7 +43,7 @@ describe('Unit Test', () => {
     target.writeU16BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write unsigned int 24-bit Big Endian', () => {
@@ -55,7 +55,7 @@ describe('Unit Test', () => {
     target.writeU24BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write unsigned int 32-bit Big Endian', () => {
@@ -67,7 +67,7 @@ describe('Unit Test', () => {
     target.writeU32BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write unsigned int 16-bit Little Endian', () => {
@@ -79,7 +79,7 @@ describe('Unit Test', () => {
     target.writeU16LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write unsigned int 24-bit Little Endian', () => {
@@ -91,7 +91,7 @@ describe('Unit Test', () => {
     target.writeU24LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write unsigned int 32-bit Little Endian', () => {
@@ -103,7 +103,7 @@ describe('Unit Test', () => {
     target.writeU32LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 8-bit', () => {
@@ -115,7 +115,7 @@ describe('Unit Test', () => {
     target.writeI8(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 16-bit Big Endian', () => {
@@ -127,7 +127,7 @@ describe('Unit Test', () => {
     target.writeI16BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 24-bit Big Endian', () => {
@@ -139,7 +139,7 @@ describe('Unit Test', () => {
     target.writeI24BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 32-bit Big Endian', () => {
@@ -151,7 +151,7 @@ describe('Unit Test', () => {
     target.writeI32BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 16-bit Little Endian', () => {
@@ -163,7 +163,7 @@ describe('Unit Test', () => {
     target.writeI16LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 24-bit Little Endian', () => {
@@ -175,7 +175,7 @@ describe('Unit Test', () => {
     target.writeI24LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write signed int 32-bit Little Endian', () => {
@@ -187,7 +187,7 @@ describe('Unit Test', () => {
     target.writeI32LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write float 32-bit Big Endian', () => {
@@ -199,7 +199,7 @@ describe('Unit Test', () => {
     target.writeF32BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Big Endian', () => {
@@ -211,7 +211,7 @@ describe('Unit Test', () => {
     target.writeF64BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Big Endian (NaN)', () => {
@@ -223,7 +223,7 @@ describe('Unit Test', () => {
     target.writeF64BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Big Endian (POSITIVE_INFINITY)', () => {
@@ -235,7 +235,7 @@ describe('Unit Test', () => {
     target.writeF64BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Big Endian (NEGATIVE_INFINITY)', () => {
@@ -247,7 +247,7 @@ describe('Unit Test', () => {
     target.writeF64BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Big Endian (MAX_VALUE)', () => {
@@ -259,7 +259,7 @@ describe('Unit Test', () => {
     target.writeF64BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Big Endian (MIN_VALUE)', () => {
@@ -271,7 +271,7 @@ describe('Unit Test', () => {
     target.writeF64BE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write float 32-bit Little Endian', () => {
@@ -283,7 +283,7 @@ describe('Unit Test', () => {
     target.writeF32LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Little Endian', () => {
@@ -295,7 +295,7 @@ describe('Unit Test', () => {
     target.writeF64LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Little Endian (NaN)', () => {
@@ -307,7 +307,7 @@ describe('Unit Test', () => {
     target.writeF64LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Little Endian (POSITIVE_INFINITY)', () => {
@@ -319,7 +319,7 @@ describe('Unit Test', () => {
     target.writeF64LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Little Endian (NEGATIVE_INFINITY)', () => {
@@ -331,7 +331,7 @@ describe('Unit Test', () => {
     target.writeF64LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Little Endian (MAX_VALUE)', () => {
@@ -343,7 +343,7 @@ describe('Unit Test', () => {
     target.writeF64LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write double 64-bit Little Endian (MIN_VALUE)', () => {
@@ -355,7 +355,7 @@ describe('Unit Test', () => {
     target.writeF64LE(value);
 
     expect(target.byteLength()).toStrictEqual(length);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test.each([
@@ -370,7 +370,7 @@ describe('Unit Test', () => {
     target.writeUIntBE(length, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test.each([
@@ -384,7 +384,7 @@ describe('Unit Test', () => {
     target.writeUIntLE(length, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test.each([
@@ -403,7 +403,7 @@ describe('Unit Test', () => {
     target.writeIntBE(length * sign, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test.each([
@@ -420,7 +420,7 @@ describe('Unit Test', () => {
     target.writeIntLE(length * sign, length);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test.each([
@@ -439,7 +439,7 @@ describe('Unit Test', () => {
     target.write(buffer);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test.each([
@@ -459,7 +459,7 @@ describe('Unit Test', () => {
     target.write(concat);
 
     expect(target.byteLength()).toStrictEqual(concat.byteLength);
-    expect(target.build().equals(concat)).toStrictEqual(true);
+    expect(target.read().equals(concat)).toStrictEqual(true);
   });
 
   test('Write mixed data types', () => {
@@ -476,7 +476,7 @@ describe('Unit Test', () => {
     buffer.writeFloatBE(3.14, 7);
 
     expect(target.byteLength()).toStrictEqual(buffer.byteLength);
-    expect(target.build().equals(buffer)).toStrictEqual(true);
+    expect(target.read().equals(buffer)).toStrictEqual(true);
   });
 
   test('Write mixed data with multiple build', () => {
@@ -489,7 +489,7 @@ describe('Unit Test', () => {
       buffer1.writeUInt8(0x01, 0);
       buffer1.writeUInt16BE(0x0203, 1);
       expect(target.byteLength()).toStrictEqual(buffer1.byteLength);
-      expect(target.build().equals(buffer1)).toStrictEqual(true);
+      expect(target.read().equals(buffer1)).toStrictEqual(true);
     }
     {
       const buffer2 = Buffer.from({ length: 11 });
@@ -500,7 +500,7 @@ describe('Unit Test', () => {
       buffer2.writeInt32BE(-1, 3);
       buffer2.writeFloatBE(3.14, 7);
       expect(target.byteLength()).toStrictEqual(buffer2.byteLength);
-      expect(target.build().equals(buffer2)).toStrictEqual(true);
+      expect(target.read().equals(buffer2)).toStrictEqual(true);
     }
   });
 });
