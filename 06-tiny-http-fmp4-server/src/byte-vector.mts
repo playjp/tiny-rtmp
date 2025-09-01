@@ -187,7 +187,7 @@ export default class ByteVector {
     if (begin < 0 || begin > end || end > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
-    return this.buffer.subarray(begin, end);
+    return Buffer.from(this.buffer.subarray(begin, end));
   }
 
   public readUIntBE(position: number, length: number): number {
