@@ -5,17 +5,18 @@ const fixed_point_U16BE = (integer: number, decimal: number, vector: ByteVector)
   vector.writeU16BE(integer);
   vector.writeU16BE(decimal);
 };
+
 const unit_composition_matrix = (() => {
   const vector = new ByteVector();
-  fixed_point_U16BE(1, 0, vector); // [0, 0]
-  fixed_point_U16BE(0, 0, vector); // [0, 1]
-  fixed_point_U16BE(0, 0, vector); // [0, 2]
-  fixed_point_U16BE(0, 0, vector); // [1, 0]
-  fixed_point_U16BE(1, 0, vector); // [1, 1]
-  fixed_point_U16BE(0, 0, vector); // [1, 2]
-  fixed_point_U16BE(0, 0, vector); // [2, 0]
-  fixed_point_U16BE(0, 0, vector); // [2, 1]
-  fixed_point_U16BE(1, 0, vector); // [2, 2]
+  fixed_point_U16BE(1, 0, vector); // [0, 0] 16.16 固定小数点
+  fixed_point_U16BE(0, 0, vector); // [0, 1] 16.16 固定小数点
+  fixed_point_U16BE(0, 0, vector); // [0, 2] 16.16 固定小数点
+  fixed_point_U16BE(0, 0, vector); // [1, 0] 16.16 固定小数点
+  fixed_point_U16BE(1, 0, vector); // [1, 1] 16.16 固定小数点
+  fixed_point_U16BE(0, 0, vector); // [1, 2] 16.16 固定小数点
+  vector.writeU32BE(0x00000000);   // [2, 0] 2.30 固定小数点
+  vector.writeU32BE(0x00000000);   // [2, 1] 2.30 固定小数点
+  vector.writeU32BE(0x40000000);   // [2, 2] 2.30 固定小数点
   // finaize
   return vector.read();
 })();
