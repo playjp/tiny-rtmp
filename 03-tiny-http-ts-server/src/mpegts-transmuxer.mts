@@ -33,7 +33,7 @@ const PMT_DATA = {
 const emit_PSI_interval = 100;
 
 const timestamp_from_rtmp_to_mpegts = (timestamp: number): number => {
-  return timestamp * 90;
+  return (timestamp * 90) % 2 ** 33;
 };
 
 export default class MPEGTSTransmuxer {
