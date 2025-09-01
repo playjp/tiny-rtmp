@@ -20,7 +20,7 @@ describe('Unit Test', () => {
   test.each([
     ['Type: 4 (MovieClip)', { value: Buffer.from('04', 'hex') }],
     ['Type: 7 (Reference)', { value: Buffer.from('07', 'hex') }],
-    ['Type: 100 (Invalid Value)', { value: Buffer.from([100])}],
+    ['Type: 100 (Invalid Value)', { value: Buffer.from([100]) }],
   ])('%s Throw Error', (_, { value }) => {
     expect(() => read_amf0(value)).toThrowError();
   });

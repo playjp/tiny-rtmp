@@ -21,15 +21,15 @@ describe('Unit Test', () => {
   });
 
   test('strict array (complex)', () => {
-    expect(write_amf0([1 ,'1', {}, true])).toStrictEqual(Buffer.from('0a00000004003ff000000000000002000131030000090101', 'hex'))
+    expect(write_amf0([1, '1', {}, true])).toStrictEqual(Buffer.from('0a00000004003ff000000000000002000131030000090101', 'hex'));
   });
 
   test('object (complex)', () => {
-    expect(write_amf0({value: 'key', test: 'ok' })).toStrictEqual(Buffer.from('03000576616c75650200036b65790004746573740200026f6b000009', 'hex'))
+    expect(write_amf0({ value: 'key', test: 'ok' })).toStrictEqual(Buffer.from('03000576616c75650200036b65790004746573740200026f6b000009', 'hex'));
   });
 
   test('string (complex)', () => {
-    const value = 'string1'.repeat(10000)
+    const value = 'string1'.repeat(10000);
     const encoder = new TextEncoder();
     const array = encoder.encode(value);
     const buffer = Buffer.alloc(5 + array.length);

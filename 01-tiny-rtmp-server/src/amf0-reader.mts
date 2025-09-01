@@ -7,7 +7,7 @@ export type AMF0Object = {
 export type AMF0Value = number | boolean | string | null | undefined | typeof scriptend | Date | AMF0Object | AMF0Value[];
 export const isAMF0Boolean = (data: AMF0Value): data is boolean => {
   return typeof data === 'boolean';
-}
+};
 export const isAMF0Number = (data: AMF0Value): data is number => {
   return typeof data === 'number';
 };

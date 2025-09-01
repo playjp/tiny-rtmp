@@ -22,7 +22,7 @@ describe('Regression Test', () => {
       write(chunk, _, cb) {
         flv.feed(chunk);
         cb();
-      }
+      },
     }));
 
     /*

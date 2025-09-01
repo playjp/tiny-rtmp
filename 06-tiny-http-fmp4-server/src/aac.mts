@@ -1,5 +1,5 @@
-import { read_audio_specific_config } from "../../03-tiny-http-ts-server/src/aac.mts"
-import { make, esds, mp4a, track } from "./mp4.mts";
+import { read_audio_specific_config } from '../../03-tiny-http-ts-server/src/aac.mts';
+import { make, esds, mp4a, track } from './mp4.mts';
 
 export const write_mp4_aac_track_information = (track_id: number, timescale: number, audioSpecificConfig: Buffer): Buffer => {
   const { channelConfiguration, samplingFrequency } = read_audio_specific_config(audioSpecificConfig);
