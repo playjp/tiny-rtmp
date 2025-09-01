@@ -14,6 +14,8 @@
     * 実装する機能: MPEG-TSのセグメンテーション, HLS配信
 5. [LL-HLS配信](./05-tiny-llhls-server/)
     * 実装する機能: LL-HLS配信
+6. [HTTP-fMP4配信](./06-tiny-http-fmp4-server/)
+    * 実装する機能: fMP4へのトランスマックス, HTTP-fMP4配信
 6. [RTMPS対応](./XX-tiny-rtmps-server/)
     * 実装する機能: RTMPのSSL/TLS対応
 7. [HTTPS対応](./XX-tiny-rtmps-https-hls-server/)
@@ -44,6 +46,9 @@
 - MPEG-TS
     - [ISO/IEC 13818-1](https://www.iso.org/standard/87619.html)
     - [T-REC-H.222.0](https://www.itu.int/rec/T-REC-H.222.0)
+- ISOBMFF, MP4
+    - ISOBMFF: [ISO/IEC 14496-12](https://www.iso.org/standard/83102.html)
+    - MP4: [ISO/IEC 14496-14](https://www.iso.org/standard/79110.html)
 - H.264/AVC
     - [ISO/IEC 14496-10](https://www.iso.org/standard/87574.html)
     - [T-REC-H.264](https://www.itu.int/rec/T-REC-H.264)
