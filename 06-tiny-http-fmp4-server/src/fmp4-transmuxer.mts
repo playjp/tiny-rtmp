@@ -22,7 +22,7 @@ export default class FMP4Transmuxer {
   private onMetadata: AMF0Object | null = null;
 
   private initializeSegment: Buffer | null = null;
-  private priviousVideoInformation: VideoInformation | null = null;
+  private previousVideoInformation: VideoInformation | null = null;
   private aacLatestTimestamp: number | null = null;
 
   public initialize(): Buffer | null {
@@ -92,14 +92,14 @@ export default class FMP4Transmuxer {
       case 'Video': {
         if (this.avcDecoderConfigurationRecord == null) { return null; }
         let frag = null;
-        if (this.priviousVideoInformation != null) {
-          const { type, dts, cto, data } = this.priviousVideoInformation;
+        if (this.previousVideoInformation != null) {
+          const { type, dts, cto, data } = this.previousVideoInformation;
           const duration = payload.timestamp - dts;
           frag = make((vector) => {
             fragment({ track_id: 1, keyframe: type === FrameType.KEY_FRAME, duration, dts, cto }, data, vector);
           });
         }
-        this.priviousVideoInformation = {
+        this.previousVideoInformation = {
           type: payload.type,
           dts: payload.timestamp,
           cto: payload.compositionTimeOffset,
