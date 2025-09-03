@@ -384,7 +384,7 @@ export const trun = (offset: number, samples: TrunSample[], vector: ByteVector, 
       vector.writeU32BE(duration);
       vector.writeU32BE(bytes);
       // keyframe: 0x000000_10(ほかに依存なし)_01(依存される)_00(冗長か不明)_00(キーフレーム)
-      // non-keyframe: 0b00000_01(ほかに依存する)_00(依存されるか不明)_00(冗長か不明)_01(非キーフレーム)
+      // non-keyframe: 0b0000_01(ほかに依存する)_00(依存されるか不明)_00(冗長か不明)_01(非キーフレーム)
       vector.writeU8(keyframe ? 2 : 1);
       vector.writeU8(((keyframe ? 1 : 0) << 6) | ((keyframe ? 0 : 1) << 0));
       vector.writeU16BE(0); // これもフラグの一部
