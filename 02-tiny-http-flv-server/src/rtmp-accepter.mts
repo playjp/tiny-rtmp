@@ -70,6 +70,7 @@ const TRANSITION = {
     const appName = command[2]['app'];
     const connectAccepted = appName === option.app;
 
+    const status = connectAccepted ? '_result' : '_error';
     const server = connectAccepted ? {
       fmsVer: 'FMS/3,5,7,7009',
       capabilities: 31,
@@ -87,12 +88,7 @@ const TRANSITION = {
       level: 'error', // 異常系
     };
 
-    const result = write_amf0(
-      '_result',
-      transaction_id,
-      server,
-      info,
-    );
+    const result = write_amf0(status, transaction_id, server, info);
     connection.write(builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
