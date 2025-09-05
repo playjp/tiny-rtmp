@@ -70,6 +70,11 @@ const TRANSITION = {
     const appName = command[2]['app'];
     const connectAccepted = appName === option.app;
 
+    const server = connectAccepted ? {
+      fmsVer: 'FMS/3,5,7,7009',
+      capabilities: 31,
+      mode: 1,
+    } : null;
     const info = connectAccepted ? {
       code: 'NetConnection.Connect.Success',
       description: 'Connection succeeded.',
@@ -85,11 +90,7 @@ const TRANSITION = {
     const result = write_amf0(
       '_result',
       transaction_id,
-      {
-        fmsVer: 'FMS/3,5,7,7009',
-        capabilities: 31,
-        mode: 1,
-      },
+      server,
       info,
     );
     connection.write(builder.build({
