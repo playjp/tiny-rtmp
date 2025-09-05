@@ -69,7 +69,6 @@ export default async (connection: Duplex, output?: Writable) => {
           if (!isAMF0Object(command[2])) { continue; }
           const appName = command[2]['app'];
           if (!isAMF0String(appName)) { continue; }
-          console.error(`appName: ${appName}`);
 
           const result = write_amf0('_result', transaction_id,
             {
@@ -127,7 +126,7 @@ export default async (connection: Duplex, output?: Writable) => {
           const transaction_id = command[1];
           if (!isAMF0String(command[3])) { continue; }
           const streamKey = command[3];
-          console.error(`streamKey: ${streamKey}`);
+
 
           const info = {
             code: 'NetStream.Publish.Start',
