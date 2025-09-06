@@ -4,6 +4,7 @@
 
 ## おしながき
 
+### メイン
 1. [RTMP受信](./01-tiny-rtmp-server/)
     * 実装する機能: RTMPサーバ
 2. [HTTP-FLV配信](./02-tiny-http-flv-server/)
@@ -16,11 +17,15 @@
     * 実装する機能: LL-HLS配信
 6. [HTTP-fMP4配信](./06-tiny-http-fmp4-server/)
     * 実装する機能: fMP4へのトランスマックス, HTTP-fMP4配信
-6. [RTMPS対応](./XX-tiny-rtmps-server/)
+
+### おまけ
+1. [ユーザ認証(Adobe)対応](./XX-tiny-rtmp-adobe-auth/)
+    * 実装する機能: RTMPのユーザ認証 "Adobe Auth" の対応
+2. [RTMPS対応](./XX-tiny-rtmps-server/)
     * 実装する機能: RTMPのSSL/TLS対応
-7. [HTTPS対応](./XX-tiny-rtmps-https-hls-server/)
+3. [HTTPS対応](./XX-tiny-rtmps-https-hls-server/)
     * 実装する機能: HLSのHTTPS対応
-8. [HTTP2対応](./XX-tiny-rtmps-http2-llhls-server/)
+4. [HTTP2対応](./XX-tiny-rtmps-http2-llhls-server/)
     * 実装する機能: LL-HLSのHTTP2対応
 
 ## 必要環境
