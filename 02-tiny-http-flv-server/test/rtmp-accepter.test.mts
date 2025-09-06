@@ -465,9 +465,9 @@ describe('Regression Test', () => {
       }));
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
-        '_result',
+        '_error',
         1,
-        { fmsVer: 'FMS/3,5,7,7009', capabilities: 31, mode: 1 },
+        null,
         {
           code: 'NetConnection.Connect.Rejected',
           description: 'Connection rejected.',
