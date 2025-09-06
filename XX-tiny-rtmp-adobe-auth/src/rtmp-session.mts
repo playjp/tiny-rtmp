@@ -91,14 +91,15 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
           }
 
           const query = appName.slice(query_index + 1).split('&').reduce((a, b) => {
-            const [key, value] = b.split('=');
+            const index = b.indexOf('=');
+            const key = index >= 0 ? b.slice(0, index) : b;
+            const value = index >= 0 ? b.slice(index + 1) : '';
             return {
               ... a,
               [key]: value,
             };
           }, {}) as Record<string, string>;
           const { authmod, challenge, response } = query;
-          console.error(query);
 
           // Reject Not Adobe Auth
           if (authmod !== 'adobe') {
