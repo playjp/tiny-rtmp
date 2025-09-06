@@ -15,7 +15,7 @@ const options = {
     type: 'string',
   },
   password: {
-    type: 'string'
+    type: 'string',
   },
   flv: {
     type: 'string',

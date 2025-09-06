@@ -1,10 +1,10 @@
-import crypto, { randomBytes } from "node:crypto";
+import crypto, { randomBytes } from 'node:crypto';
 
 export type AdobeAuthSessionInformation = {
   salt: Buffer;
   challenge: Buffer;
   opaque: Buffer;
-}
+};
 
 export default class AdobeAuthSession {
   private user: string;

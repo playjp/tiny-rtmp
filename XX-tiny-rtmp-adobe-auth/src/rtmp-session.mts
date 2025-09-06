@@ -76,12 +76,11 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
           const query_index = appName.indexOf('?');
           if (query_index < 0) {
             const result = write_amf0('_error', transaction_id, null, {
-                code: 'NetConnection.Connect.Rejected',
-                description: 'code=403 need auth; authmod=adobe',
-                objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-                level: 'error', // 正常系
-              },
-            );
+              code: 'NetConnection.Connect.Rejected',
+              description: 'code=403 need auth; authmod=adobe',
+              objectEncoding: 0, // 0 = AMF0, 3 = AMF3
+              level: 'error', // 正常系
+            });
             connection.write(builder.build({
               message_type_id: MessageType.CommandAMF0,
               message_stream_id: 0,
@@ -95,7 +94,7 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
             const [key, value] = b.split('=');
             return {
               ... a,
-              [key]: value
+              [key]: value,
             };
           }, {}) as Record<string, string>;
           const { authmod, challenge, response } = query;
@@ -104,12 +103,11 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
           // Reject Not Adobe Auth
           if (authmod !== 'adobe') {
             const result = write_amf0('_error', transaction_id, null, {
-                code: 'NetConnection.Connect.Rejected',
-                description: 'Connection Rejected', // 適当
-                objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-                level: 'error', // 正常系
-              },
-            );
+              code: 'NetConnection.Connect.Rejected',
+              description: 'Connection Rejected', // 適当
+              objectEncoding: 0, // 0 = AMF0, 3 = AMF3
+              level: 'error', // 正常系
+            });
             connection.write(builder.build({
               message_type_id: MessageType.CommandAMF0,
               message_stream_id: 0,
@@ -122,13 +120,12 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
           // Adobe Auth Challenge
           if (response == null || challenge == null) {
             const result = write_amf0('_error', transaction_id, null, {
-                code: 'NetConnection.Connect.Rejected',
-                // FIXME: ffmpeg がスペース入れる or クエリの最後に入れないと adobe にならない
-                description: `authmod=adobe :?reason=needauth&${auth.query()}`,
-                objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-                level: 'error', // 正常系
-              },
-            );
+              code: 'NetConnection.Connect.Rejected',
+              // FIXME: ffmpeg がスペース入れる or クエリの最後に入れないと adobe にならない
+              description: `authmod=adobe :?reason=needauth&${auth.query()}`,
+              objectEncoding: 0, // 0 = AMF0, 3 = AMF3
+              level: 'error', // 正常系
+            });
             connection.write(builder.build({
               message_type_id: MessageType.CommandAMF0,
               message_stream_id: 0,
