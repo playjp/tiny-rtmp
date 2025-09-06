@@ -1,6 +1,6 @@
 # RTMPS + HTTP/2 LL-HLS配信サーバ
 
-[RTMPSサーバ](../06-tiny-rtmps-server/)と[LL-HLSサーバ](../05-tiny-llhls-server/)を組み合わせた、RTMPS入力からHTTP/2経由でLL-HLS配信を行うサーバの実装です。
+[RTMPSサーバ](../XX-tiny-rtmps-server/)と[LL-HLSサーバ](../05-tiny-llhls-server/)を組み合わせた、RTMPS入力からHTTP/2経由でLL-HLS配信を行うサーバの実装です。
 AVPlayerではHTTP/2以降のプロトコルでのみ、通常のHLSと比べてバッファ量が少なくなります。
 
 [LL-HLSサーバ](../05-tiny-llhls-server/)からの変更点は以下になります。

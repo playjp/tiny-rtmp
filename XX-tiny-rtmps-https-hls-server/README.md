@@ -1,6 +1,6 @@
 # RTMPS + HTTPS HLS配信サーバ
 
-[RTMPSサーバ](../06-tiny-rtmps-server/)と[HLSサーバ](../04-tiny-hls-server/)を組み合わせた、RTMPS入力からHTTPS経由でHLS配信を行うサーバの実装です。
+[RTMPSサーバ](../XX-tiny-rtmps-server/)と[HLSサーバ](../04-tiny-hls-server/)を組み合わせた、RTMPS入力からHTTPS経由でHLS配信を行うサーバの実装です。
 
 [HLSサーバ](../04-tiny-hls-server/)からの変更点は以下になります。
 ```diff
@@ -43,7 +43,7 @@ const options = {
 
 ## 主要コンポーネント
 
-- index.mts - [RTMPSサーバ](../06-tiny-rtmps-server/)と同じようにHLSサーバをHTTPSに対応させた実装
+- index.mts - [RTMPSサーバ](../XX-tiny-rtmps-server/)と同じようにHLSサーバをHTTPSに対応させた実装
 
 ## 実行方法
 
