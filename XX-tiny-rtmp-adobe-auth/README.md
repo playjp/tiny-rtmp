@@ -46,6 +46,10 @@ rtmp://myuser:mypass@localhost:1935/myapp/mystreamkey
 
 ## メモ
 
+### Adobe Auth の資料
+
+[Adobe® Primetime Live Packager Getting Started](https://helpx.adobe.com/primetime/packagers/live_packager_getting_started.pdf)
+
 ### なんで FFmpeg は Connect 失敗したら接続を切ってくる?
 
 FFmpeg の対応[commit](https://github.com/FFmpeg/FFmpeg/commit/08225d01262b638e1c4c86679a1375e02123fd4d)
