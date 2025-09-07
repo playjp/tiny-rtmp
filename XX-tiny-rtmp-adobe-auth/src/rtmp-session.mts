@@ -77,7 +77,7 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
           if (query_index < 0) {
             const result = write_amf0('_error', transaction_id, null, {
               code: 'NetConnection.Connect.Rejected',
-              description: 'code=403 need auth; authmod=adobe',
+              description: 'authmod=adobe code=403 need auth',
               objectEncoding: 0, // 0 = AMF0, 3 = AMF3
               level: 'error', // 正常系
             });
@@ -123,7 +123,7 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
             const result = write_amf0('_error', transaction_id, null, {
               code: 'NetConnection.Connect.Rejected',
               // FIXME: ffmpeg がスペース入れる or クエリの最後に入れないと adobe にならない
-              description: `authmod=adobe :?reason=needauth&${auth.query()}`,
+              description: `authmod=adobe :?reason=needauth&${auth.query()}&authmod=adobe`,
               objectEncoding: 0, // 0 = AMF0, 3 = AMF3
               level: 'error', // 正常系
             });
