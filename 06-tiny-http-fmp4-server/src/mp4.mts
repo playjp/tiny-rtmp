@@ -129,7 +129,7 @@ export const hdlr = (type: string, name: string, vector: ByteVector, cb?: callba
     vector.writeU32BE(0); // pre_defined
     vector.write(Buffer.from(type, 'ascii'));
     vector.write(Buffer.alloc(12)); // reserved
-    vector.write(Buffer.from(name, 'ascii'));
+    vector.write(Buffer.from(name + '\0', 'ascii'));
     cb?.(vector);
   });
 };
