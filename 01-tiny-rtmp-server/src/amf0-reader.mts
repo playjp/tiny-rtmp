@@ -5,6 +5,15 @@ export type AMF0Object = {
   [key: string]: AMF0Value;
 };
 export type AMF0Value = number | boolean | string | null | undefined | typeof scriptend | Date | AMF0Object | AMF0Value[];
+export const isAMF0Null = (data: AMF0Value): data is null => {
+  return data === null;
+};
+export const isAMF0Undefined = (data: AMF0Value): data is undefined => {
+  return data === undefined;
+};
+export const isAMF0Nullish = (data: AMF0Value): data is null | undefined => {
+  return data == null;
+}
 export const isAMF0Boolean = (data: AMF0Value): data is boolean => {
   return typeof data === 'boolean';
 };
