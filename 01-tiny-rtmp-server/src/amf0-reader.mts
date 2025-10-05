@@ -13,7 +13,7 @@ export const isAMF0Undefined = (data: AMF0Value): data is undefined => {
 };
 export const isAMF0Nullish = (data: AMF0Value): data is null | undefined => {
   return data == null;
-}
+};
 export const isAMF0Boolean = (data: AMF0Value): data is boolean => {
   return typeof data === 'boolean';
 };
