@@ -22,7 +22,7 @@
 1. [ユーザ認証(Adobe)対応](./XX-tiny-rtmp-adobe-auth/)
     * 実装する機能: RTMPのユーザ認証 "Adobe Auth" の対応
 2. [拡張ハンドシェイク(Complex Handshake)対応](./XX-tiny-rtmp-complex-handshake/)
-    * 実装する機能: RTMPの拡張ハンドシェイク "Complex Handshake" 対応
+    * 実装する機能: RTMPの拡張ハンドシェイク "Complex Handshake" の対応
 3. [RTMPS対応](./XX-tiny-rtmps-server/)
     * 実装する機能: RTMPのSSL/TLS対応
 4. [HTTPS対応](./XX-tiny-rtmps-https-hls-server/)
