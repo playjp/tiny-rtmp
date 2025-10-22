@@ -21,11 +21,13 @@
 ### おまけ
 1. [ユーザ認証(Adobe)対応](./XX-tiny-rtmp-adobe-auth/)
     * 実装する機能: RTMPのユーザ認証 "Adobe Auth" の対応
-2. [RTMPS対応](./XX-tiny-rtmps-server/)
+2. [拡張ハンドシェイク(Complex Handshake)対応](./XX-tiny-rtmp-complex-handshake/)
+    * 実装する機能: RTMPの拡張ハンドシェイク "Complex Handshake" 対応
+3. [RTMPS対応](./XX-tiny-rtmps-server/)
     * 実装する機能: RTMPのSSL/TLS対応
-3. [HTTPS対応](./XX-tiny-rtmps-https-hls-server/)
+4. [HTTPS対応](./XX-tiny-rtmps-https-hls-server/)
     * 実装する機能: HLSのHTTPS対応
-4. [HTTP2対応](./XX-tiny-rtmps-http2-llhls-server/)
+5. [HTTP2対応](./XX-tiny-rtmps-http2-llhls-server/)
     * 実装する機能: LL-HLSのHTTP2対応
 
 ## 必要環境
