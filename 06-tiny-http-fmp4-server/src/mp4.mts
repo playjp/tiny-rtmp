@@ -321,7 +321,7 @@ export const track = (track_id: number, width: number, height: number, timescale
 
 export const initialize = (timescale: number, track_ids: number[], vector: ByteVector, cb?: callback): void => {
   ftyp(vector);
-  moov(vector, () => {
+  moov(vector, (vector) => {
     mvhd(timescale, vector);
     mvex(vector, (vector) => {
       for (const track_id of track_ids) {
