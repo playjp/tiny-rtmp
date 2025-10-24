@@ -43,11 +43,11 @@ type Option = {
   streamKey: string;
 };
 
-const MESSAGE_STREAM = 1;
+const PUBLISH_MESSAGE_STREAM = 1;
 let lock: Symbol | null = null;
 const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message): boolean => {
   if (state !== STATE.PUBLISHED) { return false; }
-  if (message.message_stream_id !== MESSAGE_STREAM) { return false; }
+  if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return false; }
 
   switch (message.message_type_id) {
     case MessageType.Audio: return true;
@@ -110,7 +110,7 @@ const TRANSITION = {
     const transaction_id = command[1];
 
     // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
-    const result = write_amf0('_result', transaction_id, null, MESSAGE_STREAM);
+    const result = write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM);
     connection.write(builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
@@ -121,7 +121,7 @@ const TRANSITION = {
     return STATE.WAITING_PUBLISH;
   },
   [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
-    if (message.message_stream_id !== MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
+    if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
     const command = read_amf0(message.data);
 
@@ -162,7 +162,7 @@ const TRANSITION = {
     const name = command[0];
     if (name !== 'deleteStream') { return STATE.PUBLISHED; }
     const stream = command[3];
-    if (stream !== MESSAGE_STREAM) { return STATE.PUBLISHED; }
+    if (stream !== PUBLISH_MESSAGE_STREAM) { return STATE.PUBLISHED; }
 
     return STATE.DISCONNECTED;
   },
