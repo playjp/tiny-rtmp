@@ -29,7 +29,7 @@ const simple_handshake_C1S1C2S2 = async (c1: Buffer, reader: AsyncByteReader, co
   const c2_random_echo = c2.subarray(8);
 
   return s1_random.equals(c2_random_echo);
-}
+};
 
 const clientKey = Buffer.from('Genuine Adobe Flash Player 001', 'ascii');
 const serverKey = Buffer.from('Genuine Adobe Flash Media Server 001', 'ascii');
@@ -44,7 +44,7 @@ const verifyC1 = (c1: Buffer, offset: number): boolean => {
   const c1_digest_server = hmac.digest();
 
   return c1_digest_server.equals(c1_digest_client);
-}
+};
 
 const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   const c1 = await reader.read(1536); // read C1
@@ -62,7 +62,7 @@ const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): 
     const data = Buffer.concat([s1.subarray(0, offset + 12 + s1_offset), s1.subarray(offset + 12 + s1_offset + 32)]);
     hmac_s1.update(data);
     const s1_digest_server = hmac_s1.digest();
-    s1.set(s1_digest_server, offset + 12 + s1_offset)
+    s1.set(s1_digest_server, offset + 12 + s1_offset);
 
     connection.write(s1); // write S1
 
@@ -74,12 +74,12 @@ const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): 
     const s2 = randomBytes(1536);
     const s2_hmac = crypto.createHmac('sha256', s2_key);
     s2_hmac.update(s2.subarray(0, s2.byteLength - 32));
-    s2.set(s2_hmac.digest(), s2.byteLength - 32)
+    s2.set(s2_hmac.digest(), s2.byteLength - 32);
 
     connection.write(s2); // write S2
     const c2 = await reader.read(1536); // read C2
 
-    const c2_digest_client = c2.subarray(c2.byteLength - 32)
+    const c2_digest_client = c2.subarray(c2.byteLength - 32);
     const c2_key_hmac = crypto.createHmac('sha256', Buffer.concat([clientKey, Buffer.from('F0EEC24A8068BEE82E00D0D1029E7E576EEC5D2D29806FAB93B8E636CFEB31AE', 'hex')]));
     c2_key_hmac.update(s1_digest_server);
     const c2_key = c2_key_hmac.digest();
@@ -97,8 +97,8 @@ const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): 
   }
 
   // version: 0
-  return simple_handshake_C1S1C2S2(c1, reader, connection)
-}
+  return simple_handshake_C1S1C2S2(c1, reader, connection);
+};
 
 
 export default async (connection: Duplex, output?: Writable) => {
