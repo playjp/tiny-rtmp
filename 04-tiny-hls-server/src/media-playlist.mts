@@ -106,7 +106,7 @@ export default class MediaPlaylist {
   }
 
   public segment(msn: number, writable: Writable, cb?: (found: boolean) => void): void {
-    const segment = this.sequenceNumber === msn ? this.currentSegment : this.segmentMap.get(msn) ?? this.orphanedMap.get(msn);
+    const segment = this.segmentMap.get(msn) ?? this.orphanedMap.get(msn);
     if (segment == null) {
       cb?.(false);
       return;
