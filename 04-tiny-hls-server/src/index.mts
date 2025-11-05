@@ -114,22 +114,24 @@ const web_server = http.createServer(async (req, res) => {
   }
   if (prefix.endsWith('.ts') && !Number.isNaN(Number.parseInt(prefix.slice(0, -3), 10))) {
     const index = Number.parseInt(prefix.slice(0, -3), 10);
+    const segment = rtmp_to_hls.segment(index);
 
-    rtmp_to_hls.segment(index, res, (found: boolean) => {
-      if (!found) {
-        res.writeHead(404, {
-          'access-control-allow-origin': '*',
-          'cache-control': 'maxage=0',
-        });
-        res.end();
-      } else {
-        res.writeHead(200, {
-          'content-type': 'video/mp2t',
-          'access-control-allow-origin': '*',
-          'cache-control': `maxage=${maxage}`,
-        });
-      }
+    if (segment == null) {
+      res.writeHead(404, {
+        'access-control-allow-origin': '*',
+        'cache-control': 'maxage=0',
+      });
+      res.end();
+      return;
+    }
+
+    res.writeHead(200, {
+      'content-type': 'video/mp2t',
+      'access-control-allow-origin': '*',
+      'cache-control': `maxage=${maxage}`,
     });
+    res.write(segment);
+    res.end();
     return;
   }
 

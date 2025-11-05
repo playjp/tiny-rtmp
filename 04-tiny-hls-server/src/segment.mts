@@ -18,15 +18,9 @@ export default class Segment {
     return this.endTimestamp - this.beginTimestamp;
   }
 
-  public write(writable: Writable): void {
-    if (this.extinf() != null) {
-      for (const data of this.media) {
-        writable.write(data);
-      }
-    }
-
-    writable.end();
-    return;
+  public segment(): Buffer | null {
+    if (this.extinf() == null) { return null; }
+    return Buffer.concat(this.media);
   }
 
   public feed(data: Buffer): void {

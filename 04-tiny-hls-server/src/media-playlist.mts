@@ -105,14 +105,7 @@ export default class MediaPlaylist {
     return m3u8;
   }
 
-  public segment(msn: number, writable: Writable, cb?: (found: boolean) => void): void {
-    const segment = this.segmentMap.get(msn) ?? this.orphanedMap.get(msn);
-    if (segment == null) {
-      cb?.(false);
-      return;
-    }
-
-    cb?.(true);
-    segment.write(writable);
+  public segment(msn: number): Buffer | null {
+    return (this.segmentMap.get(msn) ?? this.orphanedMap.get(msn))?.segment() ?? null;
   }
 }

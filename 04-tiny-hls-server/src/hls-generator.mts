@@ -65,8 +65,8 @@ export default class HLSGenerator {
     return this.playlist.published;
   }
 
-  public segment(msn: number, writable: Writable, cb?: (found: boolean) => void): void {
-    return this.playlist.segment(msn, writable, cb);
+  public segment(msn: number): Buffer | null {
+    return this.playlist.segment(msn);
   }
 
   public m3u8(): string {
