@@ -17,6 +17,8 @@
     * 実装する機能: LL-HLS配信
 6. [HTTP-fMP4配信](./06-tiny-http-fmp4-server/)
     * 実装する機能: fMP4へのトランスマックス, HTTP-fMP4配信
+7. [MPEG-DASH配信](./07-tiny-dash-server/)
+    * 実装する機能: MPEG-DASH配信
 
 ### おまけ
 1. [ユーザ認証(Adobe)対応](./XX-tiny-rtmp-adobe-auth/)
@@ -50,6 +52,8 @@
 - HLS ([HTTP Live Streaming](https://developer.apple.com/streaming/))
     - [HTTP Live Streaming](https://datatracker.ietf.org/doc/html/rfc8216)
     - [HTTP Live Streaming 2nd Edition](https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis)
+- MPEG-DASH
+    - [ISO/IEC 23009-1](https://www.iso.org/en/contents/data/standard/08/33/83314.html)
 - MPEG-TS
     - [ISO/IEC 13818-1](https://www.iso.org/standard/87619.html)
     - [T-REC-H.222.0](https://www.itu.int/rec/T-REC-H.222.0)
