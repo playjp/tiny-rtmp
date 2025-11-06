@@ -1,0 +1,14 @@
+{
+  "name": "tiny-dash-server",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "tsc": "tsc --noEmit",
+    "lint": "eslint ./src/**.mts ./test/**.mts  --ext mts",
+    "lint:fix": "eslint ./src/**.mts ./test/**.mts --ext mts --fix",
+    "build": "vite build"
+  }
+}

@@ -18,6 +18,7 @@
     "04-tiny-hls-server",
     "05-tiny-llhls-server",
     "06-tiny-http-fmp4-server",
+    "07-tiny-dash-server",
     "XX-tiny-rtmp-adobe-auth",
     "XX-tiny-rtmp-complex-handshake",
     "XX-tiny-rtmps-server",
