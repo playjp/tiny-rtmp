@@ -24,7 +24,6 @@ export const SegmentTimelineOption = {
 
 export default class SegmentTimeline {
   private prefix: string;
-  private presentationTimeOffset: number | null = null;
 
   private sequenceNumber: number = -1;
   private orphanedNumber: number;
@@ -76,9 +75,6 @@ export default class SegmentTimeline {
 
     this.sequenceNumber += 1;
     this.orphanedNumber += 1;
-    if (this.currentSegment == null) {
-      this.presentationTimeOffset = timestamp;
-    }
     this.currentSegment = new Segment(timestamp);
   }
 
