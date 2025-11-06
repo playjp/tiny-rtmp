@@ -12,6 +12,8 @@ import { write_mp4_aac_track_information }from '../../06-tiny-http-fmp4-server/s
 import SegmentTimeline from './segment-timeline.mts';
 import { fragment, initialize, make } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 import { serializeXML, XMLNode } from './xml.mts';
+import { aacMimeTypeCodec, avcMimeTypeCodec } from './mimetype.mts';
+import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 
 type VideoInformation = {
   type: number;
@@ -58,21 +60,23 @@ export default class DASHGenerator {
     });
     const period = XMLNode.from('Period', { start: 'PT0S' });
 
-    if (this.onMetadata?.videocodecid != null && this.videoTimeline != null) {
+    if (this.onMetadata?.videocodecid != null && this.avcDecoderConfigurationRecord != null && this.videoTimeline != null) {
+      const avcDecoderConfigurationRecord = read_avc_decoder_configuration_record(this.avcDecoderConfigurationRecord);
       const video_adaptetionset = XMLNode.from('AdaptationSet', {
         contentType: 'video',
         mimeType: 'video/mp4',
       });
       const video_representation = XMLNode.from('Representation', {
         id: '1',
-        codecs: 'avc1.42E01E',
+        codecs: avcMimeTypeCodec(avcDecoderConfigurationRecord),
       });
 
       video_representation.children.push(this.videoTimeline.template());
       video_adaptetionset.children.push(video_representation);
       period.children.push(video_adaptetionset);
     }
-    if (this.onMetadata?.audiocodecid != null && this.audioTimeline != null) {
+    if (this.onMetadata?.audiocodecid != null && this.audioSpecificConfig != null && this.audioTimeline != null) {
+      const audioSpecificConfig = read_audio_specific_config(this.audioSpecificConfig);
       const audio_adaptetionset = XMLNode.from('AdaptationSet', {
         contentType: 'audio',
         mimeType: 'audio/mp4',
@@ -80,7 +84,7 @@ export default class DASHGenerator {
 
       const audio_representation = XMLNode.from('Representation', {
         id: '2',
-        codecs: 'mp4a.40.2',
+        codecs: aacMimeTypeCodec(audioSpecificConfig),
       });
       audio_representation.children.push(this.audioTimeline.template());
       audio_adaptetionset.children.push(audio_representation);
