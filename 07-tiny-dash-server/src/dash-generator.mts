@@ -46,26 +46,26 @@ export default class DASHGenerator {
     const declaration = '<?xml version="1.0" encoding="UTF-8"?>';
 
     const mpd = XMLNode.from('MPD', {
-      xmlns: "urn:mpeg:dash:schema:mpd:2011",
-      "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-      "xsi:schemaLocation": "urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd",
-      profiles: "urn:mpeg:dash:profile:isoff-live:2011",
-      type: "dynamic",
+      xmlns: 'urn:mpeg:dash:schema:mpd:2011',
+      'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+      'xsi:schemaLocation': 'urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd',
+      profiles: 'urn:mpeg:dash:profile:isoff-live:2011',
+      type: 'dynamic',
       availabilityStartTime: this.avail,
       publishTime: new Date().toISOString(),
-      minimumUpdatePeriod: "PT1S",
-      minBufferTime: "PT2S",
+      minimumUpdatePeriod: 'PT1S',
+      minBufferTime: 'PT2S',
     });
-    const period = XMLNode.from('Period', { start: "PT0S" });
+    const period = XMLNode.from('Period', { start: 'PT0S' });
 
     if (this.onMetadata?.videocodecid != null && this.videoTimeline != null) {
       const video_adaptetionset = XMLNode.from('AdaptationSet', {
         contentType: 'video',
-        mimeType: 'video/mp4'
+        mimeType: 'video/mp4',
       });
       const video_representation = XMLNode.from('Representation', {
         id: '1',
-        codecs: "avc1.42E01E",
+        codecs: 'avc1.42E01E',
       });
 
       video_representation.children.push(this.videoTimeline.template());
@@ -73,14 +73,14 @@ export default class DASHGenerator {
       period.children.push(video_adaptetionset);
     }
     if (this.onMetadata?.audiocodecid != null && this.audioTimeline != null) {
-        const audio_adaptetionset = XMLNode.from('AdaptationSet', {
+      const audio_adaptetionset = XMLNode.from('AdaptationSet', {
         contentType: 'audio',
-        mimeType: 'audio/mp4'
+        mimeType: 'audio/mp4',
       });
 
       const audio_representation = XMLNode.from('Representation', {
         id: '2',
-        codecs: "mp4a.40.2",
+        codecs: 'mp4a.40.2',
       });
       audio_representation.children.push(this.audioTimeline.template());
       audio_adaptetionset.children.push(audio_representation);
