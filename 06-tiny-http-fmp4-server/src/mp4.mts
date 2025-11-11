@@ -359,7 +359,7 @@ export const tfhd = (trackId: number, vector: ByteVector, cb?: callback): void =
 };
 export const tfdt = (baseMediaDecodeTime: number, vector: ByteVector, cb?: callback): void => {
   fullbox('tfdt', 1, 0x000000, vector, (vector) => {
-    // Number.MAX_SAFE_INTEGER (2^53 - 1) を超得ることはない、という仮定のもとで number で表現している
+    // Number.MAX_SAFE_INTEGER (2^53 - 1) を超えることはない、という仮定のもとで number で表現している
     vector.writeU32BE(Math.floor(baseMediaDecodeTime / 2 ** 32) % (2 ** 32));
     vector.writeU32BE(Math.floor(baseMediaDecodeTime / 2 **  0) % (2 ** 32));
     cb?.(vector);
