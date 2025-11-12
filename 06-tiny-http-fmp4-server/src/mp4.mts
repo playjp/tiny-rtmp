@@ -395,7 +395,7 @@ export const trun = (offset: number, samples: TrunSample[], vector: ByteVector, 
     cb?.(vector);
   });
 };
-const mdat = (data: Buffer, vector: ByteVector, cb?: callback): void => {
+export const mdat = (data: Buffer, vector: ByteVector, cb?: callback): void => {
   box('mdat', vector, (vector) => {
     vector.write(data);
     cb?.(vector);
@@ -410,7 +410,7 @@ export type FragmentInformation = {
 };
 export const fragment = (information: FragmentInformation, data: Buffer, vector: ByteVector, cb?: callback): void => {
   let trun_offset = null;
-  const begin = vector.byteLength();
+  const moof_begin = vector.byteLength();
   moof(vector, (vector) => {
     mfhd(vector);
     traf(vector, (vector) => {
@@ -426,9 +426,9 @@ export const fragment = (information: FragmentInformation, data: Buffer, vector:
       }], vector);
     });
   });
-  const end = vector.byteLength();
+  const moof_end = vector.byteLength();
   mdat(data, vector, cb);
-  // ダミーを正しい値にする
-  const access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4;
-  vector.writeU32BE(end - begin + 8 /* mdat header */, trun_offset! + access_index);
+  // trun の ダミーを正しい値にする
+  const trun_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4 /* sample_count */;
+  vector.writeU32BE(moof_end - moof_begin + 8 /* mdat header */, trun_offset! + trun_access_index);
 };
