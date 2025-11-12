@@ -7,8 +7,9 @@ export const write_mp4_aac_track_information = (track_id: number, timescale: num
   return make((vector) => {
     track(track_id, 0, 0, timescale, 'soun', vector, (vector) => {
       mp4a(channelConfiguration, 16, samplingFrequency, vector, (vector) => {
-        esds(audioSpecificConfig, vector);
-        vector.write(Buffer.from([0x06, 0x01, 0x02])); // SyncLayer
+        esds(audioSpecificConfig, vector, (vector) => {
+          vector.write(Buffer.from([0x06, 0x01, 0x02])); // Sync Layer Descriptor
+        });
       });
     });
   });
