@@ -63,6 +63,30 @@ const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) :
 const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
 const partDuration = args.partDuration != null ? Number.parseFloat(args.partDuration) : undefined;
 
+const page = `
+<!DOCTYPE html>
+<html>
+  <body>
+    <video id="video" controls></video>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script>
+      function init() {
+        const video = document.querySelector("video");
+        const url = "./playlist.m3u8";
+        if (Hls.isSupported()) {
+          const player = new Hls();
+          player.loadSource(url);
+          player.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+        }
+      }
+      init();
+    </script>
+  </body>
+</html>
+`.trimStart();
+
 let rtmp_to_llhls: LLHLSGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
@@ -102,6 +126,16 @@ const web_server = http.createServer(async (req, res) => {
   }
 
   const prefix = url.pathname.slice(`/${app}/${streamKey}/`.length);
+  if (prefix === '' || prefix === 'index.html') {
+    res.writeHead(200, {
+      'content-type': 'text/html',
+      'access-control-allow-origin': '*',
+      'cache-control': 'maxage=0',
+    });
+    res.write(page);
+    res.end();
+    return;
+  }
   if (prefix === 'playlist.m3u8') {
     const published = await rtmp_to_llhls.published();
     if (!published) {
