@@ -19,6 +19,8 @@
     * 実装する機能: fMP4へのトランスマックス, HTTP-fMP4配信
 7. [MPEG-DASH配信](./07-tiny-dash-server/)
     * 実装する機能: MPEG-DASH配信
+8. [CENC配信](./08-tiny-dash-cenc-server/)
+    * 実装する機能: CENC暗号化, ClearKey対応
 
 ### おまけ
 1. [ユーザ認証(Adobe)対応](./XX-tiny-rtmp-adobe-auth/)
