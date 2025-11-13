@@ -35,6 +35,7 @@ export const write_mp4_avc_track_information = (track_id: number, timescale: num
 };
 
 export const encrypt_avc_cenc = (key: Buffer, iv: Buffer, sizedNalus: Buffer, avcDecoderConfigurationRecord: AVCDecoderConfigurationRecord): [Buffer, SubsampleInformation[]] => {
+  // NALu は Sub-Sample Encryption
   const cipher = crypto.createCipheriv('aes-128-ctr', key, iv);
   const builder = new ByteBuilder();
   const reader = new ByteReader(sizedNalus);

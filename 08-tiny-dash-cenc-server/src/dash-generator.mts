@@ -10,7 +10,7 @@ import handle_rtmp_payload, { FrameType } from '../../03-tiny-http-ts-server/src
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 
 import { encrypt_avc_cenc, write_mp4_avc_track_information }from './avc.mts';
-import { write_mp4_aac_track_information }from './aac.mts';
+import { encrypt_aac_cenc, write_mp4_aac_track_information }from './aac.mts';
 
 import { initialize, make } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 
@@ -242,11 +242,11 @@ export default class DASHGenerator {
         }
         this.audioTimeline.feed(make((vector) => {
           const iv = crypto.randomBytes(16);
-          const cipher = crypto.createCipheriv('aes-128-ctr', this.key, iv);
-          const encrypted = Buffer.concat([cipher.update(payload.data), cipher.final()]);
+          const [encrypted, subsample] = encrypt_aac_cenc(this.key, iv, payload.data);
+
           fragment(
             { track_id: 1, keyframe: true, duration: 1024, dts: this.aacLatestTimestamp!, cto: 0 },
-            { iv, subsamples: [] },
+            { iv, subsamples: subsample },
             this.ivType.type,
             encrypted,
             vector,
