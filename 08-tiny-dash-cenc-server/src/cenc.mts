@@ -95,12 +95,13 @@ export type SampleInformation = {
 };
 
 export const saiz = (samples: SampleInformation[], ivType: (typeof IVType)[keyof typeof IVType],  vector: ByteVector, cb?: callback): void => {
+  const use_subsample = samples.some((sample) => sample.subsamples.length > 0);
   // flags が 1 の場合 aux_info_type と aux_info_type_parameter が入る
   fullbox('saiz', 0, 0x000000, vector, (vector) => {
     vector.writeU8(0);
     vector.writeU32BE(samples.length);
     for (const { iv, subsamples } of samples) {
-      vector.writeU8((ivType === IVType.PER_SAMPLE ? iv.byteLength : 0) + (subsamples.length === 0 ? 0 : 2 + subsamples.length * 6));
+      vector.writeU8((ivType === IVType.PER_SAMPLE ? iv.byteLength : 0) + (!use_subsample ? 0 : 2 + subsamples.length * 6));
     }
     cb?.(vector);
   });
