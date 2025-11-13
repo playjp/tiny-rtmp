@@ -23,6 +23,12 @@ const options = {
   streamKey: {
     type: 'string',
   },
+  encryptionKeyId: {
+    type: 'string',
+  },
+  encryptionKey: {
+    type: 'string',
+  },
   bandwidth: {
     type: 'string',
   },
@@ -43,6 +49,12 @@ if (args.app == null) {
 if (args.streamKey == null) {
   console.error('Please Specify valid streamKey'); process.exit(1);
 }
+if (args.encryptionKeyId == null || !/[0-9a-zA-Z]{32}/.test(args.encryptionKeyId)) {
+  console.error('Please Specify valid encryptionKeyId'); process.exit(1);
+}
+if (args.encryptionKey == null || !/[0-9a-zA-Z]{32}/.test(args.encryptionKey)) {
+  console.error('Please Specify valid encryptionKey'); process.exit(1);
+}
 if (args.bandwidth != null && Number.isNaN(Number.parseInt(args.bandwidth, 10))) {
   console.error('Please Specify valid bandwidth'); process.exit(1);
 }
@@ -53,6 +65,8 @@ const port = Number.parseInt(args.rtmp, 10);
 const web = Number.parseInt(args.web, 10);
 const app = args.app;
 const streamKey = args.streamKey;
+const encryptionKeyId = Buffer.from(args.encryptionKeyId, 'hex');
+const encryptionKey = Buffer.from(args.encryptionKey, 'hex');
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
 const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
 
@@ -68,7 +82,7 @@ const page = `
         const protData = {
           "org.w3.clearkey": {
             "clearkeys": {
-              "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ",
+              "${encryptionKeyId.toString('base64url')}": "${encryptionKey.toString('base64url')}"
             }
           }
         };
@@ -95,7 +109,7 @@ let rtmp_to_dash: DASHGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
     for await (const message of handle_rtmp(connection, app, streamKey, bandwidth)) {
-      if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(3); }
+      if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(encryptionKeyId, encryptionKey, 3); }
       rtmp_to_dash.feed(message);
     }
   } catch (e) {

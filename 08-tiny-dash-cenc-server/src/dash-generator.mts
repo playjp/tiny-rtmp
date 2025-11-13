@@ -46,13 +46,15 @@ export default class DASHGenerator {
     type: IVType.PER_SAMPLE,
     per_sample_iv_size: this.ivSize,
   };
-  private keyId: Buffer = Buffer.from('9eb4050de44b4802932e27d75083e266', 'hex'); //Buffer.alloc(16, 0);
-  private key = Buffer.from('166634c675823c235a4a9446fad52e4d', 'hex'); //Buffer.alloc(this.ivSize, 0);
+  private keyId: Buffer;
+  private key: Buffer;
 
   private avail = new Date().toISOString();
 
-  public constructor(liveWindowLength: number = 3) {
+  public constructor(keyId: Buffer, key: Buffer, liveWindowLength: number = 3) {
     this.liveWindowLength = liveWindowLength;
+    this.keyId = keyId;
+    this.key = key;
     this.videoTimeline = null;
     this.audioTimeline = null;
   }
