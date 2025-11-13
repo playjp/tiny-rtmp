@@ -56,6 +56,33 @@ const streamKey = args.streamKey;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
 const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
 
+const page = `
+<!DOCTYPE html>
+<html>
+  <body>
+    <video id="video" controls></video>
+    <script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.min.js"></script>
+    <!-- <script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.debug.js"></script> -->
+    <script>
+      function init() {
+        const video = document.querySelector("video");
+        const url = "./manifest.mpd";
+        const player = dashjs.MediaPlayer().create();
+        /*
+        player.updateSettings({
+          'debug': {
+              'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
+          }
+        });
+        //*/
+        player.initialize(video, url, true);
+      }
+      init();
+    </script>
+  </body>
+</html>
+`.trimStart();
+
 let rtmp_to_dash: DASHGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
@@ -96,6 +123,16 @@ const web_server = http.createServer(async (req, res) => {
   }
 
   const prefix = url.pathname.slice(`/${app}/${streamKey}/`.length);
+  if (prefix === '' || prefix === 'index.html') {
+    res.writeHead(200, {
+      'content-type': 'text/html',
+      'access-control-allow-origin': '*',
+      'cache-control': 'maxage=0',
+    });
+    res.write(page);
+    res.end();
+    return;
+  }
   if (prefix === 'manifest.mpd') {
     res.writeHead(200, {
       'content-type': 'application/dash+xml',
