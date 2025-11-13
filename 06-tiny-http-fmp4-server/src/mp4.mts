@@ -429,6 +429,6 @@ export const fragment = (information: FragmentInformation, data: Buffer, vector:
   const moof_end = vector.byteLength();
   mdat(data, vector, cb);
   // trun の ダミーを正しい値にする
-  const trun_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4 /* sample_count */;
+  const trun_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4;
   vector.writeU32BE(moof_end - moof_begin + 8 /* mdat header */, trun_offset! + trun_access_index);
 };

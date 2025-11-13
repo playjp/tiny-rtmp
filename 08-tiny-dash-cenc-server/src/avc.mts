@@ -65,4 +65,4 @@ export const encrypt_avc_cenc = (key: Buffer, iv: Buffer, sizedNalus: Buffer, av
   // AES-128-CTR では final は空なので無視
 
   return [builder.build(), subsamples];
-}
+};

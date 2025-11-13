@@ -1,31 +1,31 @@
-import type ByteVector from "../../06-tiny-http-fmp4-server/src/byte-vector.mts"
-import { audioSampleEntry, box, fullbox, mdat, mfhd, moof, tfdt, tfhd, traf, trun, visualSampleEntry, type callback, type FragmentInformation } from "../../06-tiny-http-fmp4-server/src/mp4.mts"
+import type ByteVector from '../../06-tiny-http-fmp4-server/src/byte-vector.mts';
+import { audioSampleEntry, box, fullbox, mdat, mfhd, moof, tfdt, tfhd, traf, trun, visualSampleEntry, type callback, type FragmentInformation } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 
 export const pssh = (system_id: Buffer, kids: Buffer[], data: Buffer, vector: ByteVector, cb?: callback): void => {
   fullbox('pssh', 1, 0x000000, vector, (vector) => {
     vector.write(system_id);
     vector.writeU32BE(kids.length);
     for (const kid of kids) {
-      vector.write(kid)
+      vector.write(kid);
     }
     vector.writeU32BE(data.byteLength);
     vector.write(data);
     cb?.(vector);
   });
-}
+};
 
 export const sinf = (vector: ByteVector, cb?: callback): void => {
   box('sinf', vector, (vector) => {
     cb?.(vector);
   });
-}
+};
 
 export const frma = (original_format: string, vector: ByteVector, cb?: callback): void => {
   box('frma', vector, (vector) => {
     vector.write(Buffer.from(original_format, 'ascii'));
     cb?.(vector);
   });
-}
+};
 
 export const schm = (scheme_type: string, version: number, vector: ByteVector, cb?: callback): void => {
   fullbox('schm', 0, 0x000000, vector, (vector) => {
@@ -33,13 +33,13 @@ export const schm = (scheme_type: string, version: number, vector: ByteVector, c
     vector.writeU32BE(version);
     cb?.(vector);
   });
-}
+};
 
 export const schi = (vector: ByteVector, cb?: callback): void => {
   box('schi', vector, (vector) => {
     cb?.(vector);
   });
-}
+};
 
 export const IVType = {
   CONSTANT: 'constant',
@@ -71,13 +71,13 @@ export const tenc = (pattern: [crypt: number, clear: number] | null, keyId: Buff
     }
     cb?.(vector);
   });
-}
+};
 
 export const encv = (width: number, height: number, vector: ByteVector, cb?: callback): void => {
   box('encv', vector, (vector) => {
     visualSampleEntry(width, height, vector, cb);
   });
-}
+};
 
 export const enca = (channel_count: number, sample_size: number, sample_rate: number, vector: ByteVector, cb?: callback): void => {
   box('enca', vector, (vector) => {
@@ -105,7 +105,7 @@ export const saiz = (samples: SampleInformation[], ivType: (typeof IVType)[keyof
     }
     cb?.(vector);
   });
-}
+};
 
 export const saio = (offsets: number[], vector: ByteVector, cb?: callback): void => {
   // flags が 1 の場合 aux_info_type と aux_info_type_parameter が入る
@@ -117,7 +117,7 @@ export const saio = (offsets: number[], vector: ByteVector, cb?: callback): void
     }
     cb?.(vector);
   });
-}
+};
 
 export const senc = (samples: SampleInformation[], ivType: (typeof IVType)[keyof typeof IVType], vector: ByteVector, cb?: callback): void => {
   const use_iv = ivType === IVType.PER_SAMPLE;
@@ -141,7 +141,7 @@ export const senc = (samples: SampleInformation[], ivType: (typeof IVType)[keyof
     }
     cb?.(vector);
   });
-}
+};
 
 export const fragment = (fragment: FragmentInformation, encryption: SampleInformation, ivType: (typeof IVType)[keyof typeof IVType], data: Buffer, vector: ByteVector, cb?: callback): void => {
   let trun_offset = null;
@@ -166,14 +166,14 @@ export const fragment = (fragment: FragmentInformation, encryption: SampleInform
       const senc_begin = vector.byteLength();
       senc([encryption], ivType, vector);
       // saio のダミーを正しい値にする
-      const senc_offset = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4 /* sample_count */;
-      const saio_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4 /* sample_count */;
-      vector.writeU32BE(senc_begin + senc_offset - moof_begin, saio_begin + saio_access_index)
+      const senc_offset = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4;
+      const saio_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4;
+      vector.writeU32BE(senc_begin + senc_offset - moof_begin, saio_begin + saio_access_index);
     });
   });
   const moof_end = vector.byteLength();
   mdat(data, vector, cb);
   // trun のダミーを正しい値にする
-  const trun_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4 /* sample_count */;
+  const trun_access_index = 4 /* size */ + 4 /* fourcc */ + 4 /* version + flags */ + 4;
   vector.writeU32BE(moof_end - moof_begin + 8 /* mdat header */, trun_offset! + trun_access_index);
 };

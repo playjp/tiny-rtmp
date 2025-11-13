@@ -63,8 +63,8 @@ export default class DASHGenerator {
     const mpd = XMLNode.from('MPD', {
       xmlns: 'urn:mpeg:dash:schema:mpd:2011',
       'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-      'xmlns:cenc': "urn:mpeg:cenc:2013",
-      'xmlns:clearkey': "http://dashif.org/guidelines/clearKey",
+      'xmlns:cenc': 'urn:mpeg:cenc:2013',
+      'xmlns:clearkey': 'http://dashif.org/guidelines/clearKey',
       'xsi:schemaLocation': 'urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd',
       profiles: 'urn:mpeg:dash:profile:isoff-live:2011',
       type: 'dynamic',
@@ -212,14 +212,14 @@ export default class DASHGenerator {
           const duration = payload.timestamp - dts;
           this.videoTimeline.feed(make((vector) => {
             const iv = crypto.randomBytes(16);
-            const [ encrypted, subsample ] = encrypt_avc_cenc(this.key, iv, data, avcDecoderConfigurationRecord)
+            const [encrypted, subsample] = encrypt_avc_cenc(this.key, iv, data, avcDecoderConfigurationRecord);
 
             fragment(
               { track_id: 1, keyframe: type === FrameType.KEY_FRAME, duration, dts, cto },
               { iv, subsamples: subsample },
               this.ivType.type,
               encrypted,
-              vector
+              vector,
             );
           }));
         }
@@ -249,7 +249,7 @@ export default class DASHGenerator {
             { iv, subsamples: [] },
             this.ivType.type,
             encrypted,
-            vector
+            vector,
           );
         }));
         return;
