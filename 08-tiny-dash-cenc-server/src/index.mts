@@ -60,8 +60,9 @@ const page = `
 <!DOCTYPE html>
 <html>
   <body>
-    <video id="video"></video>
-    <script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.debug.js"></script>
+    <video id="video" controls></video>
+    <script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.min.js"></script>
+    <!-- <script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.debug.js"></script> -->
     <script>
       function init() {
         const protData = {
@@ -74,11 +75,13 @@ const page = `
         const video = document.querySelector("video");
         const url = "./manifest.mpd";
         const player = dashjs.MediaPlayer().create();
+        /*
         player.updateSettings({
           'debug': {
               'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
           }
         });
+        //*/
         player.initialize(video, url, true);
         player.setProtectionData(protData);
       }
