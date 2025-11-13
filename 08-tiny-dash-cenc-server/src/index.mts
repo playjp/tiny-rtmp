@@ -121,7 +121,7 @@ const web_server = http.createServer(async (req, res) => {
     return;
   }
   const url = new URL(req.url, `http://localhost:${web}`);
-  if (!((req.method === 'GET' || req.method === 'POST') && url.pathname.startsWith(`/${app}/${streamKey}/`))) {
+  if (!(req.method === 'GET' && url.pathname.startsWith(`/${app}/${streamKey}/`))) {
     notfound();
     return;
   }
@@ -131,34 +131,6 @@ const web_server = http.createServer(async (req, res) => {
   }
 
   const prefix = url.pathname.slice(`/${app}/${streamKey}/`.length);
-  // POST
-  if (prefix === 'getLicense') {
-    if (req.method !== 'POST') {
-      notfound();
-      return;
-    }
-
-    res.writeHead(200, {
-      'content-type': 'application/json',
-      'access-control-allow-origin': '*',
-      'cache-control': 'maxage=0',
-    });
-    res.write(JSON.stringify({
-      keys: [{
-        kty: 'oct',
-        kid: 'AAAAAAAAAAAAAAAAAAAAAA',
-        k: 'AAAAAAAAAAAAAAAAAAAAAA'
-      }]
-    }, null, 2));
-    res.end();
-    return;
-  }
-
-  // GET
-  if (req.method !== 'GET') {
-    notfound();
-    return;
-  }
   if (prefix === '' || prefix === 'index.html') {
     res.writeHead(200, {
       'content-type': 'text/html',
