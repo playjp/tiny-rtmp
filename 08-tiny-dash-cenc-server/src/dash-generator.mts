@@ -9,7 +9,7 @@ import { read_audio_specific_config } from '../../03-tiny-http-ts-server/src/aac
 import handle_rtmp_payload, { FrameType } from '../../03-tiny-http-ts-server/src/rtmp-handler.mts';
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 
-import { write_mp4_avc_track_information }from './avc.mts';
+import { encrypt_avc_cenc, write_mp4_avc_track_information }from './avc.mts';
 import { write_mp4_aac_track_information }from './aac.mts';
 
 import { initialize, make } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
@@ -75,7 +75,7 @@ export default class DASHGenerator {
     });
     const period = XMLNode.from('Period', { start: 'PT0S' });
 
-    if (false && this.onMetadata?.videocodecid != null && this.avcDecoderConfigurationRecord != null && this.videoTimeline != null) {
+    if (this.onMetadata?.videocodecid != null && this.avcDecoderConfigurationRecord != null && this.videoTimeline != null) {
       const avcDecoderConfigurationRecord = read_avc_decoder_configuration_record(this.avcDecoderConfigurationRecord);
       const video_adaptetionset = XMLNode.from('AdaptationSet', {
         contentType: 'video',
@@ -106,7 +106,7 @@ export default class DASHGenerator {
       period.children.push(video_adaptetionset);
     }
 
-    if (true && this.onMetadata?.audiocodecid != null && this.audioSpecificConfig != null && this.audioTimeline != null) {
+    if (this.onMetadata?.audiocodecid != null && this.audioSpecificConfig != null && this.audioTimeline != null) {
       const audioSpecificConfig = read_audio_specific_config(this.audioSpecificConfig);
       const audio_adaptetionset = XMLNode.from('AdaptationSet', {
         contentType: 'audio',
@@ -207,15 +207,16 @@ export default class DASHGenerator {
         if (this.videoTimeline == null) { return; }
         if (this.avcDecoderConfigurationRecord == null) { return; }
         if (this.previousVideoInformation != null) {
+          const avcDecoderConfigurationRecord = read_avc_decoder_configuration_record(this.avcDecoderConfigurationRecord);
           const { type, dts, cto, data } = this.previousVideoInformation;
           const duration = payload.timestamp - dts;
           this.videoTimeline.feed(make((vector) => {
             const iv = crypto.randomBytes(16);
-            const cipher = crypto.createCipheriv('aes-128-ctr', this.key, iv);
-            const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
+            const [ encrypted, subsample ] = encrypt_avc_cenc(this.key, iv, data, avcDecoderConfigurationRecord)
+
             fragment(
               { track_id: 1, keyframe: type === FrameType.KEY_FRAME, duration, dts, cto },
-              { iv, subsamples: [] },
+              { iv, subsamples: subsample },
               this.ivType.type,
               encrypted,
               vector
