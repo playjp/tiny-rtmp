@@ -9,8 +9,8 @@ import { read_audio_specific_config } from '../../03-tiny-http-ts-server/src/aac
 import handle_rtmp_payload, { FrameType } from '../../03-tiny-http-ts-server/src/rtmp-handler.mts';
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 
-import { encrypt_avc_cenc, write_mp4_avc_track_information }from './avc.mts';
-import { encrypt_aac_cenc, write_mp4_aac_track_information }from './aac.mts';
+import { encrypt_avc, write_mp4_avc_track_information }from './avc.mts';
+import { encrypt_aac, write_mp4_aac_track_information }from './aac.mts';
 
 import { initialize, make } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 
@@ -18,7 +18,7 @@ import SegmentTimeline from '../../07-tiny-dash-server/src/segment-timeline.mts'
 import { serializeXML, XMLNode } from '../../07-tiny-dash-server/src/xml.mts';
 import { aacMimeTypeCodec, avcMimeTypeCodec } from '../../07-tiny-dash-server/src/mimetype.mts';
 
-import { fragment, IVType, pssh } from './cenc.mts';
+import { EncryptionFormat, fragment, IVType, pssh } from './cenc.mts';
 
 type VideoInformation = {
   type: number;
@@ -41,7 +41,8 @@ export default class DASHGenerator {
   private videoTimeline: SegmentTimeline | null;
   private audioTimeline: SegmentTimeline | null;
 
-  private ivSize = 16;
+  private encryptionFormat = EncryptionFormat.from('cenc');
+  private ivSize = this.encryptionFormat.bytes;
   private ivType: IVType = {
     type: IVType.PER_SAMPLE,
     per_sample_iv_size: this.ivSize,
@@ -187,7 +188,7 @@ export default class DASHGenerator {
     if (this.onMetadata.videocodecid != null && this.avcDecoderConfigurationRecord != null && this.videoTimeline == null) {
       const initialization = make((vector) => {
         initialize(RTMP_TIMESCALE, [1], vector, (vector) => {
-          vector.write(write_mp4_avc_track_information(1, RTMP_TIMESCALE, this.ivType, this.keyId, this.avcDecoderConfigurationRecord!));
+          vector.write(write_mp4_avc_track_information(1, RTMP_TIMESCALE, this.encryptionFormat, this.ivType, this.keyId, this.avcDecoderConfigurationRecord!));
           pssh(Buffer.from('1077efec-c0b2-4d02-ace3-3c1e52e2fb4b'.replaceAll('-', ''), 'hex'), [this.keyId], Buffer.from([]), vector);
         });
       });
@@ -197,7 +198,7 @@ export default class DASHGenerator {
       const { samplingFrequency } = read_audio_specific_config(this.audioSpecificConfig);
       const initialization = make((vector) => {
         initialize(samplingFrequency, [1], vector, (vector) => {
-          vector.write(write_mp4_aac_track_information(1, samplingFrequency, this.ivType, this.keyId, this.audioSpecificConfig!));
+          vector.write(write_mp4_aac_track_information(1, samplingFrequency, this.encryptionFormat, this.ivType, this.keyId, this.audioSpecificConfig!));
           pssh(Buffer.from('1077efec-c0b2-4d02-ace3-3c1e52e2fb4b'.replaceAll('-', ''), 'hex'), [this.keyId], Buffer.from([]), vector);
         });
       });
@@ -214,7 +215,7 @@ export default class DASHGenerator {
           const duration = payload.timestamp - dts;
           this.videoTimeline.feed(make((vector) => {
             const iv = crypto.randomBytes(16);
-            const [encrypted, subsample] = encrypt_avc_cenc(this.key, iv, data, avcDecoderConfigurationRecord);
+            const [encrypted, subsample] = encrypt_avc(this.encryptionFormat, this.key, iv, data, avcDecoderConfigurationRecord);
 
             fragment(
               { track_id: 1, keyframe: type === FrameType.KEY_FRAME, duration, dts, cto },
@@ -244,7 +245,7 @@ export default class DASHGenerator {
         }
         this.audioTimeline.feed(make((vector) => {
           const iv = crypto.randomBytes(16);
-          const [encrypted, subsample] = encrypt_aac_cenc(this.key, iv, payload.data);
+          const [encrypted, subsample] = encrypt_aac(this.encryptionFormat, this.key, iv, payload.data);
 
           fragment(
             { track_id: 1, keyframe: true, duration: 1024, dts: this.aacLatestTimestamp!, cto: 0 },

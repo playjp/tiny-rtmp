@@ -54,7 +54,49 @@ export type IVType = {
   per_sample_iv_size: number;
 };
 
-export const tenc = (pattern: [crypt: number, clear: number] | null, keyId: Buffer, ivType: IVType, vector: ByteVector, cb?: callback): void => {
+export const EncryptionMode = {
+  CENC: 'cenc',
+  CBCS: 'cbcs',
+} as const;
+
+export type EncryptionFormat = ({
+  name: 'cenc-128bit';
+  mode: typeof EncryptionMode.CENC;
+  algorithm: 'aes-128-ctr';
+  bytes: 16;
+} | {
+  name: 'cbcs-128bit';
+  mode: typeof EncryptionMode.CBCS;
+  algorithm: 'aes-128-cbc';
+  bytes: 16;
+  patttern: [crypto: number, clear: number];
+});
+export type EncryptionFormatCENC = EncryptionFormat & { mode: typeof EncryptionMode.CENC; };
+export type EncryptionFormatCBCS = EncryptionFormat & { mode: typeof EncryptionMode.CBCS; };
+
+export const EncryptionFormat = {
+  from(mode: (typeof EncryptionMode)[keyof typeof EncryptionMode]): EncryptionFormat {
+    switch (mode) {
+      case EncryptionMode.CENC: return {
+        name: 'cenc-128bit',
+        mode: EncryptionMode.CENC,
+        algorithm: 'aes-128-ctr',
+        bytes: 16,
+      };
+      case EncryptionMode.CBCS: return {
+        name: 'cbcs-128bit',
+        mode: EncryptionMode.CBCS,
+        algorithm: 'aes-128-cbc',
+        bytes: 16,
+        patttern: [1, 9],
+      };
+    }
+  }
+}
+
+export const tenc = (format: EncryptionFormat, keyId: Buffer, ivType: IVType, vector: ByteVector, cb?: callback): void => {
+  const pattern = format.mode === EncryptionMode.CBCS ? format.patttern : null;
+
   fullbox('tenc', pattern == null ? 0 : 1, 0x000000, vector, (vector) => {
     vector.writeU8(0); // reserved
     if (pattern == null) {
