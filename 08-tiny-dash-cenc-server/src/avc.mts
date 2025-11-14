@@ -50,12 +50,13 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
-      builder.write(nalu.subarray(0, 4));
+      const clearBytes = Math.min(nalu.byteLength, 4);
+      builder.write(nalu.subarray(0, clearBytes));
 
-      const update = cipher.update(nalu.subarray(4));
+      const update = cipher.update(nalu.subarray(clearBytes));
       builder.write(update);
 
-      subsamples.push([naluLengthSize + 4, update.byteLength]);
+      subsamples.push([naluLengthSize + clearBytes, update.byteLength]);
     } else {
       builder.write(nalu);
       for (let i = 0; i < naluLengthSize + length; i += 0xFFFF) {
