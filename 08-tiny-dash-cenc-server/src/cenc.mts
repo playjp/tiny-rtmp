@@ -74,6 +74,13 @@ export type EncryptionFormat = ({
 export type EncryptionFormatCENC = EncryptionFormat & { mode: typeof EncryptionMode.CENC; };
 export type EncryptionFormatCBCS = EncryptionFormat & { mode: typeof EncryptionMode.CBCS; };
 
+export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFormatCBCS => {
+  return {
+    ... format,
+    patttern: [0, 0] // TODO: PlayReady のサンプルが [0, 0] だからそうしたけど、あってるのか規格を見て確認
+  };
+};
+
 export const EncryptionFormat = {
   from(mode: (typeof EncryptionMode)[keyof typeof EncryptionMode]): EncryptionFormat {
     switch (mode) {
