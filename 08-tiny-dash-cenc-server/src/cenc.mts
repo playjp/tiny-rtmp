@@ -69,7 +69,7 @@ export type EncryptionFormat = ({
   mode: typeof EncryptionMode.CBCS;
   algorithm: 'aes-128-cbc';
   bytes: 16;
-  patttern: [crypto: number, clear: number];
+  pattern: [crypto: number, clear: number];
 });
 export type EncryptionFormatCENC = EncryptionFormat & { mode: typeof EncryptionMode.CENC; };
 export type EncryptionFormatCBCS = EncryptionFormat & { mode: typeof EncryptionMode.CBCS; };
@@ -79,7 +79,7 @@ export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFor
     ... format,
     // 音声などの cbcs で Full-Sample をする場合
     // [0, 0] (PlayReady) でも [1, 0] (shaka-packger) でも良い
-    patttern: [1, 0]
+    pattern: [1, 0]
   };
 };
 
@@ -97,14 +97,14 @@ export const EncryptionFormat = {
         mode: EncryptionMode.CBCS,
         algorithm: 'aes-128-cbc',
         bytes: 16,
-        patttern: [1, 9], // 大体 1:9 で FairPlay とかもそうする
+        pattern: [1, 9], // 大体 1:9 で FairPlay とかもそうする
       };
     }
   }
 }
 
 export const tenc = (format: EncryptionFormat, keyId: Buffer, ivType: IVType, vector: ByteVector, cb?: callback): void => {
-  const pattern = format.mode === EncryptionMode.CBCS ? format.patttern : null;
+  const pattern = format.mode === EncryptionMode.CBCS ? format.pattern : null;
 
   fullbox('tenc', pattern == null ? 0 : 1, 0x000000, vector, (vector) => {
     vector.writeU8(0); // reserved

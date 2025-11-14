@@ -69,13 +69,13 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
 };
 
 export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: Buffer, sizedNalus: Buffer, avcDecoderConfigurationRecord: AVCDecoderConfigurationRecord): [Buffer, SubsampleInformation[]] => {
-  // NALu は Sub-Sample Encryption
-  const cipher = crypto.createCipheriv(format.algorithm, key, iv);
+  // NALu は Sub-Sample かつ Pattern Encryption
   const builder = new ByteBuilder();
   const reader = new ByteReader(sizedNalus);
 
   const subsamples: SubsampleInformation[] = [];
   while (!reader.isEOF()) {
+    const cipher = crypto.createCipheriv(format.algorithm, key, iv);
     const naluLengthSize = avcDecoderConfigurationRecord.lengthSize;
     const length = reader.readUIntBE(naluLengthSize);
     const nalu = reader.read(length);
@@ -83,8 +83,29 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
     const isVCL = 1 <= naluType && naluType <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
-    if (false && isVCL) {
-      // TODO: NEED Implemement Pattern Encrtyption
+    if (isVCL) {
+      const clearBytes = Math.min(nalu.byteLength, 4);
+      builder.write(nalu.subarray(0, clearBytes));
+
+      const target = nalu.subarray(clearBytes);
+      let offset = 0;
+      while (offset < target.byteLength) {
+        const [crypt, clear] = format.pattern;
+        for (let i = 0; i < crypt; i++) {
+          if (offset + format.bytes <= target.byteLength) {
+            builder.write(cipher.update(target.subarray(offset, offset + format.bytes)));
+            offset += format.bytes;
+          }
+        }
+        for (let i = 0; i < clear; i++) {
+          if (offset < target.byteLength) {
+            const next = Math.min(target.byteLength, offset + format.bytes);
+            builder.write(target.subarray(offset, next));
+            offset = next;
+          }
+        }
+      }
+      subsamples.push([naluLengthSize + clearBytes, target.byteLength]);
     } else {
       builder.write(nalu);
       for (let i = 0; i < naluLengthSize + length; i += 0xFFFF) {
