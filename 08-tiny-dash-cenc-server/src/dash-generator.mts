@@ -41,19 +41,22 @@ export default class DASHGenerator {
   private videoTimeline: SegmentTimeline | null;
   private audioTimeline: SegmentTimeline | null;
 
-  private encryptionFormat = EncryptionFormat.from('cenc');
-  private ivSize = this.encryptionFormat.bytes;
-  private ivType: IVType = {
-    type: IVType.PER_SAMPLE,
-    per_sample_iv_size: this.ivSize,
-  };
+  private encryptionFormat: EncryptionFormat;
+  private ivSize: number;
+  private ivType: IVType;
   private keyId: Buffer;
   private key: Buffer;
 
   private avail = new Date().toISOString();
 
-  public constructor(keyId: Buffer, key: Buffer, liveWindowLength: number = 3) {
+  public constructor(format: EncryptionFormat, keyId: Buffer, key: Buffer, liveWindowLength: number = 3) {
     this.liveWindowLength = liveWindowLength;
+    this.encryptionFormat = format;
+    this.ivSize = this.encryptionFormat.bytes;
+    this.ivType = {
+      type: IVType.PER_SAMPLE,
+      per_sample_iv_size: this.ivSize,
+    };
     this.keyId = keyId;
     this.key = key;
     this.videoTimeline = null;

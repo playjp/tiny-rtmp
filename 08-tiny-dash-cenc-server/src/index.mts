@@ -7,6 +7,7 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 import handle_rtmp from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
 
 import DASHGenerator from './dash-generator.mts';
+import { EncryptionFormat } from './cenc.mts';
 
 const options = {
   rtmp: {
@@ -21,6 +22,9 @@ const options = {
     type: 'string',
   },
   streamKey: {
+    type: 'string',
+  },
+  encryptionScheme: {
     type: 'string',
   },
   encryptionKeyId: {
@@ -49,6 +53,9 @@ if (args.app == null) {
 if (args.streamKey == null) {
   console.error('Please Specify valid streamKey'); process.exit(1);
 }
+if (args.encryptionScheme == null || !(args.encryptionScheme === 'cenc' || args.encryptionScheme === 'cbcs')) {
+  console.error('Please Specify valid encryptionScheme'); process.exit(1);
+}
 if (args.encryptionKeyId == null || !/[0-9a-zA-Z]{32}/.test(args.encryptionKeyId)) {
   console.error('Please Specify valid encryptionKeyId'); process.exit(1);
 }
@@ -65,6 +72,7 @@ const port = Number.parseInt(args.rtmp, 10);
 const web = Number.parseInt(args.web, 10);
 const app = args.app;
 const streamKey = args.streamKey;
+const encryptionFormat = EncryptionFormat.from(args.encryptionScheme);
 const encryptionKeyId = Buffer.from(args.encryptionKeyId, 'hex');
 const encryptionKey = Buffer.from(args.encryptionKey, 'hex');
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
@@ -109,7 +117,7 @@ let rtmp_to_dash: DASHGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
     for await (const message of handle_rtmp(connection, app, streamKey, bandwidth)) {
-      if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(encryptionKeyId, encryptionKey, 3); }
+      if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(encryptionFormat, encryptionKeyId, encryptionKey, 3); }
       rtmp_to_dash.feed(message);
     }
   } catch (e) {

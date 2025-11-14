@@ -54,25 +54,25 @@ export type IVType = {
   per_sample_iv_size: number;
 };
 
-export const EncryptionMode = {
+export const EncryptionScheme = {
   CENC: 'cenc',
   CBCS: 'cbcs',
 } as const;
 
 export type EncryptionFormat = ({
   name: 'cenc-128bit';
-  mode: typeof EncryptionMode.CENC;
+  scheme: typeof EncryptionScheme.CENC;
   algorithm: 'aes-128-ctr';
   bytes: 16;
 } | {
   name: 'cbcs-128bit';
-  mode: typeof EncryptionMode.CBCS;
+  scheme: typeof EncryptionScheme.CBCS;
   algorithm: 'aes-128-cbc';
   bytes: 16;
   pattern: [crypto: number, clear: number];
 });
-export type EncryptionFormatCENC = EncryptionFormat & { mode: typeof EncryptionMode.CENC; };
-export type EncryptionFormatCBCS = EncryptionFormat & { mode: typeof EncryptionMode.CBCS; };
+export type EncryptionFormatCENC = EncryptionFormat & { scheme: typeof EncryptionScheme.CENC; };
+export type EncryptionFormatCBCS = EncryptionFormat & { scheme: typeof EncryptionScheme.CBCS; };
 
 export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFormatCBCS => {
   return {
@@ -84,17 +84,17 @@ export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFor
 };
 
 export const EncryptionFormat = {
-  from(mode: (typeof EncryptionMode)[keyof typeof EncryptionMode]): EncryptionFormat {
+  from(mode: (typeof EncryptionScheme)[keyof typeof EncryptionScheme]): EncryptionFormat {
     switch (mode) {
-      case EncryptionMode.CENC: return {
+      case EncryptionScheme.CENC: return {
         name: 'cenc-128bit',
-        mode: EncryptionMode.CENC,
+        scheme: EncryptionScheme.CENC,
         algorithm: 'aes-128-ctr',
         bytes: 16,
       };
-      case EncryptionMode.CBCS: return {
+      case EncryptionScheme.CBCS: return {
         name: 'cbcs-128bit',
-        mode: EncryptionMode.CBCS,
+        scheme: EncryptionScheme.CBCS,
         algorithm: 'aes-128-cbc',
         bytes: 16,
         pattern: [1, 9], // 大体 1:9 で FairPlay とかもそうする
@@ -104,7 +104,7 @@ export const EncryptionFormat = {
 }
 
 export const tenc = (format: EncryptionFormat, keyId: Buffer, ivType: IVType, vector: ByteVector, cb?: callback): void => {
-  const pattern = format.mode === EncryptionMode.CBCS ? format.pattern : null;
+  const pattern = format.scheme === EncryptionScheme.CBCS ? format.pattern : null;
 
   fullbox('tenc', pattern == null ? 0 : 1, 0x000000, vector, (vector) => {
     vector.writeU8(0); // reserved
