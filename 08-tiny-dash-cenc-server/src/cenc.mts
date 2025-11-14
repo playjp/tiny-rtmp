@@ -77,7 +77,9 @@ export type EncryptionFormatCBCS = EncryptionFormat & { mode: typeof EncryptionM
 export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFormatCBCS => {
   return {
     ... format,
-    patttern: [0, 0] // TODO: PlayReady のサンプルが [0, 0] だからそうしたけど、あってるのか規格を見て確認
+    // 音声などの cbcs で Full-Sample をする場合
+    // [0, 0] (PlayReady) でも [1, 0] (shaka-packger) でも良い
+    patttern: [1, 0]
   };
 };
 
@@ -95,7 +97,7 @@ export const EncryptionFormat = {
         mode: EncryptionMode.CBCS,
         algorithm: 'aes-128-cbc',
         bytes: 16,
-        patttern: [1, 9],
+        patttern: [1, 9], // 大体 1:9 で FairPlay とかもそうする
       };
     }
   }
