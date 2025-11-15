@@ -43,12 +43,12 @@ export const encrypt_aac_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
   // Audio は Full-Sample Encryption
   const cipher = crypto.createCipheriv(format.algorithm, key, iv);
   const builder = new ByteBuilder();
-  builder.write(cipher.update(data));
-  builder.write(cipher.final()); // CBC では final あるので入れる
+  const encrypt = Math.floor(data.byteLength / format.bytes) * format.bytes;
+  builder.write(cipher.update(data.subarray(0, encrypt)));
+  builder.write(data.subarray(encrypt));
   const encrypted = builder.build();
-  const subsamples: SubsampleInformation[] = [[0, encrypted.byteLength]];
 
-  return [encrypted, subsamples];
+  return [encrypted, []];
 };
 
 export const encrypt_aac = (format: EncryptionFormat, key: Buffer, iv: Buffer, data: Buffer): [Buffer, SubsampleInformation[]] => {
