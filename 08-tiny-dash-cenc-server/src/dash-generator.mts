@@ -217,7 +217,7 @@ export default class DASHGenerator {
           const { type, dts, cto, data } = this.previousVideoInformation;
           const duration = payload.timestamp - dts;
           this.videoTimeline.feed(make((vector) => {
-            const iv = crypto.randomBytes(16);
+            const iv = this.ivType.type === IVType.CONSTANT ? this.ivType.constant_iv : crypto.randomBytes(this.ivSize);
             const [encrypted, subsample] = encrypt_avc(this.encryptionFormat, this.key, iv, data, avcDecoderConfigurationRecord);
 
             fragment(
@@ -247,7 +247,7 @@ export default class DASHGenerator {
           this.aacLatestTimestamp += 1024;
         }
         this.audioTimeline.feed(make((vector) => {
-          const iv = crypto.randomBytes(16);
+          const iv = this.ivType.type === IVType.CONSTANT ? this.ivType.constant_iv : crypto.randomBytes(this.ivSize);
           const [encrypted, subsample] = encrypt_aac(this.encryptionFormat, this.key, iv, payload.data);
 
           fragment(
