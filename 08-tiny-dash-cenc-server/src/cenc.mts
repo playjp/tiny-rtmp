@@ -82,6 +82,9 @@ export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFor
     pattern: [1, 0]
   };
 };
+export const padIV = (format: EncryptionFormat, iv: Buffer): Buffer => {
+  return Buffer.concat([iv, Buffer.alloc(Math.max(0, format.bytes - iv.byteLength), 0)]);
+};
 
 export const EncryptionFormat = {
   from(mode: (typeof EncryptionScheme)[keyof typeof EncryptionScheme]): EncryptionFormat {

@@ -5,7 +5,7 @@ import { read_avc_decoder_configuration_record, type AVCDecoderConfigurationReco
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
 import { ebsp2rbsp, read_seq_parameter_set_data } from '../../06-tiny-http-fmp4-server/src/avc.mts';
 import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
-import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
+import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, padIV, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
 import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 
 export const write_mp4_avc_track_information = (track_id: number, timescale: number, encryptionFormat: EncryptionFormat, ivType: IVType, keyId: Buffer, avc_decoder_configuration_record: Buffer): Buffer => {
@@ -35,6 +35,8 @@ export const write_mp4_avc_track_information = (track_id: number, timescale: num
 };
 
 export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: Buffer, sizedNalus: Buffer, avcDecoderConfigurationRecord: AVCDecoderConfigurationRecord): [Buffer, SubsampleInformation[]] => {
+  // IV のビット数が少ない場合は 0 埋めして合わせる
+  iv = padIV(format, iv);
   // NALu は Sub-Sample Encryption
   const cipher = crypto.createCipheriv(format.algorithm, key, iv);
   const builder = new ByteBuilder();
@@ -69,6 +71,8 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
 };
 
 export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: Buffer, sizedNalus: Buffer, avcDecoderConfigurationRecord: AVCDecoderConfigurationRecord): [Buffer, SubsampleInformation[]] => {
+  // IV のビット数が少ない場合は 0 埋めして合わせる
+  iv = padIV(format, iv);
   // NALu は Sub-Sample かつ Pattern Encryption
   const builder = new ByteBuilder();
   const reader = new ByteReader(sizedNalus);
