@@ -10,7 +10,7 @@ export const write_mp4_aac_track_information = (track_id: number, timescale: num
 
   // CBCS の場合、音声は Full-Sample Encryption なので Sub-Sample の Pattern を変更する
   if (encryptionFormat.scheme === EncryptionScheme.CBCS) {
-    encryptionFormat = patternToFullSample(encryptionFormat)
+    encryptionFormat = patternToFullSample(encryptionFormat);
   }
 
   return make((vector) => {
@@ -59,6 +59,6 @@ export const encrypt_aac_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
 export const encrypt_aac = (format: EncryptionFormat, key: Buffer, iv: Buffer, data: Buffer): [Buffer, SubsampleInformation[]] => {
   switch (format.scheme) {
     case EncryptionScheme.CENC: return encrypt_aac_cenc(format, key, iv, data);
-    case EncryptionScheme.CBCS: return encrypt_aac_cbcs(format, key, iv, data)
+    case EncryptionScheme.CBCS: return encrypt_aac_cbcs(format, key, iv, data);
   }
-}
+};

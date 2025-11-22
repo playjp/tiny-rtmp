@@ -79,7 +79,7 @@ export const patternToFullSample = (format: EncryptionFormatCBCS): EncryptionFor
     ... format,
     // 音声などの cbcs で Full-Sample をする場合
     // [0, 0] (PlayReady) でも [1, 0] (shaka-packger) でも良い
-    pattern: [1, 0]
+    pattern: [1, 0],
   };
 };
 export const padIV = (format: EncryptionFormat, iv: Buffer): Buffer => {
@@ -103,8 +103,8 @@ export const EncryptionFormat = {
         pattern: [1, 9], // 大体 1:9 で FairPlay とかもそうする
       };
     }
-  }
-}
+  },
+};
 
 export const tenc = (format: EncryptionFormat, keyId: Buffer, ivType: IVType, vector: ByteVector, cb?: callback): void => {
   const pattern = format.scheme === EncryptionScheme.CBCS ? format.pattern : null;
