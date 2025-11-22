@@ -83,12 +83,13 @@ export default async (connection: Duplex, output?: Writable) => {
               level: 'status', // 正常系
             },
           );
-          connection.write(builder.build({
+          const chunks = builder.build({
             message_type_id: MessageType.CommandAMF0,
             message_stream_id: 0,
             timestamp: 0,
             data: result,
-          }));
+          });
+          for (const chunk of chunks) { connection.write(chunk); }
 
           state = STATE.WAITING_CREATESTREAM;
           break;
@@ -105,12 +106,13 @@ export default async (connection: Duplex, output?: Writable) => {
 
           // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
           const result = write_amf0('_result', transaction_id, null, 1);
-          connection.write(builder.build({
+          const chunks = builder.build({
             message_type_id: MessageType.CommandAMF0,
             message_stream_id: 0,
             timestamp: 0,
             data: result,
-          }));
+          });
+          for (const chunk of chunks) { connection.write(chunk); }
 
           state = STATE.WAITING_PUBLISH;
           break;
@@ -134,12 +136,13 @@ export default async (connection: Duplex, output?: Writable) => {
             level: 'status', // 正常系
           };
           const result = write_amf0('onStatus', transaction_id, null, info);
-          connection.write(builder.build({
+          const chunks = builder.build({
             message_type_id: MessageType.CommandAMF0,
             message_stream_id: message.message_stream_id,
             timestamp: 0,
             data: result,
-          }));
+          });
+          for (const chunk of chunks) { connection.write(chunk); }
 
           state = STATE.PUBLISHED;
           break;

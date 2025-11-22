@@ -63,12 +63,13 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      input.write(builder.build({
+      const chunks = builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
-      }));
+      });
+      for (const chunk of chunks) { input.write(chunk); }
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
@@ -91,12 +92,13 @@ describe('Regression Test', () => {
         4,
         null,
       );
-      input.write(builder.build({
+      const chunks = builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
-      }));
+      });
+      for (const chunk of chunks) { input.write(chunk); }
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
@@ -115,12 +117,13 @@ describe('Regression Test', () => {
         'key',
         'live',
       );
-      input.write(builder.build({
+      const chunks = builder.build({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 1,
         timestamp: 0,
         data: connect,
-      }));
+      });
+      for (const chunk of chunks) { input.write(chunk); }
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         'onStatus',
@@ -136,12 +139,13 @@ describe('Regression Test', () => {
     }
     // send data
     {
-      input.write(builder.build({
+      const chunks = builder.build({
         message_type_id: MessageType.Video,
         message_stream_id: 1,
         timestamp: 123456789,
         data: Buffer.from('test', 'ascii'),
-      }));
+      });
+      for (const chunk of chunks) { input.write(chunk); }
 
       // header
       expect((await flv.read(3)).equals(Buffer.from([0x46, 0x4C, 0x56]))).toStrictEqual(true);

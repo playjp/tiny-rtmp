@@ -89,12 +89,13 @@ const TRANSITION = {
     };
 
     const result = write_amf0(status, transaction_id, server, info);
-    connection.write(builder.build({
+    const chunks = builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
       data: result,
-    }));
+    });
+    for (const chunk of chunks) { connection.write(chunk); }
 
     if (!connectAccepted) { return STATE.DISCONNECTED; }
     return STATE.WAITING_CREATESTREAM;
@@ -111,12 +112,13 @@ const TRANSITION = {
 
     // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
     const result = write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM);
-    connection.write(builder.build({
+    const chunks = builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
       data: result,
-    }));
+    });
+    for (const chunk of chunks) { connection.write(chunk); }
 
     return STATE.WAITING_PUBLISH;
   },
@@ -143,12 +145,13 @@ const TRANSITION = {
     };
 
     const result = write_amf0('onStatus', transaction_id, null, info);
-    connection.write(builder.build({
+    const chunks = builder.build({
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
       data: result,
-    }));
+    });
+    for (const chunk of chunks) { connection.write(chunk); }
 
     if (!publishAccepted) { return STATE.DISCONNECTED; }
     lock = option.id;

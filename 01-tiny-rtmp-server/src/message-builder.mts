@@ -137,8 +137,8 @@ export default class MessageBuilder {
     });
   }
 
-  public build(message: LengthOmittedMessage): Buffer {
-    const builder = new ByteBuilder();
+  public build(message: LengthOmittedMessage): Buffer[] {
+    const chunks: Buffer[] = [];
 
     const cs_id = this.get_cs_id(message);
     const previous_timestamp_information = this.get_timestamp_information(message);
@@ -146,6 +146,7 @@ export default class MessageBuilder {
     const timestamp = MessageBuilder.calculate_timestamp(message, previous_timestamp_information);
 
     for (let i = 0; i < message.data.byteLength; i += this.chunk_maximum_size) {
+      const builder = new ByteBuilder();
       const chunk = message.data.subarray(i, Math.min(message.data.byteLength, i + this.chunk_maximum_size));
 
       const fmt = i !== 0 ? 3 : previous_timestamp_information != null ? 1 : 0;
@@ -169,6 +170,8 @@ export default class MessageBuilder {
           builder.writeU32BE(timestamp);
         }
         builder.write(chunk);
+
+        chunks.push(builder.build());
         continue;
       }
 
@@ -180,9 +183,15 @@ export default class MessageBuilder {
         builder.writeU32BE(timestamp);
       }
       builder.write(chunk);
+
+      chunks.push(builder.build());
+    }
+
+    if (message.message_type_id === MessageType.SetChunkSize) {
+      this.chunk_maximum_size = message.data.readUint32BE(0) % (2 ** 31);
     }
 
     this.set_timestamp_information(message, previous_timestamp_information ?? undefined);
-    return builder.build();
+    return chunks;
   }
 }
