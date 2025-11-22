@@ -96,8 +96,8 @@ export default class MessageBuilder {
   private cs_id_map = new Map<number, number>();
   private cs_id_timestamp_information = new Map<number, TimestampInformation>();
 
-  private static cs_id_hash({ message_stream_id, message_type_id }: LengthOmittedMessage): number {
-    return message_stream_id * 128 + message_type_id;
+  private static cs_id_hash({ message_stream_id, message_type_id }: LengthOmittedMessage, track = 0): number {
+    return message_stream_id * (2 ** 8 * 2 ** 8) + message_type_id * (2 ** 8) + track;
   }
   private static use_system_cs_id({ message_type_id }: LengthOmittedMessage): number | null {
     switch (message_type_id) {
@@ -111,8 +111,8 @@ export default class MessageBuilder {
     return null;
   }
 
-  private get_cs_id(message: LengthOmittedMessage): number {
-    const hash = MessageBuilder.cs_id_hash(message);
+  private get_cs_id(message: LengthOmittedMessage, track = 0): number {
+    const hash = MessageBuilder.cs_id_hash(message, track);
     if (this.cs_id_map.has(hash)) {
       return this.cs_id_map.get(hash)!;
     }
@@ -137,10 +137,10 @@ export default class MessageBuilder {
     });
   }
 
-  public build(message: LengthOmittedMessage): Buffer[] {
+  public build(message: LengthOmittedMessage, track = 0): Buffer[] {
     const chunks: Buffer[] = [];
 
-    const cs_id = this.get_cs_id(message);
+    const cs_id = this.get_cs_id(message, track);
     const previous_timestamp_information = this.get_timestamp_information(message);
     const is_extended_timestamp = MessageBuilder.require_extended_timestamp(message, previous_timestamp_information);
     const timestamp = MessageBuilder.calculate_timestamp(message, previous_timestamp_information);
