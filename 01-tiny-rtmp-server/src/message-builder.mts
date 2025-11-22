@@ -96,7 +96,7 @@ export default class MessageBuilder {
   private cs_id_map = new Map<number, number>();
   private cs_id_timestamp_information = new Map<number, TimestampInformation>();
 
-  private static cs_id_hash({ message_stream_id, message_type_id }: LengthOmittedMessage, track = 0): number {
+  private static cs_id_hash({ message_stream_id, message_type_id }: LengthOmittedMessage, track: number = 0): number {
     return message_stream_id * (2 ** 8 * 2 ** 8) + message_type_id * (2 ** 8) + track;
   }
   private static use_system_cs_id({ message_type_id }: LengthOmittedMessage): number | null {
@@ -111,7 +111,7 @@ export default class MessageBuilder {
     return null;
   }
 
-  private get_cs_id(message: LengthOmittedMessage, track = 0): number {
+  private get_cs_id(message: LengthOmittedMessage, track: number = 0): number {
     const hash = MessageBuilder.cs_id_hash(message, track);
     if (this.cs_id_map.has(hash)) {
       return this.cs_id_map.get(hash)!;
@@ -137,7 +137,7 @@ export default class MessageBuilder {
     });
   }
 
-  public build(message: LengthOmittedMessage, track = 0): Buffer[] {
+  public build(message: LengthOmittedMessage, track: number = 0): Buffer[] {
     const chunks: Buffer[] = [];
 
     const cs_id = this.get_cs_id(message, track);
