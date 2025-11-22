@@ -101,11 +101,11 @@ export default class MessageBuilder {
   }
   private static use_system_cs_id({ message_type_id }: LengthOmittedMessage): number | null {
     switch (message_type_id) {
-      case 1:
-      case 2:
-      case 3:
-      case 5:
-      case 6:
+      case MessageType.SetChunkSize:
+      case MessageType.Abort:
+      case MessageType.Acknowledgement:
+      case MessageType.WindowAcknowledgementSize:
+      case MessageType.SetPeerBandwidth:
         return 2;
     }
     return null;
