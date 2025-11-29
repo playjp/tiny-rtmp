@@ -33,6 +33,8 @@
     * 実装する機能: HLSのHTTPS対応
 5. [HTTP2対応](./XX-tiny-rtmps-http2-llhls-server/)
     * 実装する機能: LL-HLSのHTTP2対応
+6. [WebSocket対応](./XX-tiny-ws-flv-server/)
+    * 実装する機能: WS-FLV対応
 
 ## 必要環境
 

@@ -24,7 +24,8 @@
     "XX-tiny-rtmp-complex-handshake",
     "XX-tiny-rtmps-server",
     "XX-tiny-rtmps-https-hls-server",
-    "XX-tiny-rtmps-http2-llhls-server"
+    "XX-tiny-rtmps-http2-llhls-server",
+    "XX-tiny-ws-flv-server"
   ],
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.2.0",
