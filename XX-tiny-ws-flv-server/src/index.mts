@@ -133,6 +133,56 @@ const handle = async (connection: Duplex) => {
   }
 };
 
+const pingpong = async (reader: AsyncByteReader, writable: Writable): Promise<void> => {
+  try {
+    while (true) {
+      const first = await reader.readU8();
+      const fin = (first & 0x80) !== 0;
+      const rsv1 = (first & 0x40) !== 0;
+      const rsv2 = (first & 0x20) !== 0;
+      const rsv3 = (first & 0x10) !== 0;
+      const opcode = (first & 0x0F) >> 0;
+
+      const second = await reader.readU8();
+      const mask = (second & 0x80) !== 0;
+      let payload_len = BigInt((second & 0x7F) >> 0);
+      if (payload_len === 126n) {
+        payload_len = BigInt(await reader.readU16BE());
+      } else if (payload_len === 127n) {
+        payload_len = (await reader.read(8)).readBigInt64BE(0);
+      }
+      if (payload_len > Number.MAX_SAFE_INTEGER) {
+        writable.end();
+        break;
+      }
+      const len = Number(payload_len);
+
+      const maskingKey = mask ? await reader.read(4) : Buffer.alloc(4);
+      const payload = await reader.read(len);
+      for (let i = 0; i < payload.length; i++) {
+        payload[i] = payload[i] ^ maskingKey[i % 4];
+      }
+
+      if (opcode !== 0x09) { continue; } // Ping
+      writable.write(Buffer.from([0x8a])); // FIN + Opcode(Pong)
+      if (payload.byteLength >= 2 ** 16) {
+        writable.write(Buffer.from([127])); // NoMASK and 8 bytes
+        const length = Buffer.alloc(8);
+        length.writeBigInt64BE(BigInt(payload.byteLength), 0);
+        writable.write(length);
+      } else if (payload.byteLength >= 126) {
+        writable.write(Buffer.from([126])); // NoMASK and 8 bytes
+        const length = Buffer.alloc(2);
+        length.writeUInt16BE(payload.byteLength, 0);
+        writable.write(length);
+      } else {
+        writable.write(Buffer.from([payload.byteLength]));
+      }
+      writable.write(payload);
+    }
+  } catch (e) {}
+};
+
 const rtmp_server = net.createServer({ noDelay: true }, async (connection) => {
   await handle(connection);
 });
@@ -175,10 +225,8 @@ web_server.addListener('upgrade', (req, socket, _) => {
     'Connection': 'Upgrade',
     'Sec-WebSocket-Accept': accept,
   });
-  console.log('HELLO');
 
   // recieve prepare
-  /*
   const reader = new AsyncByteReader();
   socket.on('data', (chunk) => {
     reader.feed(chunk);
@@ -186,40 +234,8 @@ web_server.addListener('upgrade', (req, socket, _) => {
   socket.on('close', () => {
     reader.feedEOF();
   });
-  // recieve loop
-  (async () => {
-    while (true) {
-      const first = await reader.readU8();
-      const fin = (first & 0x80) !== 0;
-      const rsv1 = (first & 0x40) !== 0;
-      const rsv2 = (first & 0x20) !== 0;
-      const rsv3 = (first & 0x10) !== 0;
-      const opcode = (first & 0x0F) >> 0;
+  pingpong(reader, socket); // do ping pong
 
-      const second = await reader.readU8();
-      const mask = (second & 0x80) !== 0;
-      let payload_len = BigInt((second & 0x7F) >> 0);
-      if (payload_len === 126n) {
-        payload_len = BigInt(await reader.readU16BE());
-      } else if (payload_len === 127n) {
-        payload_len = (await reader.read(8)).readBigInt64BE(0);
-      }
-      if (payload_len > Number.MAX_SAFE_INTEGER) {
-        console.log(payload_len);
-        socket.end();
-        break;
-      }
-      const len = Number(payload_len);
-
-      const maskingKey = mask ? await reader.read(4) : Buffer.alloc(4);
-      const payload = await reader.read(len);
-      for (let i = 0; i < payload.length; i++) {
-        payload[i] = payload[i] ^ maskingKey[i % 4];
-      }
-      console.log('RECV', opcode.toString(16));
-    }
-  })();
-  */
   const viewer = viewers++;
   const write = (chunk: Buffer) => {
     if (socket.closed) { return; }
