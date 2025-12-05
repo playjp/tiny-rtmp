@@ -53,8 +53,10 @@
 - Enhanced RTMP ([Enhanced RTMP Documentations](https://github.com/veovera/enhanced-rtmp/tree/main/docs/enhanced))
     - [Enhancing RTMP, FLV](https://github.com/veovera/enhanced-rtmp/blob/main/docs/enhanced/enhanced-rtmp-v1.pdf)
     - [Enhanced RTMP (V2)](https://github.com/veovera/enhanced-rtmp/blob/main/docs/enhanced/enhanced-rtmp-v2.pdf)
+- WebSocket
+    - [RFC 6455 - The WebSocket Protocol](https://datatracker.ietf.org/doc/html/rfc6455)
 - HLS ([HTTP Live Streaming](https://developer.apple.com/streaming/))
-    - [HTTP Live Streaming](https://datatracker.ietf.org/doc/html/rfc8216)
+    - [RFC 8216 - HTTP Live Streaming](https://datatracker.ietf.org/doc/html/rfc8216)
     - [HTTP Live Streaming 2nd Edition](https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis)
 - MPEG-DASH
     - [ISO/IEC 23009-1](https://www.iso.org/en/contents/data/standard/08/33/83314.html)
