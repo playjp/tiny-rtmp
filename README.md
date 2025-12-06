@@ -57,7 +57,7 @@
     - [RFC 6455 - The WebSocket Protocol](https://datatracker.ietf.org/doc/html/rfc6455)
 - HLS ([HTTP Live Streaming](https://developer.apple.com/streaming/))
     - [RFC 8216 - HTTP Live Streaming](https://datatracker.ietf.org/doc/html/rfc8216)
-    - [HTTP Live Streaming 2nd Edition](https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis)
+    - [HTTP Live Streaming 2nd Edition (draft-pantos-hls-rfc8216bis)](https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis)
 - MPEG-DASH
     - [ISO/IEC 23009-1](https://www.iso.org/en/contents/data/standard/08/33/83314.html)
 - MPEG-TS
