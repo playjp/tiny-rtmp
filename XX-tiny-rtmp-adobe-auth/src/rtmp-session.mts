@@ -124,7 +124,7 @@ export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writa
           if (response == null || challenge == null) {
             const result = write_amf0('_error', transaction_id, null, {
               code: 'NetConnection.Connect.Rejected',
-              // FIXME: ffmpeg がスペース入れる or クエリの最後に入れないと adobe にならない
+              // MEMO: ffmpeg がスペース入れる or クエリの最後に入れないと adobe にならない
               description: `authmod=adobe :?reason=needauth&${auth.query()}&authmod=adobe`,
               objectEncoding: 0, // 0 = AMF0, 3 = AMF3
               level: 'error', // 正常系
