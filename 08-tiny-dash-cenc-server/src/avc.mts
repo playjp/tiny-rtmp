@@ -312,8 +312,10 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
+      // CENCv3 から slice_header は clear である必要がある
+      // CENCv1 では そのような記載がないため nal header くらいがあれば十分
       skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
-      const clearBytes = Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
+      const clearBytes = consumed_bytes + Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
       const update = cipher.update(nalu.subarray(clearBytes));
@@ -351,8 +353,10 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
+      // CENCv3 から slice_header は clear である必要がある
+      // CENCv1 では そのような記載がないため nal header くらいがあれば十分
       skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
-      const clearBytes = Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
+      const clearBytes = consumed_bytes + Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
       const target = nalu.subarray(clearBytes);
