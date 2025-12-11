@@ -4,13 +4,9 @@ import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 import { read_avc_decoder_configuration_record, type AVCDecoderConfigurationRecord } from '../../03-tiny-http-ts-server/src/avc.mts';
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
-import { ebsp2rbsp, read_pic_parameter_set_data, read_seq_parameter_set_data, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
+import { ebsp2rbsp, is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
 import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, padIV, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
-
-export const is_idr_nal = (nal_unit_type: number): boolean => {
-  return nal_unit_type === 5;
-}
 
 export const SliceType = {
   P: 0,
@@ -178,13 +174,17 @@ const skip_dec_ref_pic_marking = (nal_unit_type: number, reader: BitReader): voi
   }
 }
 
-export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, reader: BitReader, spss: Buffer[], ppss: Buffer[]): void => {
-  const sps = read_seq_parameter_set_data(new BitReader(ebsp2rbsp(spss[0])));
-  const pps = read_pic_parameter_set_data(new BitReader(ebsp2rbsp(ppss[0])));
+export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, reader: BitReader, all_sps: Buffer[], all_pps: Buffer[]): void => {
+  const ssps = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(sps)))));
+  const ppps = all_pps.map((pps) => read_pic_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(pps)))));
 
   reader.skipUEG(); // first_mb_in_slice
-  const slice_type = reader.readUEG(); // slice_type
+  const slice_type = reader.readUEG();
   const pic_parameter_set_id = reader.readUEG();
+  // TODO: ほんとは当てはまらない再生できないやつをエラーさせるべき
+  const pps = ppps.find((pps) => pps.pic_parameter_set_id === pic_parameter_set_id)!;
+  const sps = ssps.find((sps) => sps.seq_parameter_set_id === pps.seq_parameter_set_id)!;
+
   if (sps.separate_colour_plane_flag) {
     reader.skipBits(2); // colour_plane_id
   }
@@ -268,7 +268,9 @@ export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, re
 export const write_mp4_avc_track_information = (track_id: number, timescale: number, encryptionFormat: EncryptionFormat, ivType: IVType, keyId: Buffer, avc_decoder_configuration_record: Buffer): Buffer => {
   const { SequenceParameterSets } = read_avc_decoder_configuration_record(avc_decoder_configuration_record);
   const sps = SequenceParameterSets[0];
-  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(new BitReader(ebsp2rbsp(sps)));
+  const reader = new BitReader(ebsp2rbsp(sps));
+  read_nal_unit_header(reader);
+  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(reader);
 
   const presentation = [
     Math.floor(resolution[0] * source_aspect_ratio[0] / source_aspect_ratio[1]),
@@ -297,19 +299,22 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
   // NALu は Sub-Sample Encryption
   const cipher = crypto.createCipheriv(format.algorithm, key, iv);
   const builder = new ByteBuilder();
-  const reader = new ByteReader(sizedNalus);
+  const nalu_reader = new ByteReader(sizedNalus);
 
   const subsamples: SubsampleInformation[] = [];
-  while (!reader.isEOF()) {
+  while (!nalu_reader.isEOF()) {
     const naluLengthSize = avcDecoderConfigurationRecord.lengthSize;
-    const length = reader.readUIntBE(naluLengthSize);
-    const nalu = reader.read(length);
-    const naluType = nalu.readUInt8(0) & 0x1F;
-    const isVCL = 1 <= naluType && naluType <= 5;
+    const length = nalu_reader.readUIntBE(naluLengthSize);
+    const nalu = nalu_reader.read(length);
+
+    const bit_reader = new BitReader(nalu);
+    const { nal_ref_idc, nal_unit_type } = read_nal_unit_header(bit_reader);
+    const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
-      const clearBytes = Math.min(nalu.byteLength, 4);
+      skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
+      const clearBytes = Math.floor((bit_reader.comsumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
       const update = cipher.update(nalu.subarray(clearBytes));
@@ -332,20 +337,23 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
   iv = padIV(format, iv);
   // NALu は Sub-Sample かつ Pattern Encryption
   const builder = new ByteBuilder();
-  const reader = new ByteReader(sizedNalus);
+  const nalu_reader = new ByteReader(sizedNalus);
 
   const subsamples: SubsampleInformation[] = [];
-  while (!reader.isEOF()) {
+  while (!nalu_reader.isEOF()) {
     const cipher = crypto.createCipheriv(format.algorithm, key, iv);
     const naluLengthSize = avcDecoderConfigurationRecord.lengthSize;
-    const length = reader.readUIntBE(naluLengthSize);
-    const nalu = reader.read(length);
-    const naluType = nalu.readUInt8(0) & 0x1F;
-    const isVCL = 1 <= naluType && naluType <= 5;
+    const length = nalu_reader.readUIntBE(naluLengthSize);
+    const nalu = nalu_reader.read(length);
+
+    const bit_reader = new BitReader(nalu);
+    const { nal_ref_idc, nal_unit_type } = read_nal_unit_header(bit_reader);
+    const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
-      const clearBytes = Math.min(nalu.byteLength, 4);
+      skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
+      const clearBytes = Math.floor((bit_reader.comsumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
       const target = nalu.subarray(clearBytes);

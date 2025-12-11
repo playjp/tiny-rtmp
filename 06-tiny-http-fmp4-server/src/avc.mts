@@ -18,6 +18,82 @@ export const ebsp2rbsp = (ebsp: Buffer): Buffer => {
   return rbsp.read();
 };
 
+export type NALUnitHeader = {
+  nal_ref_idc: number;
+  nal_unit_type: number;
+};
+
+export const is_idr_nal = (nal_unit_type: number): boolean => {
+  return nal_unit_type === 5;
+}
+
+const skip_nal_unit_header_svc_extension = (reader: BitReader): void => {
+  reader.skipBool(); // idr_flag
+  reader.skipBits(6); // priority_id
+  reader.skipBool(); // no_inter_layer_pred_flag
+  reader.skipBits(3); // dependency_id
+  reader.skipBits(4); // quality_id
+  reader.skipBits(3); // temporal_id
+  reader.skipBool(); // use_ref_base_pic_flag
+  reader.skipBool(); // discardable_flag
+  reader.skipBool(); // output_flag
+  reader.skipBits(2); // reserved_three_2bits
+};
+
+const skip_nal_unit_header_3davc_extension = (reader: BitReader): void => {
+  reader.skipBits(8); // view_idx
+  reader.skipBool(); // depth_flag
+  reader.skipBool(); // non_idr_flag
+  reader.skipBits(3); // temporal_id
+  reader.skipBool(); // anchor_pic_flag
+  reader.skipBool(); // inter_view_flag
+};
+
+const skip_nal_unit_header_mvc_extension = (reader: BitReader): void => {
+  reader.skipBool(); // non_idr_flag
+  reader.skipBits(6); // priority_id
+  reader.skipBits(10); // view_id
+  reader.skipBits(3); // temporal_id
+  reader.skipBool(); // anchor_pic_flag
+  reader.skipBool(); // inter_view_flag
+  reader.skipBits(1); // reserved_one_bit
+};
+
+export const read_nal_unit_header = (reader: BitReader): NALUnitHeader => {
+  reader.skipBits(1); // forbidden_zero_bit
+  const nal_ref_idc = reader.readBits(2);
+  const nal_unit_type = reader.readBits(5);
+
+  if (nal_unit_type === 14 || nal_unit_type === 20 || nal_unit_type === 21) {
+    const { svc_extension_flag, avc_3d_extension_flag } = (() => {
+      if (nal_unit_type !== 21) {
+        return { svc_extension_flag: reader.readBool(), avc_3d_extension_flag: false };
+      } else {
+        return { svc_extension_flag: false, avc_3d_extension_flag: reader.readBool() };
+      }
+    })();
+
+    if (svc_extension_flag) {
+      skip_nal_unit_header_svc_extension(reader);
+    } else if (avc_3d_extension_flag) {
+      skip_nal_unit_header_3davc_extension(reader);
+    } else {
+      skip_nal_unit_header_mvc_extension(reader);
+    }
+    reader.skipByteAlign();
+  }
+
+  return {
+    nal_ref_idc,
+    nal_unit_type,
+  };
+}
+
+export const strip_nal_unit_header = (reader: BitReader): BitReader => {
+  read_nal_unit_header(reader);
+  return reader;
+}
+
 const profile_idc_with_chroma_info_set = new Set<number>([
   100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 139, 134, 135,
 ]);
@@ -187,6 +263,7 @@ type SliceHeaderRequiredData = {
 
 export type SequenceParameterSet = {
   // 大体必要なやつ
+  seq_parameter_set_id: number;
   profile_idc: number;
   constraint_set_flag: number;
   level_idc: number;
@@ -197,7 +274,6 @@ export type SequenceParameterSet = {
 } & SliceHeaderRequiredData; // slice header のパースで使うもの
 
 export const read_seq_parameter_set_data = (reader: BitReader): SequenceParameterSet => {
-  reader.skipBits(8); // skip NALu Header
   const profile_idc = reader.readBits(8);
   const constraint_set_flag = reader.readBits(8);
   const level_idc = reader.readBits(8);
@@ -294,6 +370,7 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
   const height = ((pic_height_in_map_units_minus1 + 1) * 16  - SubHeightC * (frame_crop_top_offset + frame_crop_bottom_offset)) * (frame_mbs_only_flag ? 1 : 2);
 
   return {
+    seq_parameter_set_id,
     profile_idc,
     constraint_set_flag,
     level_idc,
@@ -411,7 +488,7 @@ export const read_pic_parameter_set_data = (reader: BitReader): PictureParameter
 };
 
 export const write_avc_decoder_configuration_record = (sps_ebsp: Buffer, pps_ebsp: Buffer): Buffer => {
-  const sps_details = read_seq_parameter_set_data(new BitReader(ebsp2rbsp(sps_ebsp)));
+  const sps_details = read_seq_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(sps_ebsp))));
 
   const builder = new ByteBuilder();
   builder.writeU8(0x01); // configurationVersion
@@ -438,7 +515,7 @@ export const write_avc_decoder_configuration_record = (sps_ebsp: Buffer, pps_ebs
 export const write_mp4_avc_track_information = (track_id: number, timescale: number, avc_decoder_configuration_record: Buffer): Buffer => {
   const { SequenceParameterSets } = read_avc_decoder_configuration_record(avc_decoder_configuration_record);
   const sps = SequenceParameterSets[0];
-  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(new BitReader(ebsp2rbsp(sps)));
+  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(sps))));
 
   const presentation = [
     Math.floor(resolution[0] * source_aspect_ratio[0] / source_aspect_ratio[1]),
