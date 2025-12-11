@@ -1,9 +1,9 @@
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 
 export default class BitReader {
-  private bits: number[];
-  private reader: ByteReader;
-  private comsumed: number = 0;
+  protected bits: number[];
+  protected reader: ByteReader;
+  protected comsumed: number = 0;
 
   public constructor(data: Buffer) {
     this.bits = [];
@@ -18,7 +18,7 @@ export default class BitReader {
     return this.comsumed;
   }
 
-  private fill(): void {
+  protected fill(): void {
     const byte = this.reader.readU8();
     for (let i = 7; i >= 0; i--) {
       this.bits.push((byte >> i) & 1);
@@ -27,7 +27,7 @@ export default class BitReader {
 
   private shift(): number {
     if (this.isEOF()) { throw new Error('EOF Exception'); }
-    if (this.bits.length === 0) { this.fill(); }
+    while (this.bits.length === 0) { this.fill(); }
     this.comsumed += 1;
     return this.bits.shift()!;
   }

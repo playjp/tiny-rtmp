@@ -7,6 +7,7 @@ import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
 import { ebsp2rbsp, is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
 import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, padIV, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
+import EBSPBitReader from './ebsp-bit-reader.mts';
 
 export const SliceType = {
   P: 0,
@@ -307,7 +308,7 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const bit_reader = new BitReader(nalu);
+    const bit_reader = new EBSPBitReader(nalu);
     const { nal_ref_idc, nal_unit_type } = read_nal_unit_header(bit_reader);
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
@@ -346,7 +347,7 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const bit_reader = new BitReader(nalu);
+    const bit_reader = new EBSPBitReader(nalu);
     const { nal_ref_idc, nal_unit_type } = read_nal_unit_header(bit_reader);
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
