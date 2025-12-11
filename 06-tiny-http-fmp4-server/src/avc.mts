@@ -155,7 +155,38 @@ const read_scaling_list = (sizeOfScalingList: number, reader: BitReader): void =
   }
 };
 
+type PicOrderCntType = ({
+  // 0
+  has_log2_max_pic_order_cnt_lsb_minus4: true; // マーカーのために勝手に定義してる
+  has_delta_pic_order_always_zero_flag: false; // マーカーのために勝手に定義してる
+  log2_max_pic_order_cnt_lsb_minus4: number
+} | {
+  has_log2_max_pic_order_cnt_lsb_minus4: false; // マーカーのために勝手に定義してる
+  has_delta_pic_order_always_zero_flag: true; // マーカーのために勝手に定義してる
+  delta_pic_order_always_zero_flag: boolean;
+} | {
+  has_log2_max_pic_order_cnt_lsb_minus4: false,
+  has_delta_pic_order_always_zero_flag: false
+});
+
+export const sufficient_bits = (value: number): number => {
+  let bits = 0;
+  while (value >= 2 ** bits) {
+    bits += 1;
+  }
+  return bits;
+};
+
+// slice header のパースで使うもの
+type SliceHeaderRequiredData = {
+  separate_colour_plane_flag: boolean;
+  pic_size_in_map_units: number;
+  frame_mbs_only_flag: boolean;
+  log2_max_frame_num_minus4: number
+} & PicOrderCntType;
+
 export type SequenceParameterSet = {
+  // 大体必要なやつ
   profile_idc: number;
   constraint_set_flag: number;
   level_idc: number;
@@ -163,7 +194,7 @@ export type SequenceParameterSet = {
   chroma_format_idc: number;
   resolution: [number, number];
   vui_parameters: VUIParameters;
-};
+} & SliceHeaderRequiredData; // slice header のパースで使うもの
 
 export const read_seq_parameter_set_data = (reader: BitReader): SequenceParameterSet => {
   reader.skipBits(8); // skip NALu Header
@@ -171,11 +202,13 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
   const constraint_set_flag = reader.readBits(8);
   const level_idc = reader.readBits(8);
   const seq_parameter_set_id = reader.readUEG();
-  const { chroma_format_idc, bit_depth } = (() => {
+
+  const { chroma_format_idc, bit_depth, separate_colour_plane_flag } = (() => {
     if (profile_idc_with_chroma_info_set.has(profile_idc)) {
+      let separate_colour_plane_flag = false;
       const chroma_format_idc = reader.readUEG();
       if (chroma_format_idc === 3) {
-        const separate_colour_plane_flag = reader.readBool();
+        separate_colour_plane_flag = reader.readBool();
       }
       const bit_depth_luma_minus8 = reader.readUEG();
       const bit_depth_chroma_minus8 = reader.readUEG();
@@ -193,24 +226,49 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
           }
         }
       }
-      return { chroma_format_idc, bit_depth: { luma: bit_depth_luma_minus8 + 8, chroma: bit_depth_chroma_minus8 + 8 } };
+      return {
+        chroma_format_idc,
+        bit_depth: { luma: bit_depth_luma_minus8 + 8, chroma: bit_depth_chroma_minus8 + 8 },
+        separate_colour_plane_flag,
+      };
     } else {
-      return { chroma_format_idc: 1, bit_depth: { luma: 8, chroma: 8 } };
+      return {
+        chroma_format_idc: 1,
+        bit_depth: { luma: 8, chroma: 8 },
+        separate_colour_plane_flag: false,
+      };
     }
   })();
   const log2_max_frame_num_minus4 = reader.readUEG();
-  const pic_order_cnt_type = reader.readUEG();
-  if (pic_order_cnt_type === 0) {
-    const log2_max_pic_order_cnt_lsb_minus4 = reader.readUEG();
-  } else if (pic_order_cnt_type === 1) {
-    const delta_pic_order_always_zero_flag  = reader.readBool();
-    const offset_for_non_ref_pic = reader.readSEG();
-    const offset_for_top_to_bottom_field = reader.readSEG();
-    const num_ref_frames_in_pic_order_cnt_cycle = reader.readUEG();
-    for (let i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
-      const offset_for_ref_frame = reader.readSEG();
+  const log2_max_pic_order_cnt_lsb_minus4 = ((): PicOrderCntType => {
+    const pic_order_cnt_type = reader.readUEG();
+    if (pic_order_cnt_type === 0) {
+      const log2_max_pic_order_cnt_lsb_minus4 = reader.readUEG();
+      return {
+        has_log2_max_pic_order_cnt_lsb_minus4: true,
+        has_delta_pic_order_always_zero_flag: false,
+        log2_max_pic_order_cnt_lsb_minus4
+      } as const;
+    } else if (pic_order_cnt_type === 1) {
+      const delta_pic_order_always_zero_flag = reader.readBool();
+      const offset_for_non_ref_pic = reader.readSEG();
+      const offset_for_top_to_bottom_field = reader.readSEG();
+      const num_ref_frames_in_pic_order_cnt_cycle = reader.readUEG();
+      for (let i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
+        const offset_for_ref_frame = reader.readSEG();
+      }
+      return {
+        has_log2_max_pic_order_cnt_lsb_minus4: false,
+        has_delta_pic_order_always_zero_flag: true,
+        delta_pic_order_always_zero_flag,
+      } as const;
+    } else {
+      return {
+        has_log2_max_pic_order_cnt_lsb_minus4: false,
+        has_delta_pic_order_always_zero_flag: false,
+      } as const;
     }
-  }
+  })();
   const max_num_ref_frames = reader.readUEG();
   const gaps_in_frame_num_value_allowed_flag  = reader.readBool();
   const pic_width_in_mbs_minus1 = reader.readUEG();
@@ -243,6 +301,112 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
     bit_depth,
     resolution: [width, height],
     vui_parameters,
+    // slice header のパースで使う
+    separate_colour_plane_flag,
+    pic_size_in_map_units: (pic_width_in_mbs_minus1 + 1) * (pic_height_in_map_units_minus1 + 1),
+    frame_mbs_only_flag,
+    log2_max_frame_num_minus4,
+    ... log2_max_pic_order_cnt_lsb_minus4
+  };
+};
+
+export type SliceGroupMapType = ({
+  has_slice_group_map_type: true;
+  slice_group_map_type: number;
+} | {
+  has_slice_group_map_type: false;
+}) & ({
+  has_slice_group_change_rate_minus1: true;
+  slice_group_change_rate_minus1: number;
+} | {
+  has_slice_group_change_rate_minus1: false;
+});
+
+export type PictureParameterSet = {
+  pic_parameter_set_id: number;
+  seq_parameter_set_id: number;
+  entropy_coding_mode_flag: boolean;
+  bottom_field_pic_order_in_frame_present_flag: boolean;
+  num_ref_idx_l0_default_active_minus1: number,
+  num_ref_idx_l1_default_active_minus1: number,
+  weighted_pred_flag: boolean,
+  weighted_bipred_idc: number,
+  deblocking_filter_control_present_flag: boolean;
+  redundant_pic_cnt_present_flag: boolean;
+} & SliceGroupMapType;
+
+export const read_pic_parameter_set_data = (reader: BitReader): PictureParameterSet => {
+  const pic_parameter_set_id = reader.readUEG();
+  const seq_parameter_set_id = reader.readUEG();
+  const entropy_coding_mode_flag = reader.readBool();
+  const bottom_field_pic_order_in_frame_present_flag = reader.readBool();
+  const slice_group_map_type = ((): SliceGroupMapType => {
+    const num_slice_groups_minus1 = reader.readUEG();
+    if (num_slice_groups_minus1 > 0) {
+      const slice_group_map_type = reader.readUEG();
+      if (slice_group_map_type === 0) {
+        for(let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
+          reader.skipUEG(); // run_length_minus1[iGroup]
+        }
+      } else if (slice_group_map_type === 1) {
+        for(let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
+          reader.skipUEG(); // top_left[iGroup]
+          reader.skipUEG(); // bottom_right[iGroup]
+        }
+      } else if (3 <= slice_group_map_type && slice_group_map_type <= 5) {
+        reader.skipBool(); // slice_group_change_direction_flag
+        const slice_group_change_rate_minus1= reader.readUEG();
+
+        return {
+          has_slice_group_map_type: true,
+          has_slice_group_change_rate_minus1: true,
+          slice_group_map_type,
+          slice_group_change_rate_minus1,
+        } as const;
+
+      } else if (slice_group_map_type === 6) {
+        const pic_size_in_map_units_minus1 = reader.readUEG();
+        for (let i = 0; i <= pic_size_in_map_units_minus1; i++) {
+          const num_slice_groups_bits = sufficient_bits(num_slice_groups_minus1 + 1);
+          reader.skipBits(num_slice_groups_bits);
+        }
+      }
+      return {
+        has_slice_group_map_type: true,
+        has_slice_group_change_rate_minus1: false,
+        slice_group_map_type
+      } as const;
+    } else {
+      return {
+        has_slice_group_map_type: false,
+        has_slice_group_change_rate_minus1: false,
+      } as const;
+    }
+  })();
+  const num_ref_idx_l0_default_active_minus1 = reader.readUEG();
+  const num_ref_idx_l1_default_active_minus1 = reader.readUEG();
+  const weighted_pred_flag = reader.readBool(); // weighted_pred_flag
+  const weighted_bipred_idc = reader.readBits(2); // weighted_bipred_idc
+  reader.skipSEG(); // pic_init_qp_minus26
+  reader.skipSEG(); // pic_init_qs_minus26
+  reader.skipSEG(); // chroma_qp_index_offset
+  const deblocking_filter_control_present_flag = reader.readBool();
+  reader.readBool(); // constrained_intra_pred_flag
+  const redundant_pic_cnt_present_flag = reader.readBool();
+  // TODO: more_rbsp_data の実装が面倒だし、slice_header を読むのに必要ないので
+
+  return {
+    pic_parameter_set_id,
+    seq_parameter_set_id,
+    entropy_coding_mode_flag,
+    bottom_field_pic_order_in_frame_present_flag,
+    num_ref_idx_l0_default_active_minus1,
+    num_ref_idx_l1_default_active_minus1,
+    weighted_pred_flag,
+    weighted_bipred_idc,
+    ... slice_group_map_type,
+    deblocking_filter_control_present_flag,
+    redundant_pic_cnt_present_flag,
   };
 };
 
