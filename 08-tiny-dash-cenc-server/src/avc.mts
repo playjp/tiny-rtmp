@@ -306,14 +306,14 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const { nal_ref_idc, nal_unit_type, comsumed_bytes } = read_nal_unit_header(nalu);
-    const bit_reader = new EBSPBitReader(nalu.subarray(comsumed_bytes));
+    const { nal_ref_idc, nal_unit_type, consumed_bytes } = read_nal_unit_header(nalu);
+    const bit_reader = new EBSPBitReader(nalu.subarray(consumed_bytes));
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
       skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
-      const clearBytes = Math.floor((bit_reader.comsumedBits() + 8 - 1) / 8);
+      const clearBytes = Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
       const update = cipher.update(nalu.subarray(clearBytes));
@@ -345,14 +345,14 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const { nal_ref_idc, nal_unit_type, comsumed_bytes } = read_nal_unit_header(nalu);
-    const bit_reader = new EBSPBitReader(nalu.subarray(comsumed_bytes));
+    const { nal_ref_idc, nal_unit_type, consumed_bytes } = read_nal_unit_header(nalu);
+    const bit_reader = new EBSPBitReader(nalu.subarray(consumed_bytes));
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
     if (isVCL) {
       skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
-      const clearBytes = Math.floor((bit_reader.comsumedBits() + 8 - 1) / 8);
+      const clearBytes = Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
       const target = nalu.subarray(clearBytes);

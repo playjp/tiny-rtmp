@@ -14,7 +14,7 @@ export default class BitReader {
     return this.reader.isEOF() && this.bits.length === 0;
   }
 
-  public comsumedBits(): number {
+  public consumedBits(): number {
     return this.comsumed;
   }
 

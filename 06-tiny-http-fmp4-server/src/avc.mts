@@ -1,28 +1,13 @@
 import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
-import ByteVector from './byte-vector.mts';
 import EBSPBitReader from './ebsp-bit-reader.mts';
 import { avc1, avcC, make, track } from './mp4.mts';
-
-export const ebsp2rbsp = (ebsp: Buffer): Buffer => {
-  const rbsp = new ByteVector(ebsp.byteLength);
-
-  rbsp.write(ebsp.subarray(0, 2));
-  for (let i = 2; i < ebsp.length - 1; i++) {
-    if (ebsp[i - 2] === 0 && ebsp[i - 1] === 0 && ebsp[i - 0] === 3 && 0x00 <= ebsp[i + 1] && ebsp[i + 1] <= 0x03) {
-      continue;
-    }
-    rbsp.writeU8(ebsp[i]);
-  }
-  rbsp.writeU8(ebsp[ebsp.length - 1]);
-  return rbsp.read();
-};
 
 export type NALUnitHeader = {
   nal_ref_idc: number;
   nal_unit_type: number;
-  comsumed_bytes: number;
+  consumed_bytes: number;
 };
 
 export const is_idr_nal = (nal_unit_type: number): boolean => {
@@ -89,13 +74,13 @@ export const read_nal_unit_header = (nalu: Buffer): NALUnitHeader => {
   return {
     nal_ref_idc,
     nal_unit_type,
-    comsumed_bytes: Math.floor((reader.comsumedBits() + 8 - 1) / 8),
+    consumed_bytes: Math.floor((reader.consumedBits() + 8 - 1) / 8),
   };
 }
 
 export const strip_nal_unit_header = (nalu: Buffer): EBSPBitReader => {
-  const { comsumed_bytes } = read_nal_unit_header(nalu);
-  return new EBSPBitReader(nalu.subarray(comsumed_bytes));
+  const { consumed_bytes } = read_nal_unit_header(nalu);
+  return new EBSPBitReader(nalu.subarray(consumed_bytes));
 }
 
 const profile_idc_with_chroma_info_set = new Set<number>([
