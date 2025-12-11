@@ -26,8 +26,8 @@ export default class BitReader {
   }
 
   private shift(): number {
+    while (!this.isEOF() && this.bits.length === 0) { this.fill(); }
     if (this.isEOF()) { throw new Error('EOF Exception'); }
-    while (this.bits.length === 0) { this.fill(); }
     this.comsumed += 1;
     return this.bits.shift()!;
   }
