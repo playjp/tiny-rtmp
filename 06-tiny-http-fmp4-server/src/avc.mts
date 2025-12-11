@@ -12,7 +12,7 @@ export type NALUnitHeader = {
 
 export const is_idr_nal = (nal_unit_type: number): boolean => {
   return nal_unit_type === 5;
-}
+};
 
 const skip_nal_unit_header_svc_extension = (reader: BitReader): void => {
   reader.skipBool(); // idr_flag
@@ -76,12 +76,12 @@ export const read_nal_unit_header = (nalu: Buffer): NALUnitHeader => {
     nal_unit_type,
     consumed_bytes: Math.floor((reader.consumedBits() + 8 - 1) / 8),
   };
-}
+};
 
 export const strip_nal_unit_header = (nalu: Buffer): EBSPBitReader => {
   const { consumed_bytes } = read_nal_unit_header(nalu);
   return new EBSPBitReader(nalu.subarray(consumed_bytes));
-}
+};
 
 const profile_idc_with_chroma_info_set = new Set<number>([
   100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 139, 134, 135,
@@ -224,14 +224,14 @@ type PicOrderCntType = ({
   // 0
   has_log2_max_pic_order_cnt_lsb_minus4: true; // マーカーのために勝手に定義してる
   has_delta_pic_order_always_zero_flag: false; // マーカーのために勝手に定義してる
-  log2_max_pic_order_cnt_lsb_minus4: number
+  log2_max_pic_order_cnt_lsb_minus4: number;
 } | {
   has_log2_max_pic_order_cnt_lsb_minus4: false; // マーカーのために勝手に定義してる
   has_delta_pic_order_always_zero_flag: true; // マーカーのために勝手に定義してる
   delta_pic_order_always_zero_flag: boolean;
 } | {
-  has_log2_max_pic_order_cnt_lsb_minus4: false,
-  has_delta_pic_order_always_zero_flag: false
+  has_log2_max_pic_order_cnt_lsb_minus4: false;
+  has_delta_pic_order_always_zero_flag: false;
 });
 
 export const sufficient_bits = (value: number): number => {
@@ -247,7 +247,7 @@ type SliceHeaderRequiredData = {
   separate_colour_plane_flag: boolean;
   pic_size_in_map_units: number;
   frame_mbs_only_flag: boolean;
-  log2_max_frame_num_minus4: number
+  log2_max_frame_num_minus4: number;
 } & PicOrderCntType;
 
 export type SequenceParameterSet = {
@@ -312,7 +312,7 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
       return {
         has_log2_max_pic_order_cnt_lsb_minus4: true,
         has_delta_pic_order_always_zero_flag: false,
-        log2_max_pic_order_cnt_lsb_minus4
+        log2_max_pic_order_cnt_lsb_minus4,
       } as const;
     } else if (pic_order_cnt_type === 1) {
       const delta_pic_order_always_zero_flag = reader.readBool();
@@ -372,7 +372,7 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
     pic_size_in_map_units: (pic_width_in_mbs_minus1 + 1) * (pic_height_in_map_units_minus1 + 1),
     frame_mbs_only_flag,
     log2_max_frame_num_minus4,
-    ... log2_max_pic_order_cnt_lsb_minus4
+    ... log2_max_pic_order_cnt_lsb_minus4,
   };
 };
 
@@ -393,10 +393,10 @@ export type PictureParameterSet = {
   seq_parameter_set_id: number;
   entropy_coding_mode_flag: boolean;
   bottom_field_pic_order_in_frame_present_flag: boolean;
-  num_ref_idx_l0_default_active_minus1: number,
-  num_ref_idx_l1_default_active_minus1: number,
-  weighted_pred_flag: boolean,
-  weighted_bipred_idc: number,
+  num_ref_idx_l0_default_active_minus1: number;
+  num_ref_idx_l1_default_active_minus1: number;
+  weighted_pred_flag: boolean;
+  weighted_bipred_idc: number;
   deblocking_filter_control_present_flag: boolean;
   redundant_pic_cnt_present_flag: boolean;
 } & SliceGroupMapType;
@@ -440,7 +440,7 @@ export const read_pic_parameter_set_data = (reader: BitReader): PictureParameter
       return {
         has_slice_group_map_type: true,
         has_slice_group_change_rate_minus1: false,
-        slice_group_map_type
+        slice_group_map_type,
       } as const;
     } else {
       return {

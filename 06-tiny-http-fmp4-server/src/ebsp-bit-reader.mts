@@ -1,4 +1,4 @@
-import BitReader from "../../03-tiny-http-ts-server/src/bit-reader.mts";
+import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
 
 const unescaped = Symbol();
 

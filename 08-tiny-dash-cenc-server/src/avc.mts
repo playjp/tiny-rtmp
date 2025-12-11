@@ -23,16 +23,16 @@ export const is_p_slice = (slice_type: number): boolean => {
   return is_target_slice_type(slice_type, SliceType.P);
 };
 export const is_b_slice = (slice_type: number): boolean => {
-  return is_target_slice_type(slice_type, SliceType.B)
+  return is_target_slice_type(slice_type, SliceType.B);
 };
 export const is_i_slice = (slice_type: number): boolean => {
-  return is_target_slice_type(slice_type, SliceType.I)
+  return is_target_slice_type(slice_type, SliceType.I);
 };
 export const is_sp_slice = (slice_type: number): boolean => {
-  return is_target_slice_type(slice_type, SliceType.SP)
+  return is_target_slice_type(slice_type, SliceType.SP);
 };
 export const is_si_slice = (slice_type: number): boolean => {
-  return is_target_slice_type(slice_type, SliceType.SI)
+  return is_target_slice_type(slice_type, SliceType.SI);
 };
 
 const skip_ref_pic_list_modification = (slice_type: number, reader: BitReader): void => {
@@ -105,7 +105,7 @@ const skip_ref_pic_list_mvc_modification = (slice_type: number, reader: BitReade
   }
 };
 
-const skip_pred_weight_table = (slice_type: number,num_ref_idx_l0_active_minus1: number, num_ref_idx_l1_active_minus1: number, sps: SequenceParameterSet, reader: BitReader): void => {
+const skip_pred_weight_table = (slice_type: number, num_ref_idx_l0_active_minus1: number, num_ref_idx_l1_active_minus1: number, sps: SequenceParameterSet, reader: BitReader): void => {
   reader.skipUEG(); // luma_log2_weight_denom
   const chroma_array_type = sps.separate_colour_plane_flag ? 0 : sps.chroma_format_idc;
   if (chroma_array_type !== 0) {
@@ -145,7 +145,7 @@ const skip_pred_weight_table = (slice_type: number,num_ref_idx_l0_active_minus1:
       }
     }
   }
-}
+};
 
 const skip_dec_ref_pic_marking = (nal_unit_type: number, reader: BitReader): void => {
   if (is_idr_nal(nal_unit_type)) {
@@ -173,7 +173,7 @@ const skip_dec_ref_pic_marking = (nal_unit_type: number, reader: BitReader): voi
       }
     }
   }
-}
+};
 
 export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, reader: BitReader, all_sps: Buffer[], all_pps: Buffer[]): void => {
   const ssps = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(sps)));
@@ -232,9 +232,9 @@ export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, re
   }
 
   if (nal_unit_type === 20 || nal_unit_type === 21) { /* specified in Annex H */
-    skip_ref_pic_list_mvc_modification(slice_type, reader)
+    skip_ref_pic_list_mvc_modification(slice_type, reader);
   } else {
-    skip_ref_pic_list_modification(slice_type, reader)
+    skip_ref_pic_list_modification(slice_type, reader);
   }
 
   if((pps.weighted_pred_flag && (is_p_slice(slice_type) || is_sp_slice(slice_type))) || (pps.weighted_bipred_idc === 1 && is_b_slice(slice_type))) {
@@ -261,7 +261,7 @@ export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, re
     }
   }
   if (pps.has_slice_group_map_type && pps.has_slice_group_change_rate_minus1) {
-    const slice_group_change_cycle_bits = sufficient_bits(sps.pic_size_in_map_units / (pps.slice_group_change_rate_minus1 + 1))
+    const slice_group_change_cycle_bits = sufficient_bits(sps.pic_size_in_map_units / (pps.slice_group_change_rate_minus1 + 1));
     reader.skipBits(slice_group_change_cycle_bits);
   }
 };
