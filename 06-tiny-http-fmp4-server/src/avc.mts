@@ -2,6 +2,7 @@ import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
 import ByteVector from './byte-vector.mts';
+import EBSPBitReader from './ebsp-bit-reader.mts';
 import { avc1, avcC, make, track } from './mp4.mts';
 
 export const ebsp2rbsp = (ebsp: Buffer): Buffer => {
@@ -21,6 +22,7 @@ export const ebsp2rbsp = (ebsp: Buffer): Buffer => {
 export type NALUnitHeader = {
   nal_ref_idc: number;
   nal_unit_type: number;
+  comsumed_bytes: number;
 };
 
 export const is_idr_nal = (nal_unit_type: number): boolean => {
@@ -59,7 +61,8 @@ const skip_nal_unit_header_mvc_extension = (reader: BitReader): void => {
   reader.skipBits(1); // reserved_one_bit
 };
 
-export const read_nal_unit_header = (reader: BitReader): NALUnitHeader => {
+export const read_nal_unit_header = (nalu: Buffer): NALUnitHeader => {
+  const reader = new BitReader(nalu);
   reader.skipBits(1); // forbidden_zero_bit
   const nal_ref_idc = reader.readBits(2);
   const nal_unit_type = reader.readBits(5);
@@ -86,12 +89,13 @@ export const read_nal_unit_header = (reader: BitReader): NALUnitHeader => {
   return {
     nal_ref_idc,
     nal_unit_type,
+    comsumed_bytes: Math.floor((reader.comsumedBits() + 8 - 1) / 8),
   };
 }
 
-export const strip_nal_unit_header = (reader: BitReader): BitReader => {
-  read_nal_unit_header(reader);
-  return reader;
+export const strip_nal_unit_header = (nalu: Buffer): EBSPBitReader => {
+  const { comsumed_bytes } = read_nal_unit_header(nalu);
+  return new EBSPBitReader(nalu.subarray(comsumed_bytes));
 }
 
 const profile_idc_with_chroma_info_set = new Set<number>([
@@ -488,7 +492,7 @@ export const read_pic_parameter_set_data = (reader: BitReader): PictureParameter
 };
 
 export const write_avc_decoder_configuration_record = (sps_ebsp: Buffer, pps_ebsp: Buffer): Buffer => {
-  const sps_details = read_seq_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(sps_ebsp))));
+  const sps_details = read_seq_parameter_set_data(strip_nal_unit_header(sps_ebsp));
 
   const builder = new ByteBuilder();
   builder.writeU8(0x01); // configurationVersion
@@ -515,7 +519,7 @@ export const write_avc_decoder_configuration_record = (sps_ebsp: Buffer, pps_ebs
 export const write_mp4_avc_track_information = (track_id: number, timescale: number, avc_decoder_configuration_record: Buffer): Buffer => {
   const { SequenceParameterSets } = read_avc_decoder_configuration_record(avc_decoder_configuration_record);
   const sps = SequenceParameterSets[0];
-  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(sps))));
+  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(strip_nal_unit_header(sps));
 
   const presentation = [
     Math.floor(resolution[0] * source_aspect_ratio[0] / source_aspect_ratio[1]),

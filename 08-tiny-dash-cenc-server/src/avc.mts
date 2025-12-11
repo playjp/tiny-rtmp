@@ -4,10 +4,10 @@ import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 import { read_avc_decoder_configuration_record, type AVCDecoderConfigurationRecord } from '../../03-tiny-http-ts-server/src/avc.mts';
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
-import { ebsp2rbsp, is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
+import { is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
+import EBSPBitReader from '../../06-tiny-http-fmp4-server/src/ebsp-bit-reader.mts';
 import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
 import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, padIV, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
-import EBSPBitReader from './ebsp-bit-reader.mts';
 
 export const SliceType = {
   P: 0,
@@ -176,8 +176,8 @@ const skip_dec_ref_pic_marking = (nal_unit_type: number, reader: BitReader): voi
 }
 
 export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, reader: BitReader, all_sps: Buffer[], all_pps: Buffer[]): void => {
-  const ssps = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(sps)))));
-  const ppps = all_pps.map((pps) => read_pic_parameter_set_data(strip_nal_unit_header(new BitReader(ebsp2rbsp(pps)))));
+  const ssps = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(sps)));
+  const ppps = all_pps.map((pps) => read_pic_parameter_set_data(strip_nal_unit_header(pps)));
 
   reader.skipUEG(); // first_mb_in_slice
   const slice_type = reader.readUEG();
@@ -269,9 +269,7 @@ export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, re
 export const write_mp4_avc_track_information = (track_id: number, timescale: number, encryptionFormat: EncryptionFormat, ivType: IVType, keyId: Buffer, avc_decoder_configuration_record: Buffer): Buffer => {
   const { SequenceParameterSets } = read_avc_decoder_configuration_record(avc_decoder_configuration_record);
   const sps = SequenceParameterSets[0];
-  const reader = new BitReader(ebsp2rbsp(sps));
-  read_nal_unit_header(reader);
-  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(reader);
+  const { resolution, vui_parameters: { source_aspect_ratio } } = read_seq_parameter_set_data(strip_nal_unit_header(sps));
 
   const presentation = [
     Math.floor(resolution[0] * source_aspect_ratio[0] / source_aspect_ratio[1]),
@@ -308,8 +306,8 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const bit_reader = new EBSPBitReader(nalu);
-    const { nal_ref_idc, nal_unit_type } = read_nal_unit_header(bit_reader);
+    const { nal_ref_idc, nal_unit_type, comsumed_bytes } = read_nal_unit_header(nalu);
+    const bit_reader = new EBSPBitReader(nalu.subarray(comsumed_bytes));
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
@@ -347,8 +345,8 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const bit_reader = new EBSPBitReader(nalu);
-    const { nal_ref_idc, nal_unit_type } = read_nal_unit_header(bit_reader);
+    const { nal_ref_idc, nal_unit_type, comsumed_bytes } = read_nal_unit_header(nalu);
+    const bit_reader = new EBSPBitReader(nalu.subarray(comsumed_bytes));
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
     builder.writeUIntBE(length, avcDecoderConfigurationRecord.lengthSize);
