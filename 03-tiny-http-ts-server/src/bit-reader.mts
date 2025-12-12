@@ -1,35 +1,36 @@
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 
 export default class BitReader {
-  protected bits: number[];
+  protected bits: number = 0;
+  protected bits_offset: number = 8;
+
   protected reader: ByteReader;
-  protected comsumed: number = 0;
+  protected consumed: number = 0;
 
   public constructor(data: Buffer) {
-    this.bits = [];
     this.reader = new ByteReader(data);
   }
 
   public isEOF(): boolean {
-    return this.reader.isEOF() && this.bits.length === 0;
+    return this.reader.isEOF() && this.bits_offset >= 8;
   }
 
   public consumedBits(): number {
-    return this.comsumed;
+    return this.consumed;
   }
 
   protected fill(): void {
-    const byte = this.reader.readU8();
-    for (let i = 7; i >= 0; i--) {
-      this.bits.push((byte >> i) & 1);
-    }
+    this.bits = this.reader.readU8();
+    this.bits_offset = 0;
   }
 
   private shift(): number {
-    while (!this.isEOF() && this.bits.length === 0) { this.fill(); }
+    while (!this.isEOF() && this.bits_offset >= 8) { this.fill(); }
     if (this.isEOF()) { throw new Error('EOF Exception'); }
-    this.comsumed += 1;
-    return this.bits.shift()!;
+    const bit = (this.bits & (1 << (7 - this.bits_offset))) !== 0 ? 1 : 0;
+    this.bits_offset += 1;
+    this.consumed += 1;
+    return bit;
   }
 
   public skipBits(length: number): void {
@@ -40,13 +41,13 @@ export default class BitReader {
   }
 
   public skipByteAlign(): void {
-    while ((this.bits.length % 8) !== 0) {
+    while (!this.isByteAligned()) {
       this.shift();
     }
   }
 
   public isByteAligned(): boolean {
-    return (this.bits.length % 8) === 0;
+    return (this.bits_offset % 8) === 0;
   }
 
   public readBits(length: number): number {

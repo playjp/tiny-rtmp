@@ -7,7 +7,7 @@ export default class EBSPBitReader extends BitReader {
   private snd_byte: number | null | typeof unescaped = null;
 
   public isEOF(): boolean {
-    return this.reader.isEOF() && this.fst_byte == null && this.snd_byte == null && this.bits.length === 0;
+    return this.reader.isEOF() && this.fst_byte == null && this.snd_byte == null && this.bits_offset >= 8;
   }
 
   protected fill(): void {
@@ -19,11 +19,10 @@ export default class EBSPBitReader extends BitReader {
     }
 
     if (typeof this.fst_byte === 'number') {
-      for (let i = 7; i >= 0; i--) {
-        this.bits.push((this.fst_byte >> i) & 1);
-      }
+      this.bits = this.fst_byte;
+      this.bits_offset = 0;
     } else if (this.fst_byte === unescaped) {
-      this.comsumed += 8;
+      this.consumed += 8;
     }
 
     this.fst_byte = this.snd_byte;
