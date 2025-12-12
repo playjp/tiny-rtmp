@@ -71,6 +71,30 @@ const streamKey = args.streamKey;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
 const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
 
+const page = `
+<!DOCTYPE html>
+<html>
+  <body>
+    <video id="video" controls></video>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script>
+      function init() {
+        const video = document.querySelector("video");
+        const url = "./playlist.m3u8";
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+        } else if (Hls.isSupported()) {
+          const player = new Hls();
+          player.loadSource(url);
+          player.attachMedia(video);
+        }
+      }
+      init();
+    </script>
+  </body>
+</html>
+`.trimStart();
+
 let rtmp_to_hls: HLSGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
@@ -111,6 +135,16 @@ const web_server = https.createServer({ key, cert }, async (req, res) => {
   }
 
   const prefix = url.pathname.slice(`/${app}/${streamKey}/`.length);
+  if (prefix === '' || prefix === 'index.html') {
+    res.writeHead(200, {
+      'content-type': 'text/html',
+      'access-control-allow-origin': '*',
+      'cache-control': 'maxage=0',
+    });
+    res.write(page);
+    res.end();
+    return;
+  }
   if (prefix === 'playlist.m3u8') {
     const published = await rtmp_to_hls.published();
     if (!published) {
@@ -129,22 +163,24 @@ const web_server = https.createServer({ key, cert }, async (req, res) => {
   }
   if (prefix.endsWith('.ts') && !Number.isNaN(Number.parseInt(prefix.slice(0, -3), 10))) {
     const index = Number.parseInt(prefix.slice(0, -3), 10);
+    const segment = rtmp_to_hls.segment(index);
 
-    rtmp_to_hls.segment(index, res, (found: boolean) => {
-      if (!found) {
-        res.writeHead(404, {
-          'access-control-allow-origin': '*',
-          'cache-control': 'maxage=0',
-        });
-        res.end();
-      } else {
-        res.writeHead(200, {
-          'content-type': 'video/mp2t',
-          'access-control-allow-origin': '*',
-          'cache-control': `maxage=${maxage}`,
-        });
-      }
+    if (segment == null) {
+      res.writeHead(404, {
+        'access-control-allow-origin': '*',
+        'cache-control': 'maxage=0',
+      });
+      res.end();
+      return;
+    }
+
+    res.writeHead(200, {
+      'content-type': 'video/mp2t',
+      'access-control-allow-origin': '*',
+      'cache-control': `maxage=${maxage}`,
     });
+    res.write(segment);
+    res.end();
     return;
   }
 
