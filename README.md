@@ -35,6 +35,8 @@
     * 実装する機能: LL-HLSのHTTP2対応
 6. [WebSocket対応](./XX-tiny-ws-flv-server/)
     * 実装する機能: WS-FLV対応
+7. [Widevine(受け入れテスト用)対応](./XX-tiny-dash-widevine-testing-server/)
+    * 実装する機能: DRM(Widevine)対応
 
 ## 必要環境
 
