@@ -91,7 +91,7 @@ export default class DASHGenerator {
       const widevine_protection = XMLNode.from('ContentProtection', {
         schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
       }, [
-        XMLNode.from('cenc:pssh', {}, ['AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQSEOtngrvLNF6Wu89hZjDxo9o='])
+        XMLNode.from('cenc:pssh', {}, ['AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQSEOtngrvLNF6Wu89hZjDxo9o=']),
       ]);
       video_adaptetionset.children.push(widevine_protection);
 
@@ -115,7 +115,7 @@ export default class DASHGenerator {
       const widevine_protection = XMLNode.from('ContentProtection', {
         schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
       }, [
-        XMLNode.from('cenc:pssh', {}, ['AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQSEOtngrvLNF6Wu89hZjDxo9o='])
+        XMLNode.from('cenc:pssh', {}, ['AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQSEOtngrvLNF6Wu89hZjDxo9o=']),
       ]);
       audio_adaptetionset.children.push(widevine_protection);
 
@@ -193,7 +193,7 @@ export default class DASHGenerator {
         initialize(RTMP_TIMESCALE, [1], vector, (vector) => {
           vector.write(write_mp4_avc_track_information(1, RTMP_TIMESCALE, this.encryptionFormat, this.ivType, this.keyId, this.avcDecoderConfigurationRecord!));
           pssh(Buffer.from('edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'.replaceAll('-', ''), 'hex'), [this.keyId], Buffer.from(
-            'CAESEJA1GVFoa14boiJDns7B8SoaDXdpZGV2aW5lX3Rlc3QiASo', 'base64' // テスト用の PSSH (Protocol Buffers のデータ)
+            'CAESEJA1GVFoa14boiJDns7B8SoaDXdpZGV2aW5lX3Rlc3QiASo', 'base64', // テスト用の PSSH (Protocol Buffers のデータ)
           ), vector); // 本当は v0 の方がいい
         });
       });
@@ -205,7 +205,7 @@ export default class DASHGenerator {
         initialize(samplingFrequency, [1], vector, (vector) => {
           vector.write(write_mp4_aac_track_information(1, samplingFrequency, this.encryptionFormat, this.ivType, this.keyId, this.audioSpecificConfig!));
           pssh(Buffer.from('edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'.replaceAll('-', ''), 'hex'), [this.keyId], Buffer.from(
-            'CAESEJA1GVFoa14boiJDns7B8SoaDXdpZGV2aW5lX3Rlc3QiASo', 'base64' // テスト用の PSSH (Protocol Buffers のデータ)
+            'CAESEJA1GVFoa14boiJDns7B8SoaDXdpZGV2aW5lX3Rlc3QiASo', 'base64', // テスト用の PSSH (Protocol Buffers のデータ)
           ), vector); // 本当は v0 の方がいい
         });
       });
