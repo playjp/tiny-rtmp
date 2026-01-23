@@ -127,13 +127,13 @@ export default class MessageBuilder {
   private static calculate_timestamp(message: LengthOmittedMessage, previous?: TimestampInformation): number {
     return (message.timestamp - (previous?.timestamp ?? 0));
   }
-  private static require_extended_timestamp(message: LengthOmittedMessage, previous?: TimestampInformation): boolean {
+  private static is_extended_timestamp_required(message: LengthOmittedMessage, previous?: TimestampInformation): boolean {
     return MessageBuilder.calculate_timestamp(message, previous) >= 0xFFFFFF;
   };
   private set_timestamp_information(message: LengthOmittedMessage, previous?: TimestampInformation): void {
     this.cs_id_timestamp_information.set(MessageBuilder.cs_id_hash(message), {
       timestamp: message.timestamp,
-      is_extended_timestamp: MessageBuilder.require_extended_timestamp(message, previous),
+      is_extended_timestamp: MessageBuilder.is_extended_timestamp_required(message, previous),
     });
   }
 
@@ -142,7 +142,7 @@ export default class MessageBuilder {
 
     const cs_id = this.get_cs_id(message, track);
     const previous_timestamp_information = this.get_timestamp_information(message);
-    const is_extended_timestamp = MessageBuilder.require_extended_timestamp(message, previous_timestamp_information);
+    const is_extended_timestamp = MessageBuilder.is_extended_timestamp_required(message, previous_timestamp_information);
     const timestamp = MessageBuilder.calculate_timestamp(message, previous_timestamp_information);
 
     for (let i = 0; i < message.data.byteLength; i += this.chunk_maximum_size) {
