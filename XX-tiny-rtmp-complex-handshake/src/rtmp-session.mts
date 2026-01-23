@@ -90,7 +90,7 @@ const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): 
     if (c2_digest_server.equals(c2_digest_client)) {
       return true;
     } else {
-      // fallback for simple signature
+      // 署名だけサポートしてない場合がある(らしい)ので、その場合はランダムエコーを検証するが、これはいるのか疑問
       const c2_random_echo = c2.subarray(8);
       return s1_random.equals(c2_random_echo);
     }
