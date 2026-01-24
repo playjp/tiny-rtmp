@@ -6,7 +6,7 @@ import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
-import read_amf0, { isAMF0Number, isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
+import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 
 import BandwidthEstimator from './bandwidth-estimator.mts';
@@ -68,6 +68,7 @@ const TRANSITION = {
     const transaction_id = command[1];
     if (!isAMF0Object(command[2])) { return STATE.WAITING_CONNECT; }
     const appName = command[2]['app'];
+    if (!isAMF0String(appName)) { return STATE.WAITING_CONNECT; }
     const connectAccepted = appName === option.app;
 
     const status = connectAccepted ? '_result' : '_error';
@@ -205,7 +206,7 @@ export default async function* handle_rtmp(connection: Duplex, app: string, key:
     /*
     * RTMPのメッセージを処理する
     */
-    let state: (typeof STATE)[keyof typeof STATE] = STATE.WAITING_CONNECT;
+    let state: (typeof STATE)[keyof typeof STATE] = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
     for await (const message of read_message(reader)) {
       // 共通で処理するメッセージはここで処理する
 

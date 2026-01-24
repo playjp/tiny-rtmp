@@ -4,17 +4,11 @@ import type { Duplex } from 'node:stream';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import FLVWriter from '../../01-tiny-rtmp-server/src/flv-writer.mts';
 import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
-
-const STATE = {
-  WAITING_CONNECT: 'WAITING_CONNECT',
-  WAITING_CREATESTREAM: 'WAITING_CREATESTREAM',
-  WAITING_PUBLISH: 'WAITING_PUBLISH',
-  PUBLISHED: 'PUBLISHED',
-} as const;
 
 const simple_handshake_C1S1C2S2 = async (c1: Buffer, reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // simple handshake
@@ -48,8 +42,7 @@ const verifyC1 = (c1: Buffer, offset: number): boolean => {
 
 const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   const c1 = await reader.read(1536); // read C1
-  const s1_random = randomBytes(1536 - 8);
-  const s1 = Buffer.concat([Buffer.alloc(8), s1_random]);
+  const s1 = Buffer.concat([Buffer.alloc(8), randomBytes(1536 - 8)]);
 
   for (const offset of [0, 764]) { // Scheme 0 / Scheme 1
     if (!verifyC1(c1, offset)) { continue; }
@@ -90,7 +83,9 @@ const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): 
     if (c2_digest_server.equals(c2_digest_client)) {
       return true;
     } else {
-      // 署名だけサポートしてない場合がある(らしい)ので、その場合はランダムエコーを検証するが、これはいるのか疑問
+      // 署名だけサポートしてない場合があるので、その場合はランダムエコーを検証する
+      // FFmpeg の 内蔵 (librtmpではない方) の打ち上げでこのルートを通る (8.0.1 で確認)
+      const s1_random = s1.subarray(8);
       const c2_random_echo = c2.subarray(8);
       return s1_random.equals(c2_random_echo);
     }
@@ -100,147 +95,185 @@ const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): 
   return simple_handshake_C1S1C2S2(c1, reader, connection);
 };
 
+const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
+  // C0/S0
+  await reader.readU8(); // Read C0
+  connection.write(Buffer.from([0x03])); // Write S0 (Version: 3)
+  // C1/S1
+  return handshake_C1S1C2S2(reader, connection);
+};
 
-export default async (connection: Duplex, output?: Writable) => {
-  using reader = new AsyncByteReader();
+const STATE = {
+  WAITING_CONNECT: 'WAITING_CONNECT',
+  WAITING_CREATESTREAM: 'WAITING_CREATESTREAM',
+  WAITING_PUBLISH: 'WAITING_PUBLISH',
+  PUBLISHED: 'PUBLISHED',
+  DISCONNECTED: 'DISCONNECTED',
+} as const;
+
+const PUBLISH_MESSAGE_STREAM = 1;
+const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message): boolean => {
+  if (state !== STATE.PUBLISHED) { return false; }
+  if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return false; }
+
+  switch (message.message_type_id) {
+    case MessageType.Audio: return true;
+    case MessageType.Video: return true;
+    case MessageType.DataAMF0: return true;
+    default: return false;
+  }
+};
+const TRANSITION = {
+  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex) => {
+    if (message.message_stream_id !== 0) { return STATE.WAITING_CONNECT; }
+    if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CONNECT; }
+    const command = read_amf0(message.data);
+
+    const name = command[0];
+    if (name !== 'connect') { return STATE.WAITING_CONNECT; }
+    if (!isAMF0Number(command[1])) { return STATE.WAITING_CONNECT; }
+    const transaction_id = command[1];
+    if (!isAMF0Object(command[2])) { return STATE.WAITING_CONNECT; }
+    const appName = command[2]['app'];
+    if (!isAMF0String(appName)) { return STATE.WAITING_CONNECT; }
+
+    const result = write_amf0('_result', transaction_id,
+      {
+        fmsVer: 'FMS/3,5,7,7009',
+        capabilities: 31,
+        mode: 1,
+      }, {
+        code: 'NetConnection.Connect.Success',
+        description: 'Connection succeeded.',
+        data: { version: '3,5,7,7009' },
+        objectEncoding: 0, // 0 = AMF0, 3 = AMF3
+        level: 'status', // 正常系
+      },
+    );
+    const chunks = builder.build({
+      message_type_id: MessageType.CommandAMF0,
+      message_stream_id: 0,
+      timestamp: 0,
+      data: result,
+    });
+    for (const chunk of chunks) { connection.write(chunk); }
+
+    return STATE.WAITING_CREATESTREAM;
+  },
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex) => {
+    if (message.message_stream_id !== 0) { return STATE.WAITING_CREATESTREAM; }
+    if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CREATESTREAM; }
+    const command = read_amf0(message.data);
+
+    const name = command[0];
+    if (name !== 'createStream') { return STATE.WAITING_CREATESTREAM; }
+    if (!isAMF0Number(command[1])) { return STATE.WAITING_CREATESTREAM; }
+    const transaction_id = command[1];
+
+    // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
+    const result = write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM);
+    const chunks = builder.build({
+      message_type_id: MessageType.CommandAMF0,
+      message_stream_id: 0,
+      timestamp: 0,
+      data: result,
+    });
+    for (const chunk of chunks) { connection.write(chunk); }
+
+    return STATE.WAITING_PUBLISH;
+  },
+  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex) => {
+    if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
+    if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
+    const command = read_amf0(message.data);
+
+    const name = command[0];
+    if (name !== 'publish') { return STATE.WAITING_PUBLISH; }
+    if (!isAMF0Number(command[1])) { return STATE.WAITING_PUBLISH; }
+    const transaction_id = command[1];
+    const streamKey = command[3];
+
+    const info = {
+      code: 'NetStream.Publish.Start',
+      description: 'Publish Accepted',
+      level: 'status', // 正常系
+    };
+    const result = write_amf0('onStatus', transaction_id, null, info);
+    const chunks = builder.build({
+      message_type_id: MessageType.CommandAMF0,
+      message_stream_id: message.message_stream_id,
+      timestamp: 0,
+      data: result,
+    });
+    for (const chunk of chunks) { connection.write(chunk); }
+
+    return STATE.PUBLISHED;
+  },
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex) => {
+    if (message.message_stream_id !== 0) { return STATE.PUBLISHED; }
+    if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.PUBLISHED; }
+    const command = read_amf0(message.data);
+
+    const name = command[0];
+    if (name !== 'deleteStream') { return STATE.PUBLISHED; }
+    const stream = command[3];
+    if (stream !== PUBLISH_MESSAGE_STREAM) { return STATE.PUBLISHED; }
+
+    return STATE.DISCONNECTED;
+  },
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex) => {
+    return STATE.DISCONNECTED;
+  },
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex) => (typeof STATE)[keyof typeof STATE]>;
+
+async function* handle_rtmp(connection: Duplex): AsyncIterable<Message> {
+  const controller = new AbortController();
+  using reader = new AsyncByteReader({ signal: controller.signal });
+  const builder = new MessageBuilder();
   connection.pipe(new Writable({
     write(data, _, cb) { reader.feed(data); cb(); },
-    destroy(err, cb) { reader.feedEOF(); cb(err); },
   }));
-  using writer = output != null ? new FLVWriter(output) : null;
-  const builder = new MessageBuilder();
 
   try {
     /*
     * RTMPのハンドシェイクを処理する
     */
-    {
-      // C0/S0
-      await reader.readU8(); // Read C0
-      connection.write(Buffer.from([0x03])); // Write S0 (Version: 3)
-      // C1/S1
-      if (await !handshake_C1S1C2S2(reader, connection)) {
-        throw new Error('Handshake Failure');
-      }
-    }
+    if (!await handle_handshake(reader, connection)) { return; }
     /*
     * RTMPのメッセージを処理する
     */
-    let state: (typeof STATE)[keyof typeof STATE] = STATE.WAITING_CONNECT;
+    let state: (typeof STATE)[keyof typeof STATE] = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
     for await (const message of read_message(reader)) {
-      // 本当は共通で処理するシステムメッセージ部分を書く、大体の打ち上げRTMPではなくても良いので省略
+      // 共通で処理するメッセージはここで処理する
 
-      switch (state) {
-        case STATE.WAITING_CONNECT: {
-          if (message.message_stream_id !== 0) { continue; }
-          if (message.message_type_id !== MessageType.CommandAMF0) { continue; }
-          const command = read_amf0(message.data);
+      // 上位に伝える映像/音声/データのメッセージだったら伝える
+      if (need_yield(state, message)) { yield message; }
 
-          const name = command[0];
-          if (name !== 'connect') { continue; }
-          if (!isAMF0Number(command[1])) { continue; }
-          const transaction_id = command[1];
-          if (!isAMF0Object(command[2])) { continue; }
-          const appName = command[2]['app'];
-          if (!isAMF0String(appName)) { continue; }
-
-          const result = write_amf0('_result', transaction_id,
-            {
-              fmsVer: 'FMS/3,5,7,7009',
-              capabilities: 31,
-              mode: 1,
-            }, {
-              code: 'NetConnection.Connect.Success',
-              description: 'Connection succeeded.',
-              data: { version: '3,5,7,7009' },
-              objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-              level: 'status', // 正常系
-            },
-          );
-          const chunks = builder.build({
-            message_type_id: MessageType.CommandAMF0,
-            message_stream_id: 0,
-            timestamp: 0,
-            data: result,
-          });
-          for (const chunk of chunks) { connection.write(chunk); }
-
-          state = STATE.WAITING_CREATESTREAM;
-          break;
-        }
-        case STATE.WAITING_CREATESTREAM: {
-          if (message.message_stream_id !== 0) { continue; }
-          if (message.message_type_id !== MessageType.CommandAMF0) { continue; }
-          const command = read_amf0(message.data);
-
-          const name = command[0];
-          if (name !== 'createStream') { continue; }
-          if (!isAMF0Number(command[1])) { continue; }
-          const transaction_id = command[1];
-
-          // message_stream_id は 0 が予約されている (今使ってる) ので 1 を利用する
-          const result = write_amf0('_result', transaction_id, null, 1);
-          const chunks = builder.build({
-            message_type_id: MessageType.CommandAMF0,
-            message_stream_id: 0,
-            timestamp: 0,
-            data: result,
-          });
-          for (const chunk of chunks) { connection.write(chunk); }
-
-          state = STATE.WAITING_PUBLISH;
-          break;
-        }
-        case STATE.WAITING_PUBLISH: {
-          if (message.message_stream_id !== 1) { continue; }
-          if (message.message_type_id !== MessageType.CommandAMF0) { continue; }
-          const command = read_amf0(message.data);
-
-          const name = command[0];
-          if (name !== 'publish') { continue; }
-          if (!isAMF0Number(command[1])) { continue; }
-          const transaction_id = command[1];
-          if (!isAMF0String(command[3])) { continue; }
-          const streamKey = command[3];
-
-
-          const info = {
-            code: 'NetStream.Publish.Start',
-            description: 'Publish Accepted',
-            level: 'status', // 正常系
-          };
-          const result = write_amf0('onStatus', transaction_id, null, info);
-          const chunks = builder.build({
-            message_type_id: MessageType.CommandAMF0,
-            message_stream_id: message.message_stream_id,
-            timestamp: 0,
-            data: result,
-          });
-          for (const chunk of chunks) { connection.write(chunk); }
-
-          state = STATE.PUBLISHED;
-          break;
-        }
-        case STATE.PUBLISHED: {
-          switch (message.message_type_id) {
-            case MessageType.Audio:
-            case MessageType.Video:
-              writer?.write(message);
-              break;
-            case MessageType.DataAMF0: {
-              const command = read_amf0(message.data);
-              const data = command.length === 3 && command[0] === '@setDataFrame' && command[1] === 'onMetaData' ? [command[1], command[2]] : command;
-              writer?.write({ ... message, data: write_amf0(... data) });
-              break;
-            }
-          }
-          break;
-        }
-      }
+      // 個別のメッセージによる状態遷移
+      state = TRANSITION[state](message, builder, connection);
+      if (state === STATE.DISCONNECTED) { return; }
     }
   } catch (e) {
-    console.error(e);
+    throw e;
   } finally {
-    connection.destroy();
+    connection.end();
+  }
+}
+
+export default async (connection: Duplex, output?: Writable): Promise<void> => {
+  using writer = output != null ? new FLVWriter(output) : null;
+  for await (const message of handle_rtmp(connection)) {
+    switch (message.message_type_id) {
+      case MessageType.Audio:
+      case MessageType.Video:
+        writer?.write(message);
+        break;
+      case MessageType.DataAMF0: {
+        const command = read_amf0(message.data);
+        const data = command.length === 3 && command[0] === '@setDataFrame' && command[1] === 'onMetaData' ? [command[1], command[2]] : command;
+        writer?.write({ ... message, data: write_amf0(... data) });
+        break;
+      }
+    }
   }
 };
