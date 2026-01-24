@@ -37,14 +37,15 @@ const STATE = {
   PUBLISHED: 'PUBLISHED',
   DISCONNECTED: 'DISCONNECTED',
 } as const;
+
 type Option = {
-  id: Symbol;
   app: string;
   streamKey: string;
 };
+const generate_key = (option: Option): string => `${option.app}/${option.streamKey}`;
+const lock = new Set<ReturnType<typeof generate_key>>();
 
 const PUBLISH_MESSAGE_STREAM = 1;
-let lock: Symbol | null = null;
 const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message): boolean => {
   if (state !== STATE.PUBLISHED) { return false; }
   if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return false; }
@@ -133,7 +134,7 @@ const TRANSITION = {
     if (!isAMF0Number(command[1])) { return STATE.WAITING_PUBLISH; }
     const transaction_id = command[1];
     const streamKey = command[3];
-    const publishAccepted = streamKey === option.streamKey && lock == null; // streamKey が合致していて、配信されてない場合は配信を許可する
+    const publishAccepted = streamKey === option.streamKey && !lock.has(generate_key(option)); // streamKey が合致していて、配信されてない場合は配信を許可する
 
     const info = publishAccepted ? {
       code: 'NetStream.Publish.Start',
@@ -155,7 +156,7 @@ const TRANSITION = {
     for (const chunk of chunks) { connection.write(chunk); }
 
     if (!publishAccepted) { return STATE.DISCONNECTED; }
-    lock = option.id;
+    lock.add(generate_key(option));
     return STATE.PUBLISHED;
   },
   [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
@@ -184,7 +185,6 @@ export class DisconnectError extends Error {
 
 export default async function* handle_rtmp(connection: Duplex, app: string, key: string, limit?: number): AsyncIterable<Message> {
   const option = {
-    id: Symbol(),
     app: app,
     streamKey: key,
   } satisfies Option;
@@ -222,6 +222,6 @@ export default async function* handle_rtmp(connection: Duplex, app: string, key:
   } finally {
     connection.removeListener('close', disconnected);
     connection.end();
-    if (lock === option.id) { lock = null; }
+    lock.delete(generate_key(option));
   }
 }
