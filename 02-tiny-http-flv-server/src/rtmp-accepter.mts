@@ -38,11 +38,11 @@ const STATE = {
   DISCONNECTED: 'DISCONNECTED',
 } as const;
 
-type Option = {
+type Parameter = {
   app: string;
   streamKey: string;
 };
-const generate_key = (option: Option): string => `${option.app}/${option.streamKey}`;
+const generate_key = (params: Parameter): string => `${params.app}/${params.streamKey}`;
 const lock = new Set<ReturnType<typeof generate_key>>();
 
 const PUBLISH_MESSAGE_STREAM = 1;
@@ -58,7 +58,7 @@ const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message)
   }
 };
 const TRANSITION = {
-  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
+  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, params: Parameter) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CONNECT; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CONNECT; }
     const command = read_amf0(message.data);
@@ -70,7 +70,7 @@ const TRANSITION = {
     if (!isAMF0Object(command[2])) { return STATE.WAITING_CONNECT; }
     const appName = command[2]['app'];
     if (!isAMF0String(appName)) { return STATE.WAITING_CONNECT; }
-    const connectAccepted = appName === option.app;
+    const connectAccepted = appName === params.app;
 
     const status = connectAccepted ? '_result' : '_error';
     const server = connectAccepted ? {
@@ -102,7 +102,7 @@ const TRANSITION = {
     if (!connectAccepted) { return STATE.DISCONNECTED; }
     return STATE.WAITING_CREATESTREAM;
   },
-  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, params: Parameter) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CREATESTREAM; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CREATESTREAM; }
     const command = read_amf0(message.data);
@@ -124,7 +124,7 @@ const TRANSITION = {
 
     return STATE.WAITING_PUBLISH;
   },
-  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
+  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, params: Parameter) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
     const command = read_amf0(message.data);
@@ -134,7 +134,7 @@ const TRANSITION = {
     if (!isAMF0Number(command[1])) { return STATE.WAITING_PUBLISH; }
     const transaction_id = command[1];
     const streamKey = command[3];
-    const publishAccepted = streamKey === option.streamKey && !lock.has(generate_key(option)); // streamKey が合致していて、配信されてない場合は配信を許可する
+    const publishAccepted = streamKey === params.streamKey && !lock.has(generate_key(params)); // streamKey が合致していて、配信されてない場合は配信を許可する
 
     const info = publishAccepted ? {
       code: 'NetStream.Publish.Start',
@@ -156,10 +156,10 @@ const TRANSITION = {
     for (const chunk of chunks) { connection.write(chunk); }
 
     if (!publishAccepted) { return STATE.DISCONNECTED; }
-    lock.add(generate_key(option));
+    lock.add(generate_key(params));
     return STATE.PUBLISHED;
   },
-  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, params: Parameter) => {
     if (message.message_stream_id !== 0) { return STATE.PUBLISHED; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.PUBLISHED; }
     const command = read_amf0(message.data);
@@ -171,10 +171,10 @@ const TRANSITION = {
 
     return STATE.DISCONNECTED;
   },
-  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => {
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, params: Parameter) => {
     return STATE.DISCONNECTED;
   },
-} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, option: Option) => (typeof STATE)[keyof typeof STATE]>;
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, params: Parameter) => (typeof STATE)[keyof typeof STATE]>;
 
 export class DisconnectError extends Error {
   constructor(message: string, option?: ErrorOptions) {
@@ -184,10 +184,10 @@ export class DisconnectError extends Error {
 }
 
 export default async function* handle_rtmp(connection: Duplex, app: string, key: string, limit?: number): AsyncIterable<Message> {
-  const option = {
+  const params = {
     app: app,
     streamKey: key,
-  } satisfies Option;
+  } satisfies Parameter;
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
   const builder = new MessageBuilder();
@@ -214,7 +214,7 @@ export default async function* handle_rtmp(connection: Duplex, app: string, key:
       if (need_yield(state, message)) { yield message; }
 
       // 個別のメッセージによる状態遷移
-      state = TRANSITION[state](message, builder, connection, option);
+      state = TRANSITION[state](message, builder, connection, params);
       if (state === STATE.DISCONNECTED) { return; }
     }
   } catch (e) {
@@ -222,6 +222,6 @@ export default async function* handle_rtmp(connection: Duplex, app: string, key:
   } finally {
     connection.removeListener('close', disconnected);
     connection.end();
-    lock.delete(generate_key(option));
+    lock.delete(generate_key(params));
   }
 }
