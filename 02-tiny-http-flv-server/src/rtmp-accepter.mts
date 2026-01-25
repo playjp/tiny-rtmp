@@ -99,13 +99,13 @@ const connect_handler = (transaction_id: number, app: string, config: AuthConfig
     level: 'error', // 異常系
   };
 
-  const next_context = Object.assign({}, context, authResult === AuthResult.OK ? { app } : {});
+  const next_context = connectAccepted ? { ... context, app } : context;
   return [[status, transaction_id, server, info], authResult, next_context];
 };
 const publish_handler = (transaction_id: number, streamKey: string, config: AuthConfiguration, context: RTMPContext): [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] => {
   const auth_before_lock = config.streamKey(streamKey);
   // streamKey が合致していて、配信されてない場合は配信を許可する
-  const authResult = auth_before_lock === AuthResult.OK && lock.has(generate_key(context)) ?  AuthResult.DISCONNECT : auth_before_lock;
+  const authResult = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey })) ?  AuthResult.DISCONNECT : auth_before_lock;
   const publishAccepted = authResult === AuthResult.OK;
 
   const info = publishAccepted ? {
@@ -118,8 +118,8 @@ const publish_handler = (transaction_id: number, streamKey: string, config: Auth
     level: 'error', // 異常系
   };
 
-  if (publishAccepted) { lock.add(generate_key(context)); }
-  const next_context = Object.assign({}, context, authResult === AuthResult.OK ? { streamKey } : {});
+  const next_context = publishAccepted ? { ... context, streamKey } : context;
+  if (publishAccepted) { lock.add(generate_key(next_context)); }
   return [['onStatus', transaction_id, null, info], authResult, next_context];
 };
 
