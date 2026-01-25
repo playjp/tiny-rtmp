@@ -136,7 +136,7 @@ const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message)
   }
 };
 const TRANSITION = {
-  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, handers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CONNECT, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CONNECT, context]; }
     const command = read_amf0(message.data);
@@ -149,7 +149,7 @@ const TRANSITION = {
     const appName = command[2]['app'];
     if (!isAMF0String(appName)) { return [STATE.WAITING_CONNECT, context]; }
 
-    const [data, result, next_context] = handers.connect(transaction_id, appName, config, context);
+    const [data, result, next_context] = handlers.connect(transaction_id, appName, config, context);
     const next = {
       [AuthResult.OK]: STATE.WAITING_CREATESTREAM,
       [AuthResult.RETRY]: STATE.WAITING_CONNECT,
@@ -165,7 +165,7 @@ const TRANSITION = {
 
     return [next[result], next_context];
   },
-  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, handers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CREATESTREAM, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CREATESTREAM, context]; }
     const command = read_amf0(message.data);
@@ -187,7 +187,7 @@ const TRANSITION = {
 
     return [STATE.WAITING_PUBLISH, context];
   },
-  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, handers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return [STATE.WAITING_PUBLISH, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_PUBLISH, context]; }
     const command = read_amf0(message.data);
@@ -199,7 +199,7 @@ const TRANSITION = {
     if (!isAMF0String(command[3])) { return [STATE.WAITING_PUBLISH, context]; }
     const streamKey = command[3];
 
-    const [data, result, next_context] = handers.publish(transaction_id, streamKey, config, context);
+    const [data, result, next_context] = handlers.publish(transaction_id, streamKey, config, context);
     const next = {
       [AuthResult.OK]: STATE.PUBLISHED,
       [AuthResult.RETRY]: STATE.WAITING_PUBLISH,
@@ -215,7 +215,7 @@ const TRANSITION = {
 
     return [next[result], next_context];
   },
-  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, handers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.PUBLISHED, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.PUBLISHED, context]; }
     const command = read_amf0(message.data);
@@ -227,7 +227,7 @@ const TRANSITION = {
 
     return [STATE.DISCONNECTED, context];
   },
-  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, handers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
     return [STATE.DISCONNECTED, context];
   },
 } as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => [(typeof STATE)[keyof typeof STATE], RTMPContext]>;
@@ -263,7 +263,7 @@ export default async function* handle_rtmp(connection: Duplex, auth: AuthConfigu
     /*
     * RTMPのメッセージを処理する
     */
-    let state: (typeof STATE)[keyof typeof STATE] = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
+    let state = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
     for await (const message of read_message(reader)) {
       // 共通で処理するメッセージはここで処理する
 
