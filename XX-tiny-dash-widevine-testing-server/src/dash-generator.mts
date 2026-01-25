@@ -12,7 +12,7 @@ import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-ser
 import { encrypt_avc, write_mp4_avc_track_information } from '../../08-tiny-dash-cenc-server/src/avc.mts';
 import { encrypt_aac, write_mp4_aac_track_information } from '../../08-tiny-dash-cenc-server/src/aac.mts';
 
-import { initialize, make } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
+import { initialize, make } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 
 import SegmentTimeline from '../../07-tiny-dash-server/src/segment-timeline.mts';
 import { serializeXML, XMLNode } from '../../07-tiny-dash-server/src/xml.mts';

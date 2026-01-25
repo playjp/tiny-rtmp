@@ -5,7 +5,7 @@
 ## 主要コンポーネント
 
 - fmp4-transmuxer.mts - FLVからfMP4への変換処理
-- mp4.mts - MP4フォーマットのボックス生成
+- fmp4.mts - MP4フォーマットのボックス生成
 - aac.mts / avc.mts - AACとAVCコーデックの処理
 - byte-vector.mts - バイトデータ操作ユーティリティ
 

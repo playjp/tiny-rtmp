@@ -6,7 +6,7 @@ import { read_audio_specific_config } from '../../03-tiny-http-ts-server/src/aac
 import handle_rtmp_payload, { FrameType } from '../../03-tiny-http-ts-server/src/rtmp-handler.mts';
 
 import { write_mp4_aac_track_information } from './aac.mts';
-import { fragment, initialize, make } from './mp4.mts';
+import { fragment, initialize, make } from './fmp4.mts';
 import { write_mp4_avc_track_information } from './avc.mts';
 
 type VideoInformation = {

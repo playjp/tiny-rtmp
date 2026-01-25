@@ -2,7 +2,7 @@ import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
 import EBSPBitReader from './ebsp-bit-reader.mts';
-import { avc1, avcC, make, track } from './mp4.mts';
+import { avc1, avcC, make, track } from './fmp4.mts';
 
 export type NALUnitHeader = {
   nal_ref_idc: number;

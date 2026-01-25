@@ -6,7 +6,7 @@ import { read_avc_decoder_configuration_record, type AVCDecoderConfigurationReco
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
 import { is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
 import EBSPBitReader from '../../06-tiny-http-fmp4-server/src/ebsp-bit-reader.mts';
-import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
+import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, padIV, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
 
 export const SliceType = {

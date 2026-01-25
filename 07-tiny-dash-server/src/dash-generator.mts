@@ -10,7 +10,7 @@ import { write_mp4_avc_track_information }from '../../06-tiny-http-fmp4-server/s
 import { write_mp4_aac_track_information }from '../../06-tiny-http-fmp4-server/src/aac.mts';
 
 import SegmentTimeline from './segment-timeline.mts';
-import { fragment, initialize, make } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
+import { fragment, initialize, make } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 import { serializeXML, XMLNode } from './xml.mts';
 import { aacMimeTypeCodec, avcMimeTypeCodec } from './mimetype.mts';
 import { read_avc_decoder_configuration_record } from '../../03-tiny-http-ts-server/src/avc.mts';

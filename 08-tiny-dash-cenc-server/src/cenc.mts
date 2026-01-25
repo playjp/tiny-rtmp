@@ -1,5 +1,5 @@
 import type ByteVector from '../../06-tiny-http-fmp4-server/src/byte-vector.mts';
-import { audioSampleEntry, box, fullbox, mdat, mfhd, moof, tfdt, tfhd, traf, trun, visualSampleEntry, type callback, type FragmentInformation } from '../../06-tiny-http-fmp4-server/src/mp4.mts';
+import { audioSampleEntry, box, fullbox, mdat, mfhd, moof, tfdt, tfhd, traf, trun, visualSampleEntry, type callback, type FragmentInformation } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 
 export const pssh = (system_id: Buffer, kids: Buffer[], data: Buffer, vector: ByteVector, cb?: callback): void => {
   fullbox('pssh', 1, 0x000000, vector, (vector) => {
