@@ -84,7 +84,7 @@ export default class HLSGenerator {
           this.avcDecoderConfigurationRecord = read_avc_decoder_configuration_record(payload.avcDecoderConfigurationRecord);
           return;
         }
-        if (payload.type === FrameType.KEY_FRAME) {
+        if (payload.frameType === FrameType.KEY_FRAME) {
           this.playlist.append(timestamp_from_rtmp_to_hls(payload.timestamp));
           this.playlist.feed([
             ... this.patPacketizer.packetize(write_pat(PAT_DATA)),

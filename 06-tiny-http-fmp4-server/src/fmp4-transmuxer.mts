@@ -100,7 +100,7 @@ export default class FMP4Transmuxer {
           });
         }
         this.previousVideoInformation = {
-          type: payload.type,
+          type: payload.frameType,
           dts: payload.timestamp,
           cto: payload.compositionTimeOffset,
           data: payload.data,

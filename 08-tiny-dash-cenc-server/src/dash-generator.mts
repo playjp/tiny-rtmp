@@ -160,7 +160,7 @@ export default class DASHGenerator {
           this.avcDecoderConfigurationRecord = payload.avcDecoderConfigurationRecord;
           return;
         }
-        if (payload.type === FrameType.KEY_FRAME) {
+        if (payload.frameType === FrameType.KEY_FRAME) {
           this.videoTimeline?.append(payload.timestamp);
           if (this.aacLatestTimestamp != null) {
             this.audioTimeline?.append(this.aacLatestTimestamp);
@@ -230,7 +230,7 @@ export default class DASHGenerator {
           }));
         }
         this.previousVideoInformation = {
-          type: payload.type,
+          type: payload.frameType,
           dts: payload.timestamp,
           cto: payload.compositionTimeOffset,
           data: payload.data,

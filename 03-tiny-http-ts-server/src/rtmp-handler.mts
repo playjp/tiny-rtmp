@@ -29,29 +29,39 @@ export const FrameType = {
   VIDEO_INFO_OR_COMMAND: 5,
 } as const;
 
+export const PacketType = {
+  SequenceStart: 0,
+  CodedFrames: 1,
+  SequenceEnd: 2,
+} as const;
+
 export type AVCData = {
   codec: 'AVC';
 } & ({
-  packetType: 0;
+  packetType: typeof PacketType.SequenceStart;
   avcDecoderConfigurationRecord: Buffer;
 } | {
-  packetType: 1;
+  packetType: typeof PacketType.CodedFrames;
   compositionTimeOffset: number;
   data: Buffer;
 });
 export type VideoData = AVCData & {
   timestamp: number;
-  type: number;
+  frameType: number;
   kind: 'Video';
 };
 
+export const AACPacketType = {
+  SequenceHeader: 0,
+  Raw: 1,
+} as const;
 export type AACData = {
   codec: 'AAC';
 } & ({
-  packetType: 0;
+  packetType: typeof AACPacketType.SequenceHeader;
   audioSpecificConfig: Buffer;
 } | {
-  packetType: 1;
+  packetType: typeof AACPacketType.Raw;
   data: Buffer;
 });
 export type AudioData = AACData & {
@@ -70,12 +80,12 @@ const handle_avc = (reader: ByteReader): AVCData | null => {
   const compositionTimeOffset = reader.readI24BE();
 
   switch (packetType) {
-    case 0: return {
+    case PacketType.SequenceStart: return {
       codec: 'AVC',
       packetType,
       avcDecoderConfigurationRecord: reader.read(),
     };
-    case 1: return {
+    case PacketType.CodedFrames: return {
       codec: 'AVC',
       packetType,
       compositionTimeOffset,
@@ -90,14 +100,14 @@ export const handle_video = (message: VideoMessage): VideoData | null => {
   const reader = new ByteReader(message.data);
 
   const meta = reader.readU8();
-  const type = (meta & 0xF0) >> 4;
+  const frameType = (meta & 0xF0) >> 4;
   const codec = (meta & 0x0F) >> 0;
 
   switch (codec) {
     case VideoCodecType.AVC: {
       const avc = handle_avc(reader);
       if (avc == null) { return null; }
-      return { kind: 'Video', type, timestamp: message.timestamp, ... avc };
+      return { kind: 'Video', frameType, timestamp: message.timestamp, ... avc };
     }
     default:
       return null;
@@ -107,12 +117,12 @@ export const handle_video = (message: VideoMessage): VideoData | null => {
 const handle_aac = (reader: ByteReader): AACData | null => {
   const packetType = reader.readU8();
   switch (packetType) {
-    case 0: return {
+    case AACPacketType.SequenceHeader: return {
       codec: 'AAC',
       packetType,
       audioSpecificConfig: reader.read(),
     };
-    case 1: return {
+    case AACPacketType.Raw: return {
       codec: 'AAC',
       packetType,
       data: reader.read(),
