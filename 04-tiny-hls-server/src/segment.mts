@@ -1,5 +1,3 @@
-import { Writable } from 'node:stream';
-
 export default class Segment {
   private beginTimestamp: number;
   private endTimestamp: number | null = null;

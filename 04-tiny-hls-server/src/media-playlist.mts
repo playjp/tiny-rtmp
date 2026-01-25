@@ -1,5 +1,3 @@
-import { Writable } from 'node:stream';
-
 import Segment from './segment.mts';
 
 const MINIMUM_LIVE_WINDOW_LENGTH = 3;
