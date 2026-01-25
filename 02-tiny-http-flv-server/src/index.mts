@@ -10,7 +10,7 @@ import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 
-import handle_rtmp from './rtmp-accepter.mts';
+import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
 
 const options = {
   rtmp: {
@@ -86,7 +86,7 @@ const handle = async (connection: Duplex) => {
   let aacConfigMessage: Message | null = null;
 
   try {
-    for await (const message of handle_rtmp(connection, app, streamKey, bandwidth)) {
+    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
       const reader = new ByteReader(message.data);
       switch (message.message_type_id) {
         case MessageType.Video: {

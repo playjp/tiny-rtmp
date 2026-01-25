@@ -4,7 +4,7 @@ import type { Duplex } from 'node:stream';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
+import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
 
 import HLSGenerator from './hls-generator.mts';
 
@@ -83,7 +83,7 @@ const page = `
 let rtmp_to_hls: HLSGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
-    for await (const message of handle_rtmp(connection, app, streamKey, bandwidth)) {
+    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
       if (rtmp_to_hls == null) { rtmp_to_hls = new HLSGenerator(3); }
       rtmp_to_hls.feed(message);
     }

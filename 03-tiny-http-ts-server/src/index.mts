@@ -4,7 +4,7 @@ import type { Duplex } from 'node:stream';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
+import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
 
 import MPEGTSTransmuxer from './mpegts-transmuxer.mts';
 
@@ -61,7 +61,7 @@ const streaming = new Map<number, StreamingHandlers>();
 const handle = async (connection: Duplex) => {
   const rtmp_to_mpegts = new MPEGTSTransmuxer();
   try {
-    for await (const message of handle_rtmp(connection, app, streamKey, bandwidth)) {
+    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
       for (const packet of rtmp_to_mpegts.feed(message)) {
         for (const [write, _] of streaming.values()) { write(packet); }
       }

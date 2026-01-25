@@ -4,7 +4,7 @@ import type { Duplex } from 'node:stream';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
+import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
 
 import DASHGenerator from './dash-generator.mts';
 import { EncryptionFormat } from '../../08-tiny-dash-cenc-server/src/cenc.mts';
@@ -104,7 +104,7 @@ const page = `
 let rtmp_to_dash: DASHGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
-    for await (const message of handle_rtmp(connection, app, streamKey, bandwidth)) {
+    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
       if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(encryptionFormat, encryptionKeyId, encryptionKey, 3); }
       rtmp_to_dash.feed(message);
     }
