@@ -46,7 +46,7 @@ export const AuthResult = {
 export type AuthConfiguration = {
   app: (app: string) => (typeof AuthResult)[keyof typeof AuthResult];
   streamKey: (key: string) => (typeof AuthResult)[keyof typeof AuthResult];
-}
+};
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
     return {
@@ -59,8 +59,8 @@ export const AuthConfiguration = {
       app: (app: string) => app === appName ? AuthResult.OK : AuthResult.DISCONNECT,
       streamKey: (key: string) => key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT,
     };
-  }
-}
+  },
+};
 type RTMPContext = Partial<{
   app: string;
   streamKey: string;
@@ -68,14 +68,14 @@ type RTMPContext = Partial<{
 const RTMPContext = {
   from(): RTMPContext {
     return {};
-  }
-}
+  },
+};
 const generate_key = (context: RTMPContext): string => `${context.app}/${context.streamKey}`;
 const lock = new Set<NonNullable<ReturnType<typeof generate_key>>>();
 
 type AuthHandler = {
-  connect: (transaction_id: number, app: string, config: AuthConfiguration, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] ;
-  publish: (transaction_id: number, streamKey: string, config: AuthConfiguration, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] ;
+  connect: (transaction_id: number, app: string, config: AuthConfiguration, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext];
+  publish: (transaction_id: number, streamKey: string, config: AuthConfiguration, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext];
 };
 const connect_handler = (transaction_id: number, app: string, config: AuthConfiguration, context: RTMPContext): [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] => {
   const authResult = config.app(app);
@@ -159,11 +159,11 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0(... data)
+      data: write_amf0(... data),
     });
     for (const chunk of chunks) { connection.write(chunk); }
 
-    return [next[result], next_context]
+    return [next[result], next_context];
   },
   [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, handers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CREATESTREAM, context]; }
@@ -209,7 +209,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
-      data: write_amf0(... data)
+      data: write_amf0(... data),
     });
     for (const chunk of chunks) { connection.write(chunk); }
 
