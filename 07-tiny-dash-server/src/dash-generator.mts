@@ -71,7 +71,7 @@ export default class DASHGenerator {
         codecs: avcMimeTypeCodec(avcDecoderConfigurationRecord),
       });
 
-      video_representation.children.push(this.videoTimeline.template());
+      video_representation.children.push(this.videoTimeline.segment_template());
       video_adaptetionset.children.push(video_representation);
       period.children.push(video_adaptetionset);
     }
@@ -86,7 +86,7 @@ export default class DASHGenerator {
         id: '2',
         codecs: aacMimeTypeCodec(audioSpecificConfig),
       });
-      audio_representation.children.push(this.audioTimeline.template());
+      audio_representation.children.push(this.audioTimeline.segment_template());
       audio_adaptetionset.children.push(audio_representation);
       period.children.push(audio_adaptetionset);
     }

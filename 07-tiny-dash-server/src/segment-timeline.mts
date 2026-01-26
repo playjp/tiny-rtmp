@@ -1,5 +1,3 @@
-import { Writable } from 'node:stream';
-
 import Segment from '../../04-tiny-hls-server/src/segment.mts';
 import { XMLNode } from './xml.mts';
 
@@ -82,7 +80,7 @@ export default class SegmentTimeline {
     this.currentSegment?.feed(data);
   }
 
-  public template(): XMLNode {
+  public segment_template(): XMLNode {
     const template = XMLNode.from('SegmentTemplate', {
       timescale: `${this.timescale}`,
       media: `${this.prefix}_$Number$.m4s`,
