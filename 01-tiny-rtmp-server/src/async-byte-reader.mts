@@ -5,6 +5,7 @@ export type AsyncByteReaderOption = {
 export default class AsyncByteReader {
   private buffers: Buffer[] = [];
   private offset = 0;
+  private reserved = 0;
   private totals = 0;
   private eof = false;
   private promises: [byteLength: number, resolve: (result: Buffer) => void, reject: (error: Error) => void][] = [];
@@ -39,6 +40,7 @@ export default class AsyncByteReader {
       }
 
       this.totals -= length;
+      this.reserved -= length;
       resolve(drained.length === 1 ? drained[0] : Buffer.concat(drained));
       this.promises.shift();
     }
@@ -65,7 +67,12 @@ export default class AsyncByteReader {
   public [Symbol.dispose](): void { this.feedEOF(); }
 
   public read(size: number): Promise<Buffer> {
+    if (this.eof && (this.reserved + Math.max(1, size)) > this.totals) {
+      return Promise.reject(this.signal?.reason ?? new Error('EOF Exception'));
+    }
+
     const { promise, resolve, reject } = Promise.withResolvers<Buffer>();
+    this.reserved += size;
     this.promises.push([size, resolve, reject]);
     this.fulfill();
     return promise;

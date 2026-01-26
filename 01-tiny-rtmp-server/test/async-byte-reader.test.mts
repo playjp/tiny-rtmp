@@ -27,12 +27,43 @@ describe('Unit Test', () => {
     await expect(promise).rejects.toThrow();
   });
 
+  test('Read empty bytes in initial state and reach EOF should resolve', async () => {
+    const reader = new AsyncByteReader();
+    const promise = reader.read(0);
+    reader.feedEOF();
+
+    await expect(promise).resolves.toStrictEqual(Buffer.from([]));
+  });
+
   test('Read non-empty bytes in EOF should reject', async () => {
     const reader = new AsyncByteReader();
     reader.feedEOF();
     const promise = reader.read(1);
 
     await expect(promise).rejects.toThrow();
+  });
+
+  test('Read empty bytes in EOF should reject', async () => {
+    const reader = new AsyncByteReader();
+    reader.feedEOF();
+    const promise = reader.read(0);
+
+    await expect(promise).rejects.toThrow();
+  });
+
+  test('Read bytes around feedEOF', async () => {
+    const reader = new AsyncByteReader();
+    reader.feed(Buffer.from([0x00]));
+    const promise1 = reader.read(1);
+    const promise2 = reader.read(0);
+    reader.feedEOF();
+    const promise3 = reader.read(0);
+    const promise4 = reader.read(1);
+
+    await expect(promise1).resolves.toStrictEqual(Buffer.from([0x00]));
+    await expect(promise2).resolves.toStrictEqual(Buffer.from([]));
+    await expect(promise3).rejects.toThrow();
+    await expect(promise4).rejects.toThrow();
   });
 
   test('Read non-empty bytes in Abort also should reject', async () => {
