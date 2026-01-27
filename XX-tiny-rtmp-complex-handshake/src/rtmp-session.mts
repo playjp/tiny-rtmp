@@ -271,7 +271,7 @@ const TRANSITION = {
 
     const [auth_before_lock, description_before_lock] = await auth.streamKey(streamKey);
     // streamKey が合致していて、配信されてない場合は配信を許可する
-    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
+    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey: strip_query(streamKey) })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
     const publishAccepted = authResult === AuthResult.OK;
 
     const info = publishAccepted ? {
