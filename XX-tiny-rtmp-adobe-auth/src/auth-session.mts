@@ -11,7 +11,7 @@ export type AdobeAuthSessionInformation = {
 
 export default class AdobeAuthSession implements AuthConfiguration {
   private passwordFn: (user: string) => Promise<string | null> | (string | null);
-  private session: AdobeAuthSessionInformation | null = null;
+  private sessions = new Map<string, AdobeAuthSessionInformation>();
 
   constructor(passwordFn: (user: string) => Promise<string | null> | (string | null)) {
     this.passwordFn = passwordFn;
@@ -45,8 +45,6 @@ export default class AdobeAuthSession implements AuthConfiguration {
     }
 
     const accepted = await this.verify(user, response, challenge);
-    this.end();
-
     return accepted ? [AuthResult.OK, null] : [AuthResult.DISCONNECT, 'authmod=adobe :?reason=authfailed'];
   }
 
@@ -55,29 +53,28 @@ export default class AdobeAuthSession implements AuthConfiguration {
   }
 
   private query(user: string): string {
-    this.session = {
+    const session = {
       salt: randomBytes(4),
       challenge: randomBytes(4),
       opaque: randomBytes(4), // MEMO: 用意するけど使わない
-    };
+    } satisfies AdobeAuthSessionInformation;
+    this.sessions.set(user, session);
+
     // opaque は送信すると FFmpeg が challenge より opaque を優先し、Wirecast は challenge を優先する、どっちか片方にすべき
     // 仕様上は challenge を用いることになっているので opaque を除外する
-    return `user=${encodeURIComponent(user)}&salt=${this.session.salt.toString('base64')}&challenge=${this.session.challenge.toString('base64')}`;
+    return `user=${encodeURIComponent(user)}&salt=${session.salt.toString('base64')}&challenge=${session.challenge.toString('base64')}`;
   }
 
   private async verify(user: string, response: string, challenge: string): Promise<boolean> {
-    if (this.session == null) { return false; }
-
+    const session = this.sessions.get(user);
+    if (session == null) { return false; }
     const password = await this.passwordFn(user);
     if (password == null) { return false; }
 
-    const firststep = crypto.createHash('md5').update(user).update(this.session.salt.toString('base64')).update(password).digest('base64');
+    const firststep = crypto.createHash('md5').update(user).update(session.salt.toString('base64')).update(password).digest('base64');
     // FFmpeg は opaque を優先して使い opaque がない時に client challenge を使う... なんで???
-    const secondstep = crypto.createHash('md5').update(firststep).update(this.session.challenge.toString('base64')).update(challenge).digest('base64');
+    const secondstep = crypto.createHash('md5').update(firststep).update(session.challenge.toString('base64')).update(challenge).digest('base64');
+    this.sessions.delete(user);
     return response === secondstep;
-  }
-
-  private end(): void {
-    this.session = null;
   }
 }
