@@ -121,6 +121,19 @@ const strip_query = (value: string): string => {
   if (query_index < 0) { return value; }
   return value.slice(0, query_index);
 };
+const collect_query = (value: string): Record<string, string> | undefined => {
+  const query_index = value.indexOf('?');
+  if (query_index < 0) { return undefined; }
+  return value.slice(query_index + 1).split('&').reduce((a, b) => {
+    const index = b.indexOf('=');
+    const key = index >= 0 ? b.slice(0, index) : b;
+    const value = index >= 0 ? b.slice(index + 1) : '';
+    return {
+      ... a,
+      [key]: value,
+    };
+  }, {}) as Record<string, string>;
+};
 export interface AuthConfiguration {
   app(app: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
   streamKey(key: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
@@ -138,10 +151,10 @@ export const AuthConfiguration = {
       streamKey: (key: string) => [strip_query(key) === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
     };
   },
-  customAuth(appFn: ((app_without_query: string) => boolean) | null, streamKeyFn: ((key_without_query: string) => boolean) | null): AuthConfiguration {
+  customAuth(appFn: ((app: string, query?: Record<string, string>) => boolean) | null, streamKeyFn: ((key: string, query?: Record<string, string>) => boolean) | null): AuthConfiguration {
     return {
-      app: (app: string) => [(appFn?.(strip_query(app)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      streamKey: (key: string) => [(streamKeyFn?.(strip_query(key)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      app: (app: string) => [(appFn?.(strip_query(app), collect_query(app)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      streamKey: (key: string) => [(streamKeyFn?.(strip_query(key), collect_query(key)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
     };
   },
 };
