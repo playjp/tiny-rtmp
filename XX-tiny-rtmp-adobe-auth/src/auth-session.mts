@@ -7,7 +7,6 @@ const MAX_SESSIONS = 1000;
 export type AdobeAuthSessionInformation = {
   salt: Buffer;
   challenge: Buffer;
-  opaque: Buffer;
 };
 
 export default class AdobeAuthSession implements AuthConfiguration {
@@ -34,18 +33,18 @@ export default class AdobeAuthSession implements AuthConfiguration {
         [key]: value,
       };
     }, {}) as Record<string, string>;
-    const { user, authmod, challenge, response } = query;
+    const { user, authmod, challenge, opaque, response } = query;
     // Adobe Auth でなければ切断 (authmod, user は必須)
     if (authmod !== 'adobe' || user == null) {
       return [AuthResult.DISCONNECT, null];
     }
     // Adobe Auth の第2段階だったら needauth を伝達して切断
     // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
-    if (response == null || challenge == null) {
+    if (response == null || challenge == null || opaque == null) {
       return [AuthResult.DISCONNECT, `authmod=adobe :?reason=needauth&${this.query(user)}&authmod=adobe`];
     }
 
-    const accepted = await this.verify(user, response, challenge);
+    const accepted = await this.verify(user, response, challenge, opaque);
     return accepted ? [AuthResult.OK, null] : [AuthResult.DISCONNECT, 'authmod=adobe :?reason=authfailed'];
   }
 
@@ -59,20 +58,26 @@ export default class AdobeAuthSession implements AuthConfiguration {
       this.sessions.delete(oldest);
     }
 
-    const session = {
-      salt: randomBytes(4),
-      challenge: randomBytes(4),
-      opaque: randomBytes(4), // MEMO: 用意するけど使わない
-    } satisfies AdobeAuthSessionInformation;
-    this.sessions.set(user, session);
+    const challenge = randomBytes(4);
+    const challenge_base64 = challenge.toString('base64');
+    const salt = randomBytes(4);
+    this.sessions.set(challenge_base64, { salt, challenge } satisfies AdobeAuthSessionInformation);
 
-    // opaque は送信すると FFmpeg が challenge より opaque を優先し、Wirecast は challenge を優先する、どっちか片方にすべき
-    // 仕様上は challenge を用いることになっているので opaque を除外する
-    return `user=${encodeURIComponent(user)}&salt=${session.salt.toString('base64')}&challenge=${session.challenge.toString('base64')}`;
+    // FFmpeg (8.0.1) 内臓の Adobe Auth は response の計算に opaque があったら challenge の代わりに opaque を使う
+    // Wirecast の Adobe Auth は response の計算に challenge を使う
+    // 仕様上は challenge を用いることになっているが、実装的に揺れたりしている
+    // FFmepg のコミットメッセージには opaque も challenge も実世界では同じ値 と言っている
+    // なので opaque に challenge と同じ値を入れておけば、どっちが優先されようとも計算は同じ
+    return Object.entries(({
+      user,
+      salt: salt.toString('base64'),
+      challenge: challenge_base64,
+      opaque: challenge_base64,
+    })).map(([k, v]) => `${k}=${v}`).join('&');
   }
 
-  private async verify(user: string, response: string, challenge: string): Promise<boolean> {
-    const session = this.sessions.get(user);
+  private async verify(user: string, response: string, challenge: string, opaque: string): Promise<boolean> {
+    const session = this.sessions.get(opaque);
     if (session == null) { return false; }
     const password = await this.passwordFn(user);
     if (password == null) { return false; }
@@ -80,7 +85,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
     const firststep = crypto.createHash('md5').update(user).update(session.salt.toString('base64')).update(password).digest('base64');
     // FFmpeg は opaque を優先して使い opaque がない時に client challenge を使う... なんで???
     const secondstep = crypto.createHash('md5').update(firststep).update(session.challenge.toString('base64')).update(challenge).digest('base64');
-    this.sessions.delete(user);
+    this.sessions.delete(opaque);
     return response === secondstep;
   }
 }
