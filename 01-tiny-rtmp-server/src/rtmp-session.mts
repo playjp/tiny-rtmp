@@ -42,6 +42,11 @@ export const AuthResult = {
   RETRY: 'RETRY',
   DISCONNECT: 'DISCONNECT',
 } as const;
+const strip_query = (value: string): string => {
+  const query_index = value.indexOf('?');
+  if (query_index < 0) { return value; }
+  return value.slice(0, query_index);
+};
 export interface AuthConfiguration {
   app(app: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
   streamKey(key: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
@@ -55,8 +60,8 @@ export const AuthConfiguration = {
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
     return {
-      app: (app: string) => [app === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      streamKey: (key: string) => [key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      app: (app: string) => [strip_query(app) === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      streamKey: (key: string) => [strip_query(key) === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
     };
   },
 };
@@ -69,11 +74,6 @@ export const RTMPContext = {
   from(): RTMPContext {
     return {};
   },
-};
-const strip_query = (value: string): string => {
-  const query_index = value.indexOf('?');
-  if (query_index < 0) { return value; }
-  return value.slice(0, query_index);
 };
 const generate_key = (context: RTMPContext): string => `${context.app}/${context.streamKey}`;
 const lock = new Set<NonNullable<ReturnType<typeof generate_key>>>();
