@@ -34,7 +34,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
         ... a,
         [key]: value,
       };
-    }, {}) as Record<string, string>;
+    }, {}) as Record<string, string | undefined>;
     const { user, authmod, challenge, opaque, response } = query;
     // Adobe Auth でなければ Adobe Auth を要求して切断 (authmod, user は必須)
     // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)

@@ -47,7 +47,7 @@ const strip_query = (value: string): string => {
   if (query_index < 0) { return value; }
   return value.slice(0, query_index);
 };
-const collect_query = (value: string): Record<string, string> | undefined => {
+const collect_query = (value: string): Record<string, string | undefined> | undefined => {
   const query_index = value.indexOf('?');
   if (query_index < 0) { return undefined; }
   return value.slice(query_index + 1).split('&').reduce((a, b) => {
@@ -58,7 +58,7 @@ const collect_query = (value: string): Record<string, string> | undefined => {
       ... a,
       [key]: value,
     };
-  }, {}) as Record<string, string>;
+  }, {}) as Record<string, string | undefined>;
 };
 type MaybePromise<T> = T | Promise<T>;
 export type AuthResultWithDescription = [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
@@ -79,7 +79,7 @@ export const AuthConfiguration = {
       streamKey: (key: string) => [strip_query(key) === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
     };
   },
-  customAuth(appFn: ((app: string, query?: Record<string, string>) => (boolean | Promise<boolean>)) | null, streamKeyFn: ((key: string, query?: Record<string, string>) => (boolean | Promise<boolean>)) | null): AuthConfiguration {
+  customAuth(appFn: ((app: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null, streamKeyFn: ((key: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null): AuthConfiguration {
     return {
       app: async (app: string) => [(await (appFn?.(strip_query(app), collect_query(app))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
       streamKey: async (key: string) => [(await (streamKeyFn?.(strip_query(key), collect_query(key))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
