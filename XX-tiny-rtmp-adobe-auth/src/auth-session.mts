@@ -20,6 +20,8 @@ export default class AdobeAuthSession implements AuthConfiguration {
   public async app(app: string): Promise<AuthResultWithDescription> {
     const query_index = app.indexOf('?');
     if (query_index < 0) {
+      // Adobe Auth を要求する
+      // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
       return [AuthResult.DISCONNECT, 'authmod=adobe code=403 need auth'];
     }
     // クエリパラメータをパース
