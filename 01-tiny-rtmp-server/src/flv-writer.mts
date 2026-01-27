@@ -58,6 +58,11 @@ export default class FLVWriter {
     this.output.write(previousTagSize);
   }
 
-  public close(): void { this.output.end(); }
+  public close(): void {
+    // 標準出力と標準エラー出力は閉じると他に影響するので閉じない
+    if (this.output === process.stdout) { return; }
+    if (this.output === process.stderr) { return; }
+    this.output.end();
+  }
   public [Symbol.dispose](): void { this.close(); }
 }
