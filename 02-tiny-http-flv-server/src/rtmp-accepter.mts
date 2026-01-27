@@ -61,10 +61,11 @@ const collect_query = (value: string): Record<string, string> | undefined => {
     };
   }, {}) as Record<string, string>;
 };
-type AuthConfigurationResult = [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
+type MaybePromise<T> = T | PromiseLike<T> | Promise<T>;
+type AuthResultWithDescription = MaybePromise<[authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null]>;
 export interface AuthConfiguration {
-  app(app: string): AuthConfigurationResult | Promise<AuthConfigurationResult>;
-  streamKey(key: string): AuthConfigurationResult | Promise<AuthConfigurationResult>;
+  app(app: string): AuthResultWithDescription;
+  streamKey(key: string): AuthResultWithDescription;
 };
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
@@ -162,7 +163,7 @@ const TRANSITION = {
 
     return [next[authResult], next_context];
   },
-  [STATE.WAITING_CREATESTREAM]: async (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CREATESTREAM, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CREATESTREAM, context]; }
     const command = read_amf0(message.data);
@@ -229,7 +230,7 @@ const TRANSITION = {
 
     return [next[authResult], next_context];
   },
-  [STATE.PUBLISHED]: async (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.PUBLISHED, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.PUBLISHED, context]; }
     const command = read_amf0(message.data);
@@ -241,10 +242,10 @@ const TRANSITION = {
 
     return [STATE.DISCONNECTED, context];
   },
-  [STATE.DISCONNECTED]: async (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     return [STATE.DISCONNECTED, context];
   },
-} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => Promise<[(typeof STATE)[keyof typeof STATE], RTMPContext]>>;
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => MaybePromise<[(typeof STATE)[keyof typeof STATE], RTMPContext]>>;
 
 export class DisconnectError extends Error {
   constructor(message: string, option?: ErrorOptions) {
