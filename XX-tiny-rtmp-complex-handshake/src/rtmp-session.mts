@@ -138,7 +138,7 @@ export const AuthConfiguration = {
       streamKey: (key: string) => [strip_query(key) === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
     };
   },
-  customAuth(appFn: ((app: string) => boolean) | null, streamKeyFn: ((key: string) => boolean) | null): AuthConfiguration {
+  customAuth(appFn: ((app_without_query: string) => boolean) | null, streamKeyFn: ((key_without_query: string) => boolean) | null): AuthConfiguration {
     return {
       app: (app: string) => [(appFn?.(strip_query(app)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
       streamKey: (key: string) => [(streamKeyFn?.(strip_query(key)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
