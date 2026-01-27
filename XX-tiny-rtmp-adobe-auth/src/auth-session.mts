@@ -3,6 +3,7 @@ import crypto, { randomBytes } from 'node:crypto';
 import { AuthResult } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import type { AuthResultWithDescription, AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
+const MAX_SESSIONS = 1000;
 export type AdobeAuthSessionInformation = {
   salt: Buffer;
   challenge: Buffer;
@@ -53,6 +54,11 @@ export default class AdobeAuthSession implements AuthConfiguration {
   }
 
   private query(user: string): string {
+    while (this.sessions.size >= MAX_SESSIONS) {
+      const oldest = this.sessions.keys().next().value!;
+      this.sessions.delete(oldest);
+    }
+
     const session = {
       salt: randomBytes(4),
       challenge: randomBytes(4),
