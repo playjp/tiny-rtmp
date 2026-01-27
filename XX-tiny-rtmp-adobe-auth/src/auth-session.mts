@@ -80,7 +80,10 @@ export default class AdobeAuthSession implements AuthConfiguration {
     const session = this.sessions.get(opaque);
     if (session == null) { return false; }
     const password = await this.passwordFn(user);
-    if (password == null) { return false; }
+    if (password == null) {
+      this.sessions.delete(opaque);
+      return false;
+    }
 
     const firststep = crypto.createHash('md5').update(user).update(session.salt.toString('base64')).update(password).digest('base64');
     // FFmpeg は opaque を優先して使い opaque がない時に client challenge を使う... なんで???
