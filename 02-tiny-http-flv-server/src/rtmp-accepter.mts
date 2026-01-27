@@ -61,7 +61,7 @@ const collect_query = (value: string): Record<string, string> | undefined => {
     };
   }, {}) as Record<string, string>;
 };
-type MaybePromise<T> = T | PromiseLike<T> | Promise<T>;
+type MaybePromise<T> = T | Promise<T>;
 type AuthResultWithDescription = MaybePromise<[authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null]>;
 export interface AuthConfiguration {
   app(app: string): AuthResultWithDescription;
@@ -282,7 +282,9 @@ export default async function* handle_rtmp(connection: Duplex, auth: AuthConfigu
       if (need_yield(state, message)) { yield message; }
 
       // 個別のメッセージによる状態遷移
-      ([state, context] = await TRANSITION[state](message, builder, connection, auth, context));
+      const transition = TRANSITION[state](message, builder, connection, auth, context);
+      // メディアデータを読んでいる時に余計な microtask を作りたくないので判定して await する
+      ([state, context] = transition instanceof Promise ? await transition : transition);
       if (state === STATE.DISCONNECTED) { return; }
     }
   } finally {
