@@ -1,6 +1,7 @@
 import crypto, { randomBytes } from 'node:crypto';
 
-import { AuthResult, type AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import { AuthResult } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import type { AuthResultWithDescription, AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 export type AdobeAuthSessionInformation = {
   salt: Buffer;
@@ -9,16 +10,14 @@ export type AdobeAuthSessionInformation = {
 };
 
 export default class AdobeAuthSession implements AuthConfiguration {
-  private user: string;
-  private password: string;
+  private passwordFn: (user: string) => Promise<string | null> | (string | null);
   private session: AdobeAuthSessionInformation | null = null;
 
-  constructor(user: string, password: string) {
-    this.user = user;
-    this.password = password;
+  constructor(passwordFn: (user: string) => Promise<string | null> | (string | null)) {
+    this.passwordFn = passwordFn;
   }
 
-  public app(app: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null] {
+  public async app(app: string): Promise<AuthResultWithDescription> {
     const query_index = app.indexOf('?');
     if (query_index < 0) {
       return [AuthResult.DISCONNECT, 'authmod=adobe code=403 need auth'];
@@ -34,18 +33,18 @@ export default class AdobeAuthSession implements AuthConfiguration {
         [key]: value,
       };
     }, {}) as Record<string, string>;
-    const { authmod, challenge, response } = query;
-    // Adobe Auth でなければ切断
-    if (authmod !== 'adobe') {
+    const { user, authmod, challenge, response } = query;
+    // Adobe Auth でなければ切断 (authmod, user は必須)
+    if (authmod !== 'adobe' || user == null) {
       return [AuthResult.DISCONNECT, null];
     }
     // Adobe Auth の第2段階だったら needauth を伝達して切断
     // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
     if (response == null || challenge == null) {
-      return [AuthResult.DISCONNECT, `authmod=adobe :?reason=needauth&${this.query()}&authmod=adobe`];
+      return [AuthResult.DISCONNECT, `authmod=adobe :?reason=needauth&${this.query(user)}&authmod=adobe`];
     }
 
-    const accepted = this.verify(response, challenge);
+    const accepted = await this.verify(user, response, challenge);
     this.end();
 
     return accepted ? [AuthResult.OK, null] : [AuthResult.DISCONNECT, 'authmod=adobe :?reason=authfailed'];
@@ -55,7 +54,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return [AuthResult.OK, null];
   }
 
-  private query(): string {
+  private query(user: string): string {
     this.session = {
       salt: randomBytes(4),
       challenge: randomBytes(4),
@@ -63,12 +62,16 @@ export default class AdobeAuthSession implements AuthConfiguration {
     };
     // opaque は送信すると FFmpeg が challenge より opaque を優先し、Wirecast は challenge を優先する、どっちか片方にすべき
     // 仕様上は challenge を用いることになっているので opaque を除外する
-    return `user=${encodeURIComponent(this.user)}&salt=${this.session.salt.toString('base64')}&challenge=${this.session.challenge.toString('base64')}`;
+    return `user=${encodeURIComponent(user)}&salt=${this.session.salt.toString('base64')}&challenge=${this.session.challenge.toString('base64')}`;
   }
 
-  private verify(response: string, challenge: string): boolean {
+  private async verify(user: string, response: string, challenge: string): Promise<boolean> {
     if (this.session == null) { return false; }
-    const firststep = crypto.createHash('md5').update(this.user).update(this.session.salt.toString('base64')).update(this.password).digest('base64');
+
+    const password = await this.passwordFn(user);
+    if (password == null) { return false; }
+
+    const firststep = crypto.createHash('md5').update(user).update(this.session.salt.toString('base64')).update(password).digest('base64');
     // FFmpeg は opaque を優先して使い opaque がない時に client challenge を使う... なんで???
     const secondstep = crypto.createHash('md5').update(firststep).update(this.session.challenge.toString('base64')).update(challenge).digest('base64');
     return response === secondstep;

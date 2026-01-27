@@ -61,10 +61,10 @@ const collect_query = (value: string): Record<string, string> | undefined => {
   }, {}) as Record<string, string>;
 };
 type MaybePromise<T> = T | Promise<T>;
-type AuthResultWithDescription = MaybePromise<[authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null]>;
+export type AuthResultWithDescription = [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
 export interface AuthConfiguration {
-  app(app: string): AuthResultWithDescription;
-  streamKey(key: string): AuthResultWithDescription;
+  app(app: string): MaybePromise<AuthResultWithDescription>;
+  streamKey(key: string): MaybePromise<AuthResultWithDescription>;
 };
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
