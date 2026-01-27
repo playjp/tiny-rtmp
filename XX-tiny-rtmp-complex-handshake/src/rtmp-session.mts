@@ -116,85 +116,41 @@ export const AuthResult = {
   RETRY: 'RETRY',
   DISCONNECT: 'DISCONNECT',
 } as const;
-export type AuthConfiguration = {
-  app: (app: string) => (typeof AuthResult)[keyof typeof AuthResult];
-  streamKey: (key: string) => (typeof AuthResult)[keyof typeof AuthResult];
+export interface AuthConfiguration {
+  app(app: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
+  streamKey(key: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
 };
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
     return {
-      app: () => AuthResult.OK,
-      streamKey: () => AuthResult.OK,
+      app: () => [AuthResult.OK, null],
+      streamKey: () => [AuthResult.OK, null],
     };
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
     return {
-      app: (app: string) => app === appName ? AuthResult.OK : AuthResult.DISCONNECT,
-      streamKey: (key: string) => key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT,
+      app: (app: string) => [app === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      streamKey: (key: string) => [key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
     };
   },
 };
-type RTMPContext = Partial<{
+
+export type RTMPContext = Partial<{
   app: string;
   streamKey: string;
 }>;
-const RTMPContext = {
+export const RTMPContext = {
   from(): RTMPContext {
     return {};
   },
 };
+const strip_query = (value: string): string => {
+  const query_index = value.indexOf('?');
+  if (query_index < 0) { return value; }
+  return value.slice(0, query_index);
+};
 const generate_key = (context: RTMPContext): string => `${context.app}/${context.streamKey}`;
 const lock = new Set<NonNullable<ReturnType<typeof generate_key>>>();
-
-type AuthHandler = {
-  connect: (transaction_id: number, app: string, config: AuthConfiguration, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext];
-  publish: (transaction_id: number, streamKey: string, config: AuthConfiguration, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext];
-};
-const connect_handler = (transaction_id: number, app: string, config: AuthConfiguration, context: RTMPContext): [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] => {
-  const authResult = config.app(app);
-  const connectAccepted = authResult === AuthResult.OK;
-
-  const status = connectAccepted ? '_result' : '_error';
-  const server = connectAccepted ? {
-    fmsVer: 'FMS/3,5,7,7009',
-    capabilities: 31,
-    mode: 1,
-  } : null;
-  const info = connectAccepted ? {
-    code: 'NetConnection.Connect.Success',
-    description: 'Connection succeeded.',
-    data: { version: '3,5,7,7009' },
-    objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-    level: 'status', // 正常系
-  } : {
-    code: 'NetConnection.Connect.Rejected',
-    description: 'Connection rejected.',
-    level: 'error', // 異常系
-  };
-
-  const next_context = connectAccepted ? { ... context, app } : context;
-  return [[status, transaction_id, server, info], authResult, next_context];
-};
-const publish_handler = (transaction_id: number, streamKey: string, config: AuthConfiguration, context: RTMPContext): [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] => {
-  const auth_before_lock = config.streamKey(streamKey);
-  // streamKey が合致していて、配信されてない場合は配信を許可する
-  const authResult = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey })) ?  AuthResult.DISCONNECT : auth_before_lock;
-  const publishAccepted = authResult === AuthResult.OK;
-
-  const info = publishAccepted ? {
-    code: 'NetStream.Publish.Start',
-    description: 'Publish Accepted',
-    level: 'status', // 正常系
-  } : {
-    code: 'NetStream.Publish.Failed', // Permision Denied
-    description: 'Publish Failed',
-    level: 'error', // 異常系
-  };
-
-  const next_context = publishAccepted ? { ... context, streamKey } : context;
-  if (publishAccepted) { lock.add(generate_key(next_context)); }
-  return [['onStatus', transaction_id, null, info], authResult, next_context];
-};
 
 const PUBLISH_MESSAGE_STREAM = 1;
 const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message): boolean => {
@@ -209,7 +165,7 @@ const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message)
   }
 };
 const TRANSITION = {
-  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CONNECT, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CONNECT, context]; }
     const command = read_amf0(message.data);
@@ -219,10 +175,31 @@ const TRANSITION = {
     if (!isAMF0Number(command[1])) { return [STATE.WAITING_CONNECT, context]; }
     const transaction_id = command[1];
     if (!isAMF0Object(command[2])) { return [STATE.WAITING_CONNECT, context]; }
-    const appName = command[2]['app'];
-    if (!isAMF0String(appName)) { return [STATE.WAITING_CONNECT, context]; }
+    const app = command[2]['app'];
+    if (!isAMF0String(app)) { return [STATE.WAITING_CONNECT, context]; }
 
-    const [data, result, next_context] = handlers.connect(transaction_id, appName, config, context);
+    const [authResult, description] = auth.app(app);
+    const connectAccepted = authResult === AuthResult.OK;
+
+    const status = connectAccepted ? '_result' : '_error';
+    const server = connectAccepted ? {
+      fmsVer: 'FMS/3,5,7,7009',
+      capabilities: 31,
+      mode: 1,
+    } : null;
+    const info = connectAccepted ? {
+      code: 'NetConnection.Connect.Success',
+      description: description ?? 'Connection succeeded.',
+      data: { version: '3,5,7,7009' },
+      objectEncoding: 0, // 0 = AMF0, 3 = AMF3
+      level: 'status', // 正常系
+    } : {
+      code: 'NetConnection.Connect.Rejected',
+      description: description ?? 'Connection rejected.',
+      level: 'error', // 異常系
+    };
+
+    const next_context = connectAccepted ? { ... context, app: strip_query(app) } : context;
     const next = {
       [AuthResult.OK]: STATE.WAITING_CREATESTREAM,
       [AuthResult.RETRY]: STATE.WAITING_CONNECT,
@@ -232,13 +209,13 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0(... data),
+      data: write_amf0(status, transaction_id, server, info),
     });
     for (const chunk of chunks) { connection.write(chunk); }
 
-    return [next[result], next_context];
+    return [next[authResult], next_context];
   },
-  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CREATESTREAM, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CREATESTREAM, context]; }
     const command = read_amf0(message.data);
@@ -260,7 +237,7 @@ const TRANSITION = {
 
     return [STATE.WAITING_PUBLISH, context];
   },
-  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return [STATE.WAITING_PUBLISH, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_PUBLISH, context]; }
     const command = read_amf0(message.data);
@@ -272,7 +249,24 @@ const TRANSITION = {
     if (!isAMF0String(command[3])) { return [STATE.WAITING_PUBLISH, context]; }
     const streamKey = command[3];
 
-    const [data, result, next_context] = handlers.publish(transaction_id, streamKey, config, context);
+    const [auth_before_lock, description_before_lock] = auth.streamKey(streamKey);
+    // streamKey が合致していて、配信されてない場合は配信を許可する
+    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
+    const publishAccepted = authResult === AuthResult.OK;
+
+    const info = publishAccepted ? {
+      code: 'NetStream.Publish.Start',
+      description: description ?? 'Publish Accepted',
+      level: 'status', // 正常系
+    } : {
+      code: 'NetStream.Publish.Failed', // Permision Denied
+      description: description ?? 'Publish Failed',
+      level: 'error', // 異常系
+    };
+
+    const next_context = publishAccepted ? { ... context, streamKey: strip_query(streamKey) } : context;
+    if (publishAccepted) { lock.add(generate_key(next_context)); }
+
     const next = {
       [AuthResult.OK]: STATE.PUBLISHED,
       [AuthResult.RETRY]: STATE.WAITING_PUBLISH,
@@ -282,13 +276,13 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
-      data: write_amf0(... data),
+      data: write_amf0('onStatus', transaction_id, null, info),
     });
     for (const chunk of chunks) { connection.write(chunk); }
 
-    return [next[result], next_context];
+    return [next[authResult], next_context];
   },
-  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.PUBLISHED, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.PUBLISHED, context]; }
     const command = read_amf0(message.data);
@@ -300,23 +294,12 @@ const TRANSITION = {
 
     return [STATE.DISCONNECTED, context];
   },
-  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => {
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     return [STATE.DISCONNECTED, context];
   },
-} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, config: AuthConfiguration, context: RTMPContext) => [(typeof STATE)[keyof typeof STATE], RTMPContext]>;
-
-export class DisconnectError extends Error {
-  constructor(message: string, option?: ErrorOptions) {
-    super(message, option);
-    this.name = this.constructor.name;
-  }
-}
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => [(typeof STATE)[keyof typeof STATE], RTMPContext]>;
 
 async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
-  const handlers = {
-    publish: publish_handler,
-    connect: connect_handler,
-  } satisfies AuthHandler;
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
   const builder = new MessageBuilder();
@@ -341,7 +324,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
       if (need_yield(state, message)) { yield message; }
 
       // 個別のメッセージによる状態遷移
-      ([state, context] = TRANSITION[state](message, builder, connection, handlers, auth, context));
+      ([state, context] = TRANSITION[state](message, builder, connection, auth, context));
       if (state === STATE.DISCONNECTED) { return; }
     }
   } catch (e) {

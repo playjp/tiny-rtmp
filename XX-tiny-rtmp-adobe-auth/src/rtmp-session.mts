@@ -1,4 +1,4 @@
-import crypto, { randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { Writable } from 'node:stream';
 import type { Duplex } from 'node:stream';
 
@@ -8,8 +8,6 @@ import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-ti
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import FLVWriter from '../../01-tiny-rtmp-server/src/flv-writer.mts';
 import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
-
-import AdobeAuthSession from './auth-session.mts';
 
 const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // C0/S0
@@ -43,6 +41,25 @@ export const AuthResult = {
   RETRY: 'RETRY',
   DISCONNECT: 'DISCONNECT',
 } as const;
+export interface AuthConfiguration {
+  app(app: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
+  streamKey(key: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
+};
+export const AuthConfiguration = {
+  noAuth(): AuthConfiguration {
+    return {
+      app: () => [AuthResult.OK, null],
+      streamKey: () => [AuthResult.OK, null],
+    };
+  },
+  simpleAuth(appName: string, streamKey: string): AuthConfiguration {
+    return {
+      app: (app: string) => [app === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      streamKey: (key: string) => [key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
+    };
+  },
+};
+
 type RTMPContext = Partial<{
   app: string;
   streamKey: string;
@@ -52,103 +69,13 @@ const RTMPContext = {
     return {};
   },
 };
+const strip_query = (value: string): string => {
+  const query_index = value.indexOf('?');
+  if (query_index < 0) { return value; }
+  return value.slice(0, query_index);
+};
 const generate_key = (context: RTMPContext): string => `${context.app}/${context.streamKey}`;
 const lock = new Set<NonNullable<ReturnType<typeof generate_key>>>();
-
-type AuthHandler = {
-  connect: (transaction_id: number, app: string, auth: AdobeAuthSession, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext];
-  publish: (transaction_id: number, streamKey: string, auth: AdobeAuthSession, context: RTMPContext) => [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext];
-};
-const connect_handler = (transaction_id: number, app: string, auth: AdobeAuthSession, context: RTMPContext): [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] => {
-  // Adobe Auth に必要なクエリパラメータがなかったら切断 (初回のフローで authmod=adobe を返す)
-  const query_index = app.indexOf('?');
-  if (query_index < 0) {
-    const info = {
-      code: 'NetConnection.Connect.Rejected',
-      description: 'authmod=adobe code=403 need auth',
-      objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-      level: 'error', // 正常系
-    };
-    return [['_error', transaction_id, null, info], AuthResult.DISCONNECT, context];
-  }
-  // クエリパラメータをパース
-  const appName = app.slice(0, query_index);
-  const query = app.slice(query_index + 1).split('&').reduce((a, b) => {
-    const index = b.indexOf('=');
-    const key = index >= 0 ? b.slice(0, index) : b;
-    const value = index >= 0 ? b.slice(index + 1) : '';
-    return {
-      ... a,
-      [key]: value,
-    };
-  }, {}) as Record<string, string>;
-  const { authmod, challenge, response } = query;
-  // Adobe Auth でなければ切断
-  if (authmod !== 'adobe') {
-    const info = {
-      code: 'NetConnection.Connect.Rejected',
-      description: 'Connection Rejected', // 適当
-      objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-      level: 'error', // 正常系
-    };
-    return [['_error', transaction_id, null, info], AuthResult.DISCONNECT, context];
-  }
-  // Adobe Auth の第2段階だったら needauth を伝達して切断
-  // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
-  if (response == null || challenge == null) {
-    const info = {
-      code: 'NetConnection.Connect.Rejected',
-      // MEMO: ffmpeg がスペース入れる or クエリの最後に入れないと adobe にならない
-      description: `authmod=adobe :?reason=needauth&${auth.query()}&authmod=adobe`,
-      objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-      level: 'error', // 正常系
-    };
-    return [['_error', transaction_id, null, info], AuthResult.DISCONNECT, context];
-  }
-  //
-  const connectAccepted = auth.verify(response, challenge);
-  const status = connectAccepted ? '_result' : '_error';
-  const server = connectAccepted ? {
-    fmsVer: 'FMS/3,5,7,7009',
-    capabilities: 31,
-    mode: 1,
-  } : null;
-  const info = connectAccepted ? {
-    code: 'NetConnection.Connect.Success',
-    description: 'Connection succeeded.',
-    data: { version: '3,5,7,7009' },
-    objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-    level: 'status', // 正常系
-  } : {
-    code: 'NetConnection.Connect.Rejected',
-    description: 'authmod=adobe :?reason=authfailed',
-    level: 'error', // 異常系
-  };
-
-  auth.end(); // 使ったランダムは消去して再利用できないようにする
-  const authResult = connectAccepted ? AuthResult.OK : AuthResult.DISCONNECT;
-  const next_context = connectAccepted ? { ... context, appName } : context;
-  return [[status, transaction_id, server, info], authResult, next_context];
-};
-const publish_handler = (transaction_id: number, streamKey: string, auth: AdobeAuthSession, context: RTMPContext): [Parameters<typeof write_amf0>, result: (typeof AuthResult)[keyof typeof AuthResult], context: RTMPContext] => {
-  // 配信されてない場合は配信を許可する
-  const authResult = lock.has(generate_key({ ... context, streamKey })) ?  AuthResult.DISCONNECT : AuthResult.OK;
-  const publishAccepted = authResult === AuthResult.OK;
-
-  const info = publishAccepted ? {
-    code: 'NetStream.Publish.Start',
-    description: 'Publish Accepted',
-    level: 'status', // 正常系
-  } : {
-    code: 'NetStream.Publish.Failed', // Permision Denied
-    description: 'Publish Failed',
-    level: 'error', // 異常系
-  };
-
-  const next_context = publishAccepted ? { ... context, streamKey } : context;
-  if (publishAccepted) { lock.add(generate_key(next_context)); }
-  return [['onStatus', transaction_id, null, info], authResult, next_context];
-};
 
 const PUBLISH_MESSAGE_STREAM = 1;
 const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message): boolean => {
@@ -163,7 +90,7 @@ const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message)
   }
 };
 const TRANSITION = {
-  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, auth: AdobeAuthSession, context: RTMPContext) => {
+  [STATE.WAITING_CONNECT]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CONNECT, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CONNECT, context]; }
     const command = read_amf0(message.data);
@@ -173,10 +100,31 @@ const TRANSITION = {
     if (!isAMF0Number(command[1])) { return [STATE.WAITING_CONNECT, context]; }
     const transaction_id = command[1];
     if (!isAMF0Object(command[2])) { return [STATE.WAITING_CONNECT, context]; }
-    const appName = command[2]['app'];
-    if (!isAMF0String(appName)) { return [STATE.WAITING_CONNECT, context]; }
+    const app = command[2]['app'];
+    if (!isAMF0String(app)) { return [STATE.WAITING_CONNECT, context]; }
 
-    const [data, result, next_context] = handlers.connect(transaction_id, appName, auth, context);
+    const [authResult, description] = auth.app(app);
+    const connectAccepted = authResult === AuthResult.OK;
+
+    const status = connectAccepted ? '_result' : '_error';
+    const server = connectAccepted ? {
+      fmsVer: 'FMS/3,5,7,7009',
+      capabilities: 31,
+      mode: 1,
+    } : null;
+    const info = connectAccepted ? {
+      code: 'NetConnection.Connect.Success',
+      description: description ?? 'Connection succeeded.',
+      data: { version: '3,5,7,7009' },
+      objectEncoding: 0, // 0 = AMF0, 3 = AMF3
+      level: 'status', // 正常系
+    } : {
+      code: 'NetConnection.Connect.Rejected',
+      description: description ?? 'Connection rejected.',
+      level: 'error', // 異常系
+    };
+
+    const next_context = connectAccepted ? { ... context, app: strip_query(app) } : context;
     const next = {
       [AuthResult.OK]: STATE.WAITING_CREATESTREAM,
       [AuthResult.RETRY]: STATE.WAITING_CONNECT,
@@ -186,13 +134,13 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0(... data),
+      data: write_amf0(status, transaction_id, server, info),
     });
     for (const chunk of chunks) { connection.write(chunk); }
 
-    return [next[result], next_context];
+    return [next[authResult], next_context];
   },
-  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler,  auth: AdobeAuthSession, context: RTMPContext) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.WAITING_CREATESTREAM, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_CREATESTREAM, context]; }
     const command = read_amf0(message.data);
@@ -214,7 +162,7 @@ const TRANSITION = {
 
     return [STATE.WAITING_PUBLISH, context];
   },
-  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, auth: AdobeAuthSession, context: RTMPContext) => {
+  [STATE.WAITING_PUBLISH]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return [STATE.WAITING_PUBLISH, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.WAITING_PUBLISH, context]; }
     const command = read_amf0(message.data);
@@ -226,7 +174,24 @@ const TRANSITION = {
     if (!isAMF0String(command[3])) { return [STATE.WAITING_PUBLISH, context]; }
     const streamKey = command[3];
 
-    const [data, result, next_context] = handlers.publish(transaction_id, streamKey, auth, context);
+    const [auth_before_lock, description_before_lock] = auth.streamKey(streamKey);
+    // streamKey が合致していて、配信されてない場合は配信を許可する
+    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
+    const publishAccepted = authResult === AuthResult.OK;
+
+    const info = publishAccepted ? {
+      code: 'NetStream.Publish.Start',
+      description: description ?? 'Publish Accepted',
+      level: 'status', // 正常系
+    } : {
+      code: 'NetStream.Publish.Failed', // Permision Denied
+      description: description ?? 'Publish Failed',
+      level: 'error', // 異常系
+    };
+
+    const next_context = publishAccepted ? { ... context, streamKey: strip_query(streamKey) } : context;
+    if (publishAccepted) { lock.add(generate_key(next_context)); }
+
     const next = {
       [AuthResult.OK]: STATE.PUBLISHED,
       [AuthResult.RETRY]: STATE.WAITING_PUBLISH,
@@ -236,13 +201,13 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
-      data: write_amf0(... data),
+      data: write_amf0('onStatus', transaction_id, null, info),
     });
     for (const chunk of chunks) { connection.write(chunk); }
 
-    return [next[result], next_context];
+    return [next[authResult], next_context];
   },
-  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler, auth: AdobeAuthSession, context: RTMPContext) => {
+  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     if (message.message_stream_id !== 0) { return [STATE.PUBLISHED, context]; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return [STATE.PUBLISHED, context]; }
     const command = read_amf0(message.data);
@@ -254,16 +219,12 @@ const TRANSITION = {
 
     return [STATE.DISCONNECTED, context];
   },
-  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler,  auth: AdobeAuthSession, context: RTMPContext) => {
+  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => {
     return [STATE.DISCONNECTED, context];
   },
-} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, handlers: AuthHandler,  auth: AdobeAuthSession, context: RTMPContext) => [(typeof STATE)[keyof typeof STATE], RTMPContext]>;
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration, context: RTMPContext) => [(typeof STATE)[keyof typeof STATE], RTMPContext]>;
 
-async function* handle_rtmp(connection: Duplex, adobe: AdobeAuthSession): AsyncIterable<Message> {
-  const handlers = {
-    publish: publish_handler,
-    connect: connect_handler,
-  } satisfies AuthHandler;
+async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
   const builder = new MessageBuilder();
@@ -288,7 +249,7 @@ async function* handle_rtmp(connection: Duplex, adobe: AdobeAuthSession): AsyncI
       if (need_yield(state, message)) { yield message; }
 
       // 個別のメッセージによる状態遷移
-      ([state, context] = TRANSITION[state](message, builder, connection, handlers, adobe, context));
+      ([state, context] = TRANSITION[state](message, builder, connection, auth, context));
       if (state === STATE.DISCONNECTED) { return; }
     }
   } finally {
@@ -297,7 +258,7 @@ async function* handle_rtmp(connection: Duplex, adobe: AdobeAuthSession): AsyncI
   }
 }
 
-export default async (connection: Duplex, auth: AdobeAuthSession, output?: Writable): Promise<void> => {
+export default async (connection: Duplex, auth: AuthConfiguration, output?: Writable): Promise<void> => {
   // Adobe Auth は何度も切断するので、const にしとく
   const writer = output != null ? new FLVWriter(output) : null;
   for await (const message of handle_rtmp(connection, auth)) {
