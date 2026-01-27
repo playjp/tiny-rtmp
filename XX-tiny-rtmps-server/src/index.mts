@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import handle_rtmp, { AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 const options = {
   port: {
@@ -39,6 +39,6 @@ const key = fs.readFileSync(args.key);
 const cert = fs.readFileSync(args.cert);
 
 const server = tls.createServer({ noDelay: true, key, cert }, async (connection) => {
-  await handle_rtmp(connection, output ?? undefined);
+  await handle_rtmp(connection, AuthConfiguration.noAuth(), output ?? undefined);
 });
 server.listen(port);

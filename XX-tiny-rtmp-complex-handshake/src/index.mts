@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from './rtmp-session.mts';
+import handle_rtmp, { AuthConfiguration } from './rtmp-session.mts';
 
 const options = {
   port: {
@@ -23,6 +23,6 @@ const port = Number.parseInt(args.port, 10);
 const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.createWriteStream(args.flv);
 
 const server = net.createServer({ noDelay: true }, async (connection) => {
-  await handle_rtmp(connection, output ?? undefined);
+  await handle_rtmp(connection, AuthConfiguration.noAuth(), output ?? undefined);
 });
 server.listen(port);

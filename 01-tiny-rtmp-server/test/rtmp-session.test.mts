@@ -6,7 +6,7 @@ import read_amf0 from '../src/amf0-reader.mts';
 import write_amf0 from '../src/amf0-writer.mts';
 import read_message, { MessageType } from '../src/message-reader.mts';
 import MessageBuilder from '../src/message-builder.mts';
-import rtmp_session from '../src/rtmp-session.mts';
+import rtmp_session, { AuthConfiguration } from '../src/rtmp-session.mts';
 
 describe('Regression Test', () => {
   test('Publish Success', async () => {
@@ -18,7 +18,7 @@ describe('Regression Test', () => {
     const builder = new MessageBuilder();
 
     const flv = new AsyncByteReader();
-    const _ = rtmp_session(connection, new Writable({
+    const _ = rtmp_session(connection, AuthConfiguration.noAuth(), new Writable({
       write(chunk, _, cb) {
         flv.feed(chunk);
         cb();

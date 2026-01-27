@@ -1,5 +1,6 @@
 import crypto, { randomBytes } from 'node:crypto';
-import { AuthResult, type AuthConfiguration } from './rtmp-session.mts';
+
+import { AuthResult, type AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 export type AdobeAuthSessionInformation = {
   salt: Buffer;

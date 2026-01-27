@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp from './rtmp-session.mts';
+import handle_rtmp from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+
 import AdobeAuthSession from './auth-session.mts';
 
 const options = {

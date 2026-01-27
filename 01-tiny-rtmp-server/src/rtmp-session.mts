@@ -261,9 +261,9 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   }
 }
 
-export default async (connection: Duplex, output?: Writable): Promise<void> => {
+export default async (connection: Duplex, auth: AuthConfiguration, output?: Writable): Promise<void> => {
   using writer = output != null ? new FLVWriter(output) : null;
-  for await (const message of handle_rtmp(connection, AuthConfiguration.noAuth())) {
+  for await (const message of handle_rtmp(connection, auth)) {
     switch (message.message_type_id) {
       case MessageType.Audio:
       case MessageType.Video:
