@@ -36,9 +36,10 @@ export default class AdobeAuthSession implements AuthConfiguration {
       };
     }, {}) as Record<string, string>;
     const { user, authmod, challenge, opaque, response } = query;
-    // Adobe Auth でなければ切断 (authmod, user は必須)
+    // Adobe Auth でなければ Adobe Auth を要求して切断 (authmod, user は必須)
+    // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
     if (authmod !== 'adobe' || user == null) {
-      return [AuthResult.DISCONNECT, null];
+      return [AuthResult.DISCONNECT, 'authmod=adobe code=403 need auth'];
     }
     // Adobe Auth の第2段階だったら needauth を伝達して切断
     // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
