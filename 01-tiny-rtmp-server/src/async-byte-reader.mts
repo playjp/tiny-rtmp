@@ -10,12 +10,13 @@ export default class AsyncByteReader {
   private totals = 0;
   private eof = false;
   private promises: [byteLength: number, resolve: (result: Buffer) => void, reject: (error: Error) => void][] = [];
-  private signal: AbortSignal | null;
+  private controller = new AbortController();
+  private signal: AbortSignal;
   private highWaterMark: number;
 
   public constructor(option?: Partial<AsyncByteReaderOption>) {
-    this.signal = option?.signal ?? null;
-    this.signal?.addEventListener('abort', this.feedEOF.bind(this), { once: true });
+    this.signal = AbortSignal.any([this.controller.signal, option?.signal ?? AbortSignal.any([])]);
+    this.signal.addEventListener('abort', this.abort.bind(this), { once: true });
     this.highWaterMark = option?.highWaterMark ?? Number.POSITIVE_INFINITY;
   }
 
@@ -51,7 +52,7 @@ export default class AsyncByteReader {
     if (!this.eof) { return; }
     while (this.promises.length > 0) {
       const [,,reject] = this.promises[0];
-      reject(this.signal?.reason ?? new Error('EOF Exception'));
+      reject(this.signal.reason ?? new Error('EOF Detected'));
       this.promises.shift();
     }
   }
@@ -59,22 +60,28 @@ export default class AsyncByteReader {
   public feed(buffer: Buffer): void {
     if (this.eof) { return; }
     if (this.highWaterMark < Math.max(0, this.totals - this.reserved)) {
-      this.feedEOF(); return;
+      this.feedEOF(new Error('Buffer overflow: highWaterMark exceeded'));
+      return;
     }
     this.buffers.push(buffer);
     this.totals += buffer.byteLength;
     this.fulfill();
   }
 
-  public feedEOF(): void {
+  private abort(): void {
     this.eof = true;
     this.fulfill();
   }
-  public [Symbol.dispose](): void { this.feedEOF(); }
+  public feedEOF(reason?: any): void {
+    this.controller.abort(reason);
+  }
+  public [Symbol.dispose](): void {
+    this.feedEOF();
+  }
 
   public read(size: number): Promise<Buffer> {
     if (this.eof && (this.reserved + Math.max(1, size)) > this.totals) {
-      return Promise.reject(this.signal?.reason ?? new Error('EOF Exception'));
+      return Promise.reject(this.signal.reason ?? new Error('EOF Detected'));
     }
 
     const { promise, resolve, reject } = Promise.withResolvers<Buffer>();
