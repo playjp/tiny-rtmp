@@ -1,5 +1,6 @@
 export type AsyncByteReaderOption = {
   signal: AbortSignal;
+  highWaterMark: number;
 };
 
 export default class AsyncByteReader {
@@ -10,10 +11,12 @@ export default class AsyncByteReader {
   private eof = false;
   private promises: [byteLength: number, resolve: (result: Buffer) => void, reject: (error: Error) => void][] = [];
   private signal: AbortSignal | null;
+  private highWaterMark: number;
 
   public constructor(option?: Partial<AsyncByteReaderOption>) {
     this.signal = option?.signal ?? null;
     this.signal?.addEventListener('abort', this.feedEOF.bind(this), { once: true });
+    this.highWaterMark = option?.highWaterMark ?? Number.POSITIVE_INFINITY;
   }
 
   private fulfill(): void {
@@ -55,6 +58,9 @@ export default class AsyncByteReader {
 
   public feed(buffer: Buffer): void {
     if (this.eof) { return; }
+    if (this.highWaterMark < Math.max(0, this.totals - this.reserved)) {
+      this.feedEOF(); return;
+    }
     this.buffers.push(buffer);
     this.totals += buffer.byteLength;
     this.fulfill();
