@@ -60,11 +60,10 @@ export default class AdobeAuthSession implements AuthConfiguration {
 
   private query(user: string): string {
     // Map は 挿入順 で走査できるので、古い順で取り出せる
-    while (this.sessions.size >= MAX_SESSIONS) {
-      const oldest = this.sessions.keys().next().value!;
-      const session = this.sessions.get(oldest)!;
+    for (const [key, session] of this.sessions) {
+      if (this.sessions.size < MAX_SESSIONS) { break; }
       clearTimeout(session.timeoutId);
-      this.sessions.delete(oldest);
+      this.sessions.delete(key);
     }
 
     const challenge = randomBytes(4);
