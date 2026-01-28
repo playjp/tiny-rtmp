@@ -116,7 +116,7 @@ const page = `
 let rtmp_to_dash: DASHGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
-    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
+    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
       if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(encryptionFormat, encryptionKeyId, encryptionKey, 3); }
       rtmp_to_dash.feed(message);
     }

@@ -264,11 +264,19 @@ export class DisconnectError extends Error {
   }
 }
 
-export default async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration, limit?: number): AsyncIterable<Message> {
+export type RTMPOption = {
+  auth?: AuthConfiguration;
+  limit?: {
+    bandwidth?: number;
+  }
+};
+
+export default async function* handle_rtmp(connection: Duplex, option?: RTMPOption): AsyncIterable<Message> {
+  const auth = option?.auth ?? AuthConfiguration.noAuth();
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
   const builder = new MessageBuilder();
-  using estimator = new BandwidthEstimator(limit ?? Number.POSITIVE_INFINITY, controller);
+  using estimator = new BandwidthEstimator(option?.limit?.bandwidth ?? Number.POSITIVE_INFINITY, controller);
   connection.pipe(new Writable({
     write(data, _, cb) { reader.feed(data); estimator.feed(data.byteLength); cb(); },
   }));

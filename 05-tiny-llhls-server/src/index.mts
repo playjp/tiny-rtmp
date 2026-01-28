@@ -90,7 +90,7 @@ const page = `
 let rtmp_to_llhls: LLHLSGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
-    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
+    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
       if (rtmp_to_llhls == null) { rtmp_to_llhls = new LLHLSGenerator({ liveWindowLength: 3, partialSegmentDuration: partDuration }); }
       rtmp_to_llhls.feed(message);
     }

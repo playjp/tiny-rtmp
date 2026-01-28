@@ -23,7 +23,7 @@ describe('Regression Test', () => {
     const builder = new MessageBuilder();
 
     const [handle_rtmp, auth_config] = await handle_rtmp_import();
-    const handler = handle_rtmp(connection, auth_config.simpleAuth('app', 'key'));
+    const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
     // do background
     (async () => { for await (const _ of handler) {} })();
 
@@ -152,7 +152,7 @@ describe('Regression Test', () => {
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     const builder_1 = new MessageBuilder();
 
-    const handler_1 = handle_rtmp(connection_1, auth_config.simpleAuth('app', 'key'));
+    const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key') });
     (async () => { for await (const _ of handler_1) {} })(); // do background
 
     // Connection 2
@@ -163,7 +163,7 @@ describe('Regression Test', () => {
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     const builder_2 = new MessageBuilder();
 
-    const handler_2 = handle_rtmp(connection_2, auth_config.simpleAuth('app', 'key'));
+    const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key') });
     (async () => { for await (const _ of handler_2) {} })(); // do background
 
     const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
@@ -300,7 +300,7 @@ describe('Regression Test', () => {
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     const builder_1 = new MessageBuilder();
 
-    const handler_1 = handle_rtmp(connection_1, auth_config.simpleAuth('app', 'key0'));
+    const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key0') });
     (async () => { for await (const _ of handler_1) {} })(); // do background
 
     // Connection 2
@@ -311,7 +311,7 @@ describe('Regression Test', () => {
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     const builder_2 = new MessageBuilder();
 
-    const handler_2 = handle_rtmp(connection_2, auth_config.simpleAuth('app', 'key1'));
+    const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key1') });
     (async () => { for await (const _ of handler_2) {} })(); // do background
 
     const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
@@ -442,7 +442,7 @@ describe('Regression Test', () => {
     const builder = new MessageBuilder();
 
     const [handle_rtmp, auth_config] = await handle_rtmp_import();
-    const handler = handle_rtmp(connection, auth_config.simpleAuth('app', 'key'));
+    const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
     // do background
     (async () => { for await (const _ of handler) {} })();
 
@@ -569,7 +569,7 @@ describe('Regression Test', () => {
     const builder = new MessageBuilder();
 
     const [handle_rtmp, auth_config] = await handle_rtmp_import();
-    const handler = handle_rtmp(connection, auth_config.simpleAuth('app', 'key'));
+    const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
     // do background
     (async () => { for await (const _ of handler) {} })();
 

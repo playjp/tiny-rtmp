@@ -86,7 +86,7 @@ const handle = async (connection: Duplex) => {
   let aacConfigMessage: Message | null = null;
 
   try {
-    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
+    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
       const reader = new ByteReader(message.data);
       switch (message.message_type_id) {
         case MessageType.Video: {

@@ -61,7 +61,7 @@ const streaming = new Map<number, StreamingHandlers>();
 const handle = async (connection: Duplex) => {
   const rtmp_to_mpegts = new MPEGTSTransmuxer();
   try {
-    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
+    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
       for (const packet of rtmp_to_mpegts.feed(message)) {
         for (const [write, _] of streaming.values()) { write(packet); }
       }

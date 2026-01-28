@@ -62,7 +62,7 @@ const handle = async (connection: Duplex) => {
   const rtmp_to_fmp4 = new FMP4Transmuxer();
 
   try {
-    for await (const message of handle_rtmp(connection, AuthConfiguration.simpleAuth(app, streamKey), bandwidth)) {
+    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
       const frag = rtmp_to_fmp4.feed(message);
       if (frag == null) { continue; }
 
