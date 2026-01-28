@@ -95,12 +95,23 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
     }
     if (length === message_length) {
       const data = chunk_builder.build();
-      if (message_type_id === MessageType.SetChunkSize) {
-        chunk_maximum_size = data.readUInt32BE(0);
-      } else {
-        const { timestamp_delta, is_extended_timestamp, ... message } = information;
-        yield { ... message, data };
+      switch (message_type_id) {
+        case MessageType.SetChunkSize:
+          chunk_maximum_size = data.readUInt32BE(0) % (2 ** 31);
+          break;
+        case MessageType.Abort: {
+          const cs_id = data.readUInt32BE(0);
+          chunks.delete(cs_id);
+          informations.delete(cs_id);
+          break;
+        }
+        default: {
+          const { timestamp_delta, is_extended_timestamp, ... message } = information;
+          yield { ... message, data };
+          break;
+        }
       }
+
       chunks.delete(cs_id);
     }
     informations.set(cs_id, information);
