@@ -268,13 +268,14 @@ export type RTMPOption = {
   auth?: AuthConfiguration;
   limit?: {
     bandwidth?: number;
+    highWaterMark?: number;
   }
 };
 
 export default async function* handle_rtmp(connection: Duplex, option?: RTMPOption): AsyncIterable<Message> {
   const auth = option?.auth ?? AuthConfiguration.noAuth();
   const controller = new AbortController();
-  using reader = new AsyncByteReader({ signal: controller.signal });
+  using reader = new AsyncByteReader({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
   const builder = new MessageBuilder();
   using estimator = new BandwidthEstimator(option?.limit?.bandwidth ?? Number.POSITIVE_INFINITY, controller);
   connection.pipe(new Writable({
