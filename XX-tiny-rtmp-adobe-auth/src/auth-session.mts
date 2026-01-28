@@ -4,9 +4,12 @@ import { AuthResult } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import type { AuthResultWithDescription, AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 const MAX_SESSIONS = 1000;
+const SESSION_EXPIRES = 60 * 1000;
+
 export type AdobeAuthSessionInformation = {
   salt: Buffer;
   challenge: Buffer;
+  timeoutId: NodeJS.Timeout;
 };
 
 export default class AdobeAuthSession implements AuthConfiguration {
@@ -59,13 +62,22 @@ export default class AdobeAuthSession implements AuthConfiguration {
     // Map は 挿入順 で走査できるので、古い順で取り出せる
     while (this.sessions.size >= MAX_SESSIONS) {
       const oldest = this.sessions.keys().next().value!;
+      const session = this.sessions.get(oldest)!;
+      clearTimeout(session.timeoutId);
       this.sessions.delete(oldest);
     }
 
     const challenge = randomBytes(4);
     const challenge_base64 = challenge.toString('base64');
     const salt = randomBytes(4);
-    this.sessions.set(challenge_base64, { salt, challenge } satisfies AdobeAuthSessionInformation);
+    const session = {
+      salt,
+      challenge,
+      timeoutId: setTimeout(() => {
+        this.sessions.delete(challenge_base64);
+      }, SESSION_EXPIRES),
+    } satisfies AdobeAuthSessionInformation;
+    this.sessions.set(challenge_base64, session);
 
     // FFmpeg (8.0.1) 内臓の Adobe Auth は response の計算に opaque があったら challenge の代わりに opaque を使う
     // Wirecast の Adobe Auth は response の計算に challenge を使う
@@ -83,6 +95,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
   private async verify(user: string, response: string, challenge: string, opaque: string): Promise<boolean> {
     const session = this.sessions.get(opaque);
     if (session == null) { return false; }
+    clearTimeout(session.timeoutId);
     this.sessions.delete(opaque);
     const password = await this.passwordFn(user);
     if (password == null) { return false; }
