@@ -58,6 +58,10 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return [AuthResult.OK, null];
   }
 
+  public keepAlive(app: string, key: string): typeof AuthResult.OK {
+    return AuthResult.OK;
+  }
+
   private query(user: string): string {
     // Map は 挿入順 で走査できるので、古い順で取り出せる
     for (const [key, session] of this.sessions) {

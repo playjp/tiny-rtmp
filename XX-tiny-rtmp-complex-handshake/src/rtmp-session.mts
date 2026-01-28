@@ -1,6 +1,7 @@
 import crypto, { randomBytes } from 'node:crypto';
 import { Writable } from 'node:stream';
 import type { Duplex } from 'node:stream';
+import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
@@ -139,27 +140,36 @@ export type AuthResultWithDescription = [authResult: (typeof AuthResult)[keyof t
 export interface AuthConfiguration {
   app(app: string): MaybePromise<AuthResultWithDescription>;
   streamKey(key: string): MaybePromise<AuthResultWithDescription>;
+  keepAlive(app: string, key: string): MaybePromise<typeof AuthResult.OK | typeof AuthResult.DISCONNECT>;
 };
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
     return {
       app: () => [AuthResult.OK, null],
       streamKey: () => [AuthResult.OK, null],
+      keepAlive: () => AuthResult.OK,
     };
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
     return {
       app: (app: string) => [strip_query(app) === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
       streamKey: (key: string) => [strip_query(key) === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      keepAlive: () => AuthResult.OK,
     };
   },
-  customAuth(appFn: ((app: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null, streamKeyFn: ((key: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null): AuthConfiguration {
+  customAuth(
+    appFn: ((app: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
+    streamKeyFn: ((key: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
+    keepAliveFn: ((app: string, key: string) => (boolean | Promise<boolean>)) | null
+  ): AuthConfiguration {
     return {
       app: async (app: string) => [(await (appFn?.(strip_query(app), collect_query(app))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
       streamKey: async (key: string) => [(await (streamKeyFn?.(strip_query(key), collect_query(key))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      keepAlive: async (app: string, key: string) => (await (keepAliveFn?.(app, key)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT,
     };
   },
 };
+const KEEPALIVE_INTERVAL = 10 * 1000;
 
 export type RTMPContext = Partial<{
   app: string;
@@ -338,6 +348,27 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     * RTMPのメッセージを処理する
     */
     let state = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
+    // 配信セッションの定期的な生存確認
+    (async () => {
+      while (!controller.signal.aborted && state !== STATE.DISCONNECTED) {
+        await setTimeout(KEEPALIVE_INTERVAL);
+        if (state !== STATE.PUBLISHED) { continue; }
+        const keepAlive = await (async () => {
+          try {
+            // PUBLISHED なら app と streamKey は必ず存在する
+            return auth.keepAlive(context.app!, context.streamKey!)
+          } catch {
+            // keepAlive 自体に失敗した場合は可用性を優先して切断しない
+            return AuthResult.OK;
+          }
+        })();
+        if (keepAlive === AuthResult.DISCONNECT) {
+          controller.abort(new Error('keepAlive check failed'));
+          break;
+        }
+      }
+    })();
+    // メッセージループ
     for await (const message of read_message(reader)) {
       // 共通で処理するメッセージはここで処理する
 
