@@ -9,7 +9,7 @@ const SESSION_EXPIRES = 60 * 1000;
 export type AdobeAuthSessionInformation = {
   salt: Buffer;
   challenge: Buffer;
-  timeoutId: NodeJS.Timeout;
+  timeout: NodeJS.Timeout;
 };
 
 export default class AdobeAuthSession implements AuthConfiguration {
@@ -62,7 +62,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
     // Map は 挿入順 で走査できるので、古い順で取り出せる
     for (const [key, session] of this.sessions) {
       if (this.sessions.size < MAX_SESSIONS) { break; }
-      clearTimeout(session.timeoutId);
+      clearTimeout(session.timeout);
       this.sessions.delete(key);
     }
 
@@ -72,7 +72,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
     const session = {
       salt,
       challenge,
-      timeoutId: setTimeout(() => {
+      timeout: setTimeout(() => {
         this.sessions.delete(challenge_base64);
       }, SESSION_EXPIRES),
     } satisfies AdobeAuthSessionInformation;
@@ -94,7 +94,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
   private async verify(user: string, response: string, challenge: string, opaque: string): Promise<boolean> {
     const session = this.sessions.get(opaque);
     if (session == null) { return false; }
-    clearTimeout(session.timeoutId);
+    clearTimeout(session.timeout);
     this.sessions.delete(opaque);
     const password = await this.passwordFn(user);
     if (password == null) { return false; }
