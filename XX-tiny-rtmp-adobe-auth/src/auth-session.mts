@@ -58,7 +58,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return [AuthResult.OK, null];
   }
 
-  public keepAlive(app: string, key: string): typeof AuthResult.OK {
+  public keepAlive(app: string, key: string): typeof AuthResult.OK | typeof AuthResult.DISCONNECT {
     return AuthResult.OK;
   }
 
