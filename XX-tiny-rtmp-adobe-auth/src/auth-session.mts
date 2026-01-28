@@ -3,8 +3,8 @@ import crypto, { randomBytes } from 'node:crypto';
 import { AuthResult } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import type { AuthResultWithDescription, AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
-const MAX_SESSIONS = 1000;
-const SESSION_EXPIRES = 60 * 1000;
+const MAX_SESSIONS = 1000; // MEMO: アプリケーション変数
+const SESSION_EXPIRES = 60 * 1000; // MEMO: アプリケーション変数
 
 export type AdobeAuthSessionInformation = {
   salt: Buffer;

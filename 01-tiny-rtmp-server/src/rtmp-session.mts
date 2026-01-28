@@ -95,7 +95,7 @@ export const AuthConfiguration = {
     };
   },
 };
-const KEEPALIVE_INTERVAL = 10 * 1000;
+const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
 
 export type RTMPContext = Partial<{
   app: string;
