@@ -6,16 +6,7 @@ export default defineConfig({
 
     rollupOptions: {
       external: [
-        'node:net',
-        'node:tls',
-        'node:crypto',
-        'node:stream',
-        'node:fs',
-        'node:util',
-        'node:timers/promises',
-        'node:http',
-        'node:https',
-        'node:http2',
+        /^node:/, // Node.js built-in modules (node:*)
       ],
     },
   },
