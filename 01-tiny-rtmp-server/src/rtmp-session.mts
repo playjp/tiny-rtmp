@@ -290,9 +290,14 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     * RTMPのメッセージを処理する
     */
     let state = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
+    // abort 時に強制的に切断状態に移行する
+    if (controller.signal.aborted) { state = STATE.DISCONNECTED; }
+    controller.signal.addEventListener('abort', () => {
+      state = STATE.DISCONNECTED;
+    }, { once: true });
     // 配信セッションの定期的な生存確認
     (async () => {
-      while (!controller.signal.aborted && state !== STATE.DISCONNECTED) {
+      while (state !== STATE.DISCONNECTED) {
         await setTimeout(KEEPALIVE_INTERVAL);
         if (state !== STATE.PUBLISHED) { continue; }
         const keepAlive = await (async () => {
