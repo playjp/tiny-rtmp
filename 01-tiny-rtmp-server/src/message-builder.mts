@@ -9,9 +9,9 @@ export type SetChunkSize = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const SetChunkSize = {
-  from(size: number, timestamp: number): SetChunkSize {
+  from({ chunk_size, timestamp }: { chunk_size: number, timestamp: number }): SetChunkSize {
     const builder = new ByteBuilder();
-    builder.writeU32BE(size % (2 ** 31));
+    builder.writeU32BE(chunk_size % (2 ** 31));
     return {
       message_type_id: MessageType.SetChunkSize,
       message_stream_id: 0,
@@ -25,7 +25,7 @@ export type Abort = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const Abort = {
-  from(cs_id: number, timestamp: number): Abort {
+  from({ cs_id, timestamp }: { cs_id: number, timestamp: number } ): Abort {
     const builder = new ByteBuilder();
     builder.writeU32BE(cs_id);
     return {
@@ -41,9 +41,9 @@ export type Acknowledgement = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const Acknowledgement = {
-  from(sequence: number, timestamp: number): Acknowledgement {
+  from({ sequence_number, timestamp }: { sequence_number: number, timestamp: number }): Acknowledgement {
     const builder = new ByteBuilder();
-    builder.writeU32BE(sequence);
+    builder.writeU32BE(sequence_number);
     return {
       message_type_id: MessageType.Acknowledgement,
       message_stream_id: 0,
@@ -57,9 +57,9 @@ export type WindowAcknowledgementSize = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const WindowAcknowledgementSize = {
-  from(window: number, timestamp: number): WindowAcknowledgementSize {
+  from({ ack_window_size, timestamp }: { ack_window_size: number, timestamp: number }): WindowAcknowledgementSize {
     const builder = new ByteBuilder();
-    builder.writeU32BE(window);
+    builder.writeU32BE(ack_window_size);
     return {
       message_type_id: MessageType.WindowAcknowledgementSize,
       message_stream_id: 0,
@@ -73,10 +73,10 @@ export type SetPeerBandwidth = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const SetPeerBandwidth = {
-  from(window: number, limit: number, timestamp: number): SetPeerBandwidth {
+  from({ ack_window_size, limit_type, timestamp }: { ack_window_size: number, limit_type: number, timestamp: number }): SetPeerBandwidth {
     const builder = new ByteBuilder();
-    builder.writeU32BE(window);
-    builder.writeU8(limit);
+    builder.writeU32BE(ack_window_size);
+    builder.writeU8(limit_type);
     return {
       message_type_id: MessageType.SetPeerBandwidth,
       message_stream_id: 0,
