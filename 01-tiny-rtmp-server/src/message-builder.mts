@@ -1,6 +1,6 @@
 import ByteBuilder from './byte-builder.mts';
 import type { Message } from './message-reader.mts';
-import { MessageType } from './message-reader.mts';
+import { MessageType, UserControlType } from './message-reader.mts';
 
 type LengthOmittedMessage = Omit<Message, 'message_length'>;
 
@@ -79,6 +79,102 @@ export const SetPeerBandwidth = {
     builder.writeU8(limit_type);
     return {
       message_type_id: MessageType.SetPeerBandwidth,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export type UserControl = LengthOmittedMessage & {
+  message_type_id: typeof MessageType.UserControl;
+  message_stream_id: 0;
+};
+export const StreamBegin = {
+  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.StreamBegin);
+    builder.writeU32BE(message_stream_id);
+    return {
+      message_type_id: MessageType.UserControl,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export const StreamEOF = {
+  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.StreamEOF);
+    builder.writeU32BE(message_stream_id);
+    return {
+      message_type_id: MessageType.UserControl,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export const StreamDry = {
+  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.StreamDry);
+    builder.writeU32BE(message_stream_id);
+    return {
+      message_type_id: MessageType.UserControl,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export const SetBufferLength = {
+  from({ message_stream_id, buffer_size, timestamp }: { message_stream_id: number, buffer_size: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.SetBufferLength);
+    builder.writeU32BE(message_stream_id);
+    builder.writeU32BE(buffer_size);
+    return {
+      message_type_id: MessageType.UserControl,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export const StreamIsRecorded = {
+  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.StreamIsRecorded);
+    builder.writeU32BE(message_stream_id);
+    return {
+      message_type_id: MessageType.UserControl,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export const PingRequest = {
+  from({ event_timestamp, timestamp }: { event_timestamp: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.PingRequest);
+    builder.writeU32BE(event_timestamp);
+    return {
+      message_type_id: MessageType.UserControl,
+      message_stream_id: 0,
+      timestamp,
+      data: builder.build(),
+    };
+  },
+};
+export const PingResponse = {
+  from({ event_timestamp, timestamp }: { event_timestamp: number, timestamp: number }): UserControl {
+    const builder = new ByteBuilder();
+    builder.writeU16BE(UserControlType.PingResponse);
+    builder.writeU32BE(event_timestamp);
+    return {
+      message_type_id: MessageType.UserControl,
       message_stream_id: 0,
       timestamp,
       data: builder.build(),

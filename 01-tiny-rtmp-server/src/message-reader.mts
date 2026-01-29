@@ -39,6 +39,16 @@ export const MessageType = {
   CommandAMF0: 20,
 } as const;
 
+export const UserControlType = {
+  StreamBegin: 0,
+  StreamEOF: 1,
+  StreamDry: 2,
+  SetBufferLength: 3,
+  StreamIsRecorded: 4,
+  PingRequest: 6,
+  PingResponse: 7,
+} as const;
+
 export type Message = Omit<MessageInformation, 'timestamp_delta' | 'is_extended_timestamp'> & {
   data: Buffer;
 };
