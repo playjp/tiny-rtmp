@@ -100,12 +100,16 @@ export default class MessageBuilder {
     return message_stream_id * (2 ** 8 * 2 ** 8) + message_type_id * (2 ** 8) + track;
   }
   private static use_system_cs_id({ message_type_id }: LengthOmittedMessage): number | null {
+    // Protocol Control Messages と User Control Message は cs_id は必ず 2 を使う
     switch (message_type_id) {
+      // Protocol Control Messages
       case MessageType.SetChunkSize:
       case MessageType.Abort:
       case MessageType.Acknowledgement:
       case MessageType.WindowAcknowledgementSize:
       case MessageType.SetPeerBandwidth:
+      // User Control Message
+      case MessageType.UserControl:
         return 2;
     }
     return null;
