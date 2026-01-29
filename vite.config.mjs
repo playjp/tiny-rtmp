@@ -12,6 +12,7 @@ export default defineConfig({
         'node:stream',
         'node:fs',
         'node:util',
+        'node:timers/promises',
         'node:http',
         'node:https',
         'node:http2',

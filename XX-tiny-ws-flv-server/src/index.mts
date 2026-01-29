@@ -1,6 +1,6 @@
 import net from 'node:net';
 import http from 'node:http';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { Writable, type Duplex } from 'node:stream';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
