@@ -391,15 +391,20 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
       }
     })();
     // メッセージループ
-    for await (const message of read_message(reader)) {
-      // 共通で処理するメッセージはここで処理する
+    try {
+      for await (const message of read_message(reader)) {
+        // 共通で処理するメッセージはここで処理する
 
-      // 上位に伝える映像/音声/データのメッセージだったら伝える
-      if (need_yield(state, message)) { yield message; }
+        // 上位に伝える映像/音声/データのメッセージだったら伝える
+        if (need_yield(state, message)) { yield message; }
 
-      // 個別のメッセージによる状態遷移
-      [state, context] = await TRANSITION[state](message, builder, connection, auth, context);
-      if (state === STATE.DISCONNECTED) { return; }
+        // 個別のメッセージによる状態遷移
+        [state, context] = await TRANSITION[state](message, builder, connection, auth, context);
+        if (state === STATE.DISCONNECTED) { return; }
+      }
+    } finally {
+      // ループが異常な理由で終了しても切断状態にする
+      state = STATE.DISCONNECTED;
     }
   } finally {
     connection.end();
