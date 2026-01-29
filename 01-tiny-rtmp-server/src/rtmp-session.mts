@@ -286,12 +286,17 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     * RTMPのハンドシェイクを処理する
     */
     if (!await handle_handshake(reader, connection)) { return; }
+
     /*
     * RTMPのメッセージを処理する
     */
     let state = STATE.WAITING_CONNECT as (typeof STATE)[keyof typeof STATE];
+
     // abort 時に強制的に切断状態に移行する
-    if (controller.signal.aborted) { state = STATE.DISCONNECTED; }
+    if (controller.signal.aborted) {
+      state = STATE.DISCONNECTED;
+      return;
+    }
     controller.signal.addEventListener('abort', () => {
       state = STATE.DISCONNECTED;
     }, { once: true });
@@ -316,6 +321,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
         }
       }
     })();
+
     // メッセージループ
     try {
       for await (const message of read_message(reader)) {
