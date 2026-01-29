@@ -135,7 +135,15 @@ const TRANSITION = {
     const app = command[2]['app'];
     if (!isAMF0String(app)) { return [STATE.WAITING_CONNECT, context]; }
 
-    const [authResult, description] = await auth.app(app);
+    const [authResult, description] = await (() => {
+      try {
+        return auth.app(app);
+      } catch {
+        // 認証で不測のエラーが起きた場合は切断する
+        // FIXME: ここはログが欲しい
+        return [AuthResult.DISCONNECT, null];
+      }
+    })();
     const connectAccepted = authResult === AuthResult.OK;
 
     const status = connectAccepted ? '_result' : '_error';
@@ -206,7 +214,15 @@ const TRANSITION = {
     if (!isAMF0String(command[3])) { return [STATE.WAITING_PUBLISH, context]; }
     const streamKey = command[3];
 
-    const [auth_before_lock, description_before_lock] = await auth.streamKey(streamKey);
+    const [auth_before_lock, description_before_lock] = await (() => {
+      try {
+        return auth.streamKey(streamKey);
+      } catch {
+        // 認証で不測のエラーが起きた場合は切断する
+        // FIXME: ここはログが欲しい
+        return [AuthResult.DISCONNECT, null];
+      }
+    })();
     // streamKey が合致していて、配信されてない場合は配信を許可する
     const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... context, streamKey: strip_query(streamKey) })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
     const publishAccepted = authResult === AuthResult.OK;
@@ -284,7 +300,8 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
             // PUBLISHED なら app と streamKey は必ず存在する
             return auth.keepAlive(context.app!, context.streamKey!)
           } catch {
-            // keepAlive 自体に失敗した場合は可用性を優先して切断しない
+            // keepAlive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
+            // FIXME: ここはログが欲しい
             return AuthResult.OK;
           }
         })();
