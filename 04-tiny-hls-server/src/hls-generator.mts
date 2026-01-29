@@ -42,6 +42,7 @@ const timestamp_from_rtmp_to_mpegts = (timestamp: number): number => {
 };
 
 const timestamp_from_rtmp_to_hls = (timestamp: number): number => {
+  // HLS のマニフェスト生成の内部時間を管理するためのもので、整数でなくてよい
   return timestamp / 1000;
 };
 
