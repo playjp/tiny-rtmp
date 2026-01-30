@@ -167,16 +167,17 @@ const TRANSITION = {
       capabilities: 31,
       mode: 1,
     } : null;
+    // Connect のレスポンスが level -> code の順じゃないと FMLE 3.2 は落ちてしまう
     const info = connectAccepted ? {
+      level: 'status', // 正常系
       code: 'NetConnection.Connect.Success',
       description: description ?? 'Connection succeeded.',
       data: { version: '3,5,7,7009' },
       objectEncoding: 0, // 0 = AMF0, 3 = AMF3
-      level: 'status', // 正常系
     } : {
+      level: 'error', // 異常系
       code: 'NetConnection.Connect.Rejected',
       description: description ?? 'Connection rejected.',
-      level: 'error', // 異常系
     };
 
     // connect のレスポンス
@@ -254,13 +255,13 @@ const TRANSITION = {
     const publishAccepted = authResult === AuthResult.OK;
 
     const info = publishAccepted ? {
+      level: 'status', // 正常系
       code: 'NetStream.Publish.Start',
       description: description ?? 'Publish Accepted',
-      level: 'status', // 正常系
     } : {
+      level: 'error', // 異常系
       code: 'NetStream.Publish.Failed', // Permision Denied
       description: description ?? 'Publish Failed',
-      level: 'error', // 異常系
     };
 
     // Publish のレスポンスを返す
