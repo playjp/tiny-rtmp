@@ -12,6 +12,7 @@ import { SectionPacketizer, PESPacketizer, PCRPacketizer, write_pat, write_pmt, 
 import type { PAT, PMT } from '../../03-tiny-http-ts-server/src/mpegts.mts';
 
 import MediaPlaylist from './media-playlist.mts';
+import { PlaylistTimestamp } from './playlist-timestamp.mts';
 
 const PMT_PID = 256;
 const PCR_PID = 257;
@@ -39,11 +40,6 @@ const emit_PSI_interval = 100;
 
 const timestamp_from_rtmp_to_mpegts = (timestamp: number): number => {
   return (timestamp * 90) % 2 ** 33;
-};
-
-const timestamp_from_rtmp_to_hls = (timestamp: number): number => {
-  // HLS のマニフェスト生成の内部時間を管理するためのもので、整数でなくてよい
-  return timestamp / 1000;
 };
 
 export default class HLSGenerator {
@@ -86,7 +82,7 @@ export default class HLSGenerator {
           return;
         }
         if (payload.frameType === FrameType.KEY_FRAME) {
-          this.playlist.append(timestamp_from_rtmp_to_hls(payload.timestamp));
+          this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
           this.playlist.feed([
             ... this.patPacketizer.packetize(write_pat(PAT_DATA)),
             ... this.pmtPacketizer.packetize(write_pmt(PMT_DATA)),

@@ -1,5 +1,7 @@
 import { Writable } from 'node:stream';
 
+import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts'
+
 import ConcatenatedSegment from './concatenated-segment.mts';
 
 const MINIMUM_LIVE_WINDOW_LENGTH = 3;
@@ -18,7 +20,7 @@ export const MediaPlaylistOption = {
       liveWindowLength: Math.max(option?.liveWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       orphanedWindowLength: Math.max(option?.orphanedWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       partialSegmentDuration: Math.max(option?.partialSegmentDuration ?? 0.25, 0.25),
-      minimumSegmentDuration: Math.max(option?.minimumSegmentDuration ?? 0, 0),
+      minimumSegmentDuration: Math.max(option?.minimumSegmentDuration ?? 1, 1),
     };
   },
 };
@@ -54,8 +56,8 @@ export default class MediaPlaylist {
     this.publishedNotify = publishedNotify;
   }
 
-  public append(timestamp: number) {
-    if (this.currentSegment != null && (timestamp - this.currentSegment.begin()) < this.minimumSegmentDuration) {
+  public append({ timestamp, timescale }: PlaylistTimestamp) {
+    if (this.currentSegment != null && (timestamp - this.currentSegment.begin()) < (this.minimumSegmentDuration * timescale)) {
       return;
     }
     const previousSegment = this.currentSegment;
@@ -64,7 +66,7 @@ export default class MediaPlaylist {
     if (this.currentSegment) {
       this.segmentMap.set(this.sequenceNumber, this.currentSegment);
       if (this.targetduration == null) {
-        this.targetduration = Math.ceil(timestamp - this.currentSegment.begin());
+        this.targetduration = Math.ceil(this.currentSegment.extinf()!);
       }
     }
     if (this.sequenceNumber - this.liveWindowLength >= 0) {
@@ -83,7 +85,7 @@ export default class MediaPlaylist {
 
     this.sequenceNumber += 1;
     this.orphanedNumber += 1;
-    this.currentSegment = new ConcatenatedSegment(timestamp, new Date());
+    this.currentSegment = new ConcatenatedSegment(timestamp, timescale, new Date());
     previousSegment?.notify();
 
     if (this.segmentMap.size >= MINIMUM_LIVE_WINDOW_LENGTH) {
@@ -91,9 +93,9 @@ export default class MediaPlaylist {
     }
   }
 
-  public feed(data: Iterable<Buffer>, timestamp: number, keyframe: boolean = false) {
-    if (this.currentSegment != null && (timestamp - this.currentSegment.latestBegin()) > this.partialSegmentDuration) {
-      this.currentSegment.partialComplete(this.currentSegment.latestBegin() + this.partialSegmentDuration);
+  public feed(data: Iterable<Buffer>, { timestamp, timescale }: PlaylistTimestamp, keyframe: boolean = false) {
+    if (this.currentSegment != null && (timestamp - this.currentSegment.latestBegin()) > (this.partialSegmentDuration * timescale)) {
+      this.currentSegment.partialComplete(this.currentSegment.latestBegin() + (this.partialSegmentDuration * timescale), timescale);
     }
 
     for (const buffer of data) {

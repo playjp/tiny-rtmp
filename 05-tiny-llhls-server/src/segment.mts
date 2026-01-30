@@ -1,6 +1,7 @@
 import { Writable } from 'node:stream';
 
 export default class Segment {
+  private timescale: number;
   private beginTimestamp: number;
   private endTimestamp: number | null = null;
   private buffers: Buffer[] = [];
@@ -12,7 +13,8 @@ export default class Segment {
   private writables: Writable[] = [];
   private endHandlers: (() => void)[] = [];
 
-  public constructor(timestamp: number, pdt?: Date) {
+  public constructor(timestamp: number, timescale: number, pdt?: Date) {
+    this.timescale = timescale;
     this.beginTimestamp = timestamp;
     this.pdt = pdt ?? null;
   }
@@ -26,6 +28,11 @@ export default class Segment {
   }
 
   public extinf(): number | null {
+    if (this.endTimestamp == null) { return null; }
+    return (this.endTimestamp - this.beginTimestamp) / this.timescale;
+  }
+
+  public duration(): number | null {
     if (this.endTimestamp == null) { return null; }
     return this.endTimestamp - this.beginTimestamp;
   }

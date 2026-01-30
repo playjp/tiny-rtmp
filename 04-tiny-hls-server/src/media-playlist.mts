@@ -1,3 +1,4 @@
+import type { PlaylistTimestamp } from './playlist-timestamp.mts';
 import Segment from './segment.mts';
 
 const MINIMUM_LIVE_WINDOW_LENGTH = 3;
@@ -14,7 +15,7 @@ export const MediaPlaylistOption = {
       ... option,
       liveWindowLength: Math.max(option?.liveWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       orphanedWindowLength: Math.max(option?.orphanedWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
-      minimumSegmentDuration: Math.max(0, option?.minimumSegmentDuration ?? 0),
+      minimumSegmentDuration: Math.max(option?.minimumSegmentDuration ?? 1, 1),
     };
   },
 };
@@ -48,8 +49,8 @@ export default class MediaPlaylist {
     this.publishedNotify = publishedNotify;
   }
 
-  public append(timestamp: number): void {
-    if (this.currentSegment != null && (timestamp - this.currentSegment.begin()) < this.minimumSegmentDuration) {
+  public append({ timestamp, timescale }: PlaylistTimestamp): void {
+    if (this.currentSegment != null && (timestamp - this.currentSegment.begin()) < (this.minimumSegmentDuration * timescale)) {
       return;
     }
 
@@ -76,7 +77,7 @@ export default class MediaPlaylist {
 
     this.sequenceNumber += 1;
     this.orphanedNumber += 1;
-    this.currentSegment = new Segment(timestamp);
+    this.currentSegment = new Segment(timestamp, timescale);
 
     if (this.segmentMap.size >= MINIMUM_LIVE_WINDOW_LENGTH) {
       this.publishedNotify(true);

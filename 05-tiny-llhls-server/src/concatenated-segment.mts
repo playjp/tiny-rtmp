@@ -3,18 +3,18 @@ import Segment from './segment.mts';
 export default class ConcatenatedSegment extends Segment {
   private parts: Segment[] = [];
 
-  public constructor(timestamp: number, pdt?: Date) {
-    super(timestamp, pdt);
-    this.parts.push(new Segment(timestamp));
+  public constructor(timestamp: number, timescale: number, pdt?: Date) {
+    super(timestamp, timescale, pdt);
+    this.parts.push(new Segment(timestamp, timescale));
   }
 
   public latestBegin(): number {
     return this.parts[this.parts.length - 1].begin();
   }
 
-  public partialComplete(timestamp: number): void {
+  public partialComplete(timestamp: number, timescale: number): void {
     const part = this.parts[this.parts.length - 1];
-    this.parts.push(new Segment(timestamp));
+    this.parts.push(new Segment(timestamp, timescale));
     part.complete(timestamp);
   }
 

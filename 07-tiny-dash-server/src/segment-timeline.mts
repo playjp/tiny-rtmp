@@ -1,4 +1,5 @@
 import Segment from '../../04-tiny-hls-server/src/segment.mts';
+
 import { XMLNode } from './xml.mts';
 
 const MINIMUM_LIVE_WINDOW_LENGTH = 3;
@@ -15,7 +16,7 @@ export const SegmentTimelineOption = {
       ... option,
       liveWindowLength: Math.max(option?.liveWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       orphanedWindowLength: Math.max(option?.orphanedWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
-      minimumSegmentDuration: Math.max(0, option?.minimumSegmentDuration ?? 0),
+      minimumSegmentDuration: Math.max(option?.minimumSegmentDuration ?? 1, 1),
     };
   },
 };
@@ -49,7 +50,7 @@ export default class SegmentTimeline {
   }
 
   public append(timestamp: number): void {
-    if (this.currentSegment != null && (timestamp - this.currentSegment.begin()) < this.minimumSegmentDuration) {
+    if (this.currentSegment != null && (timestamp - this.currentSegment.begin()) < (this.minimumSegmentDuration * this.timescale)) {
       return;
     }
 
@@ -73,7 +74,7 @@ export default class SegmentTimeline {
 
     this.sequenceNumber += 1;
     this.orphanedNumber += 1;
-    this.currentSegment = new Segment(timestamp);
+    this.currentSegment = new Segment(timestamp, this.timescale);
   }
 
   public feed(data: Buffer): void {
@@ -91,7 +92,7 @@ export default class SegmentTimeline {
     const timeline = XMLNode.from('SegmentTimeline');
     for (let i = Math.max(0, this.sequenceNumber - this.liveWindowLength); i < this.sequenceNumber; i++) {
       const segment = this.segmentMap.get(i)!;
-      const S = XMLNode.from('S', { t: `${segment.begin()}`, d: `${segment.extinf()}` });
+      const S = XMLNode.from('S', { t: `${segment.begin()}`, d: `${segment.duration()!}` });
       timeline.children.push(S);
     }
     template.children.push(timeline);

@@ -2,6 +2,8 @@ import read_amf0, { isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-read
 import type { AMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
 
+import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts';
+
 import { fragment, initialize, make } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 import { write_mp4_avc_track_information } from '../../06-tiny-http-fmp4-server/src/avc.mts';
 import { write_mp4_aac_track_information } from '../../06-tiny-http-fmp4-server/src/aac.mts';
@@ -22,10 +24,6 @@ type AudioInformation = {
 };
 
 const RTMP_TIMESCALE = 1000;
-const timestamp_from_rtmp_to_hls = (timestamp: number): number => {
-  // HLS のマニフェスト生成の内部時間を管理するためのもので、整数でなくてよい
-  return timestamp / 1000;
-};
 
 export default class HLSGenerator {
   private videoTrack: Buffer | null = null;
@@ -105,9 +103,9 @@ export default class HLSGenerator {
     if (!video_ready || !audio_ready) { return; }
 
     if (has_video && payload.kind === 'Video' && payload.frameType === FrameType.KEY_FRAME) {
-      this.playlist.append(timestamp_from_rtmp_to_hls(payload.timestamp));
+      this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
     } else if (has_audio && payload.kind === 'Audio') {
-      this.playlist.append(timestamp_from_rtmp_to_hls(payload.timestamp));
+      this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
     }
 
     if (this.initialization == null) {
