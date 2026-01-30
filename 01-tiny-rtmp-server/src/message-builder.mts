@@ -192,8 +192,12 @@ export default class MessageBuilder {
   private cs_id_map = new Map<number, number>();
   private cs_id_timestamp_information = new Map<number, TimestampInformation>();
 
-  private static cs_id_hash({ message_stream_id, message_type_id }: LengthOmittedMessage, track: number = 0): number {
-    return message_stream_id * (2 ** 8 * 2 ** 8) + message_type_id * (2 ** 8) + track;
+  private static cs_id_hash(message: LengthOmittedMessage, track: number = 0): number {
+    if (MessageBuilder.use_system_cs_id(message) != null) {
+      track = 0; // system 予約されている場合は track による多重化を行わない
+    }
+    const { message_stream_id, message_type_id } = message;
+    return message_stream_id * (2 ** 16) + message_type_id * (2 ** 8) + track;
   }
   private static use_system_cs_id({ message_type_id }: LengthOmittedMessage): number | null {
     // Protocol Control Messages と User Control Message は cs_id は必ず 2 を使う
