@@ -5,7 +5,7 @@ import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
+import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message-builder.mts';
 
 const handle_rtmp_import = async () => {
   vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
@@ -72,6 +72,34 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... WindowAcknowledgementSize.from({
+            ack_window_size: 2500000,
+            timestamp: 0,
+          }),
+          message_length: 4,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... SetPeerBandwidth.from({
+            ack_window_size: 2500000,
+            limit_type: 2,
+            timestamp: 0,
+          }),
+          message_length: 5,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 0,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
@@ -101,6 +129,15 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 1,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
@@ -215,6 +252,34 @@ describe('Regression Test', () => {
           data: connect,
         });
         for (const chunk of chunks) { input.write(chunk); }
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... WindowAcknowledgementSize.from({
+              ack_window_size: 2500000,
+              timestamp: 0,
+            }),
+            message_length: 4,
+          }
+        );
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... SetPeerBandwidth.from({
+              ack_window_size: 2500000,
+              limit_type: 2,
+              timestamp: 0,
+            }),
+            message_length: 5,
+          }
+        );
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... StreamBegin.from({
+              message_stream_id: 0,
+              timestamp: 0,
+            }),
+            message_length: 6,
+          }
+        );
         const data = read_amf0((await gen.next()).value.data);
         const expected = [
           '_result',
@@ -244,6 +309,15 @@ describe('Regression Test', () => {
           data: connect,
         });
         for (const chunk of chunks) { input.write(chunk); }
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... StreamBegin.from({
+              message_stream_id: 1,
+              timestamp: 0,
+            }),
+            message_length: 6,
+          }
+        );
         const data = read_amf0((await gen.next()).value.data);
         const expected = [
           '_result',
@@ -363,6 +437,34 @@ describe('Regression Test', () => {
           data: connect,
         });
         for (const chunk of chunks) { input.write(chunk); }
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... WindowAcknowledgementSize.from({
+              ack_window_size: 2500000,
+              timestamp: 0,
+            }),
+            message_length: 4,
+          }
+        );
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... SetPeerBandwidth.from({
+              ack_window_size: 2500000,
+              limit_type: 2,
+              timestamp: 0,
+            }),
+            message_length: 5,
+          }
+        );
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... StreamBegin.from({
+              message_stream_id: 0,
+              timestamp: 0,
+            }),
+            message_length: 6,
+          }
+        );
         const data = read_amf0((await gen.next()).value.data);
         const expected = [
           '_result',
@@ -392,6 +494,15 @@ describe('Regression Test', () => {
           data: connect,
         });
         for (const chunk of chunks) { input.write(chunk); }
+        expect((await gen.next()).value).toStrictEqual(
+          {
+            ... StreamBegin.from({
+              message_stream_id: 1,
+              timestamp: 0,
+            }),
+            message_length: 6,
+          }
+        );
         const data = read_amf0((await gen.next()).value.data);
         const expected = [
           '_result',
@@ -491,6 +602,34 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... WindowAcknowledgementSize.from({
+            ack_window_size: 2500000,
+            timestamp: 0,
+          }),
+          message_length: 4,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... SetPeerBandwidth.from({
+            ack_window_size: 2500000,
+            limit_type: 2,
+            timestamp: 0,
+          }),
+          message_length: 5,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 0,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
@@ -520,6 +659,15 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 1,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
@@ -618,6 +766,34 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... WindowAcknowledgementSize.from({
+            ack_window_size: 2500000,
+            timestamp: 0,
+          }),
+          message_length: 4,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... SetPeerBandwidth.from({
+            ack_window_size: 2500000,
+            limit_type: 2,
+            timestamp: 0,
+          }),
+          message_length: 5,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 0,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_error',

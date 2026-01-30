@@ -5,7 +5,7 @@ import AsyncByteReader from '../src/async-byte-reader.mts';
 import read_amf0 from '../src/amf0-reader.mts';
 import write_amf0 from '../src/amf0-writer.mts';
 import read_message, { MessageType } from '../src/message-reader.mts';
-import MessageBuilder from '../src/message-builder.mts';
+import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../src/message-builder.mts';
 import rtmp_session, { AuthConfiguration } from '../src/rtmp-session.mts';
 
 describe('Regression Test', () => {
@@ -70,17 +70,47 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... WindowAcknowledgementSize.from({
+            ack_window_size: 2500000,
+            timestamp: 0,
+          }),
+          message_length: 4,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... SetPeerBandwidth.from({
+            ack_window_size: 2500000,
+            limit_type: 2,
+            timestamp: 0,
+          }),
+          message_length: 5,
+        }
+      );
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 0,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
+
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
         1,
         { fmsVer: 'FMS/3,5,7,7009', capabilities: 31, mode: 1 },
         {
+          level: 'status',
           code: 'NetConnection.Connect.Success',
           description: 'Connection succeeded.',
           data: { version: '3,5,7,7009' },
           objectEncoding: 0,
-          level: 'status',
         },
       ];
       expect(data).toStrictEqual(expected);
@@ -99,6 +129,17 @@ describe('Regression Test', () => {
         data: connect,
       });
       for (const chunk of chunks) { input.write(chunk); }
+
+      expect((await gen.next()).value).toStrictEqual(
+        {
+          ... StreamBegin.from({
+            message_stream_id: 1,
+            timestamp: 0,
+          }),
+          message_length: 6,
+        }
+      );
+
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         '_result',
