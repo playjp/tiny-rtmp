@@ -110,7 +110,7 @@ export default class HLSGenerator {
 
     if (this.initialization == null) {
       this.initialization = make((vector) => {
-        initialize(RTMP_TIMESCALE, [1, 2], vector, (vector) => {
+        initialize(RTMP_TIMESCALE, [... (has_video ? [1] : []), ... (has_audio ? [2] : [])], vector, (vector) => {
           if (this.videoTrack != null) { vector.write(this.videoTrack); }
           if (this.audioTrack != null) { vector.write(this.audioTrack); }
         });
