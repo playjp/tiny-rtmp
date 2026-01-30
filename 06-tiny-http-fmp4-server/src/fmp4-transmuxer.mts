@@ -78,8 +78,8 @@ export default class FMP4Transmuxer {
       this.initializeSegment = (make((vector) => {
         initialize(1000,
           [
-            ...(avc != null ? [1] : []),
-            ...(aac != null ? [2] : []),
+            ... (avc != null ? [1] : []),
+            ... (aac != null ? [2] : []),
           ], vector, (vector) => {
             if (avc) { vector.write(avc); }
             if (aac) { vector.write(aac); }
