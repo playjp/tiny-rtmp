@@ -355,7 +355,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       while (state !== STATE.DISCONNECTED) {
         await setTimeout(KEEPALIVE_INTERVAL);
         if (state !== STATE.PUBLISHED) { continue; }
-        const keepAlive = await (async () => {
+        const keepAlive = await (() => {
           try {
             // PUBLISHED なら app と streamKey は必ず存在する
             return auth.keepAlive(context.app!, context.streamKey!);
