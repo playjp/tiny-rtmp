@@ -176,7 +176,9 @@ export class SectionPacketizer {
     this.pid = pid;
   }
 
-  public *packetize(section: Buffer): Iterable<Buffer> {
+  public packetize(section: Buffer): Buffer[] {
+    const packets: Buffer[] = [];
+
     for (let i = 0; i < section.byteLength; i += (PAYLOAD_SIZE - (i === 0 ? 1 : 0))) {
       const packet = Buffer.alloc(PACKET_SIZE, 0xFF);
       const length = Math.min(i + (PAYLOAD_SIZE - (i === 0 ? 1 : 0)), section.byteLength) - i;
@@ -197,9 +199,11 @@ export class SectionPacketizer {
       header.copy(packet, 0);
       section.copy(packet, header.byteLength, i, i + length);
 
-      yield packet;
+      packets.push(packet);
       this.continuity_counter = (this.continuity_counter + 1) & 0x0F;
     }
+
+    return packets;
   }
 }
 
@@ -211,7 +215,9 @@ export class PESPacketizer {
     this.pid = pid;
   }
 
-  public *packetize(pes: Buffer): Iterable<Buffer> {
+  public packetize(pes: Buffer): Buffer[] {
+    const packets: Buffer[] = [];
+
     for (let i = 0; i < pes.byteLength; i += PAYLOAD_SIZE) {
       const packet = Buffer.alloc(PACKET_SIZE, 0xFF);
       const length = Math.min(i + PAYLOAD_SIZE, pes.byteLength) - i;
@@ -234,9 +240,11 @@ export class PESPacketizer {
       header.copy(packet, 0);
       pes.copy(packet, header.byteLength + Math.max(filler - 2, 0), i, i + length);
 
-      yield packet;
+      packets.push(packet);
       this.continuity_counter = (this.continuity_counter + 1) & 0x0F;
     }
+
+    return packets;
   }
 }
 
