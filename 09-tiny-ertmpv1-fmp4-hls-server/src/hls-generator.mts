@@ -97,7 +97,7 @@ export default class HLSGenerator {
     if (this.onMetadata == null) { return; }
 
     const has_video = this.videoTrack != null;
-    const has_audio = this.audioTrack != null
+    const has_audio = this.audioTrack != null;
     const video_ready = this.onMetadata.videocodecid == null || has_video;
     const audio_ready = this.onMetadata.audiocodecid == null || has_audio;
     if (!video_ready || !audio_ready) { return; }

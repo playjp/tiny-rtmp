@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
 
-import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts'
+import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts';
 
 import ConcatenatedSegment from './concatenated-segment.mts';
 

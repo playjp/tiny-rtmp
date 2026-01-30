@@ -136,7 +136,7 @@ const handle_hevc = (packetType: number, reader: ByteReader): HEVCData | null =>
     default:
       return null;
   }
-}
+};
 
 export const handle_video = (message: VideoMessage): VideoData | null => {
   const reader = new ByteReader(message.data);

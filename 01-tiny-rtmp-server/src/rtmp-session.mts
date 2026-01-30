@@ -86,7 +86,7 @@ export const AuthConfiguration = {
   customAuth(
     appFn: ((app: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
     streamKeyFn: ((key: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
-    keepAliveFn: ((app: string, key: string) => (boolean | Promise<boolean>)) | null
+    keepAliveFn: ((app: string, key: string) => (boolean | Promise<boolean>)) | null,
   ): AuthConfiguration {
     return {
       app: async (app: string) => [(await (appFn?.(strip_query(app), collect_query(app))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
@@ -338,7 +338,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
         const keepAlive = await (async () => {
           try {
             // PUBLISHED なら app と streamKey は必ず存在する
-            return auth.keepAlive(context.app!, context.streamKey!)
+            return auth.keepAlive(context.app!, context.streamKey!);
           } catch {
             // keepAlive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
             // FIXME: ここはログが欲しい

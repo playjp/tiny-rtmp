@@ -9,7 +9,7 @@ export type SetChunkSize = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const SetChunkSize = {
-  from({ chunk_size, timestamp }: { chunk_size: number, timestamp: number }): SetChunkSize {
+  from({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): SetChunkSize {
     const builder = new ByteBuilder();
     builder.writeU32BE(chunk_size % (2 ** 31));
     return {
@@ -25,7 +25,7 @@ export type Abort = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const Abort = {
-  from({ cs_id, timestamp }: { cs_id: number, timestamp: number } ): Abort {
+  from({ cs_id, timestamp }: { cs_id: number; timestamp: number; } ): Abort {
     const builder = new ByteBuilder();
     builder.writeU32BE(cs_id);
     return {
@@ -41,7 +41,7 @@ export type Acknowledgement = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const Acknowledgement = {
-  from({ sequence_number, timestamp }: { sequence_number: number, timestamp: number }): Acknowledgement {
+  from({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): Acknowledgement {
     const builder = new ByteBuilder();
     builder.writeU32BE(sequence_number);
     return {
@@ -57,7 +57,7 @@ export type WindowAcknowledgementSize = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const WindowAcknowledgementSize = {
-  from({ ack_window_size, timestamp }: { ack_window_size: number, timestamp: number }): WindowAcknowledgementSize {
+  from({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): WindowAcknowledgementSize {
     const builder = new ByteBuilder();
     builder.writeU32BE(ack_window_size);
     return {
@@ -73,7 +73,7 @@ export type SetPeerBandwidth = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const SetPeerBandwidth = {
-  from({ ack_window_size, limit_type, timestamp }: { ack_window_size: number, limit_type: number, timestamp: number }): SetPeerBandwidth {
+  from({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): SetPeerBandwidth {
     const builder = new ByteBuilder();
     builder.writeU32BE(ack_window_size);
     builder.writeU8(limit_type);
@@ -90,7 +90,7 @@ export type UserControl = LengthOmittedMessage & {
   message_stream_id: 0;
 };
 export const StreamBegin = {
-  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.StreamBegin);
     builder.writeU32BE(message_stream_id);
@@ -103,7 +103,7 @@ export const StreamBegin = {
   },
 };
 export const StreamEOF = {
-  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.StreamEOF);
     builder.writeU32BE(message_stream_id);
@@ -116,7 +116,7 @@ export const StreamEOF = {
   },
 };
 export const StreamDry = {
-  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.StreamDry);
     builder.writeU32BE(message_stream_id);
@@ -129,7 +129,7 @@ export const StreamDry = {
   },
 };
 export const SetBufferLength = {
-  from({ message_stream_id, buffer_size, timestamp }: { message_stream_id: number, buffer_size: number, timestamp: number }): UserControl {
+  from({ message_stream_id, buffer_size, timestamp }: { message_stream_id: number; buffer_size: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.SetBufferLength);
     builder.writeU32BE(message_stream_id);
@@ -143,7 +143,7 @@ export const SetBufferLength = {
   },
 };
 export const StreamIsRecorded = {
-  from({ message_stream_id, timestamp }: { message_stream_id: number, timestamp: number }): UserControl {
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.StreamIsRecorded);
     builder.writeU32BE(message_stream_id);
@@ -156,7 +156,7 @@ export const StreamIsRecorded = {
   },
 };
 export const PingRequest = {
-  from({ event_timestamp, timestamp }: { event_timestamp: number, timestamp: number }): UserControl {
+  from({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.PingRequest);
     builder.writeU32BE(event_timestamp);
@@ -169,7 +169,7 @@ export const PingRequest = {
   },
 };
 export const PingResponse = {
-  from({ event_timestamp, timestamp }: { event_timestamp: number, timestamp: number }): UserControl {
+  from({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): UserControl {
     const builder = new ByteBuilder();
     builder.writeU16BE(UserControlType.PingResponse);
     builder.writeU32BE(event_timestamp);

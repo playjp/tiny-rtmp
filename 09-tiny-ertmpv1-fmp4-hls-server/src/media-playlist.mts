@@ -1,6 +1,6 @@
 import Segment from '../../04-tiny-hls-server/src/segment.mts';
 
-import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts'
+import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts';
 
 const MINIMUM_LIVE_WINDOW_LENGTH = 3;
 
@@ -99,7 +99,7 @@ export default class MediaPlaylist {
     for (let i = Math.max(0, this.sequenceNumber - this.liveWindowLength); i < this.sequenceNumber; i++) {
       const segment = this.segmentMap.get(i)!;
       if (i === (this.sequenceNumber - this.liveWindowLength)) {
-        m3u8 += `#EXT-X-MAP:URI="init.mp4"\n`;
+        m3u8 += '#EXT-X-MAP:URI="init.mp4"\n';
       }
       m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)}\n`;
       m3u8 += `${i}.m4s\n`;
