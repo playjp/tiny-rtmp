@@ -1,6 +1,6 @@
 import read_amf0, { isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import type { AMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
-import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 
 import { PlaylistTimestamp } from '../../04-tiny-hls-server/src/playlist-timestamp.mts';
 

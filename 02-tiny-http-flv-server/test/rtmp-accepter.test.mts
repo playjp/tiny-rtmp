@@ -4,7 +4,8 @@ import { Duplex, PassThrough } from 'stream';
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
-import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message-builder.mts';
 
 const handle_rtmp_import = async () => {

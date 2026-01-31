@@ -4,8 +4,9 @@ import type { Duplex } from 'node:stream';
 import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
-import read_message, { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import FLVWriter from '../../01-tiny-rtmp-server/src/flv-writer.mts';

@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
 
-import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 
 import { read_avc_decoder_configuration_record, write_annexb_avc } from '../../03-tiny-http-ts-server/src/avc.mts';
 import type { AVCDecoderConfigurationRecord } from '../../03-tiny-http-ts-server/src/avc.mts';

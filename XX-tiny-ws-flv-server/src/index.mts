@@ -7,8 +7,8 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
-import { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';

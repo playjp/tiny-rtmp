@@ -1,6 +1,6 @@
 import ByteBuilder from './byte-builder.mts';
-import type { Message } from './message-reader.mts';
-import { MessageType, UserControlType } from './message-reader.mts';
+import type { Message } from './message.mts';
+import { MessageType, UserControlType } from './message.mts';
 
 type LengthOmittedMessage = Omit<Message, 'message_length'>;
 

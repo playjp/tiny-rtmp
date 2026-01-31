@@ -4,8 +4,9 @@ import type { Duplex } from 'node:stream';
 import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from './async-byte-reader.mts';
-import read_message, { MessageType } from './message-reader.mts';
-import type { Message } from './message-reader.mts';
+import read_message from './message-reader.mts';
+import { MessageType } from './message.mts';
+import type { Message } from './message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from './message-builder.mts';

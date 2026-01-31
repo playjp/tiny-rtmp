@@ -5,8 +5,8 @@ import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
-import { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 

@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
-import { MessageType } from './message-reader.mts';
-import type { Message } from './message-reader.mts';
+import { MessageType } from './message.mts';
+import type { Message } from './message.mts';
 import read_amf0, { isAMF0Object } from './amf0-reader.mts';
 
 export default class FLVWriter {

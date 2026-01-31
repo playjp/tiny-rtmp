@@ -4,7 +4,8 @@ import { Duplex, PassThrough, Writable } from 'stream';
 import AsyncByteReader from '../src/async-byte-reader.mts';
 import read_amf0 from '../src/amf0-reader.mts';
 import write_amf0 from '../src/amf0-writer.mts';
-import read_message, { MessageType } from '../src/message-reader.mts';
+import read_message from '../src/message-reader.mts';
+import { MessageType } from '../src/message.mts';
 import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../src/message-builder.mts';
 import rtmp_session, { AuthConfiguration } from '../src/rtmp-session.mts';
 

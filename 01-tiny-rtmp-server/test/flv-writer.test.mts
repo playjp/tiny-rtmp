@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { Writable } from 'stream';
 import FLWWriter from '../src/flv-writer.mts';
 import AsyncByteReader from '../src/async-byte-reader.mts';
-import { MessageType } from '../src/message-reader.mts';
+import { MessageType } from '../src/message.mts';
 import write_amf0 from '../src/amf0-writer.mts';
 
 describe('Unit Test', () => {

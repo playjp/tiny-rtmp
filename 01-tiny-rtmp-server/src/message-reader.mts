@@ -1,5 +1,7 @@
 import AsyncByteReader from './async-byte-reader.mts';
 import ByteBuilder from './byte-builder.mts';
+import { MessageType } from './message.mts';
+import type { Message } from './message.mts';
 
 export class InsufficientChunkError extends Error {
   constructor(message: string, option?: ErrorOptions) {
@@ -15,45 +17,9 @@ export class MessageLengthExceededError extends Error {
   }
 }
 
-type MessageInformation = {
-  message_type_id: number;
-  message_stream_id: number;
-  message_length: number;
-  timestamp: number;
+type MessageInformation = Omit<Message, 'data'> & {
   timestamp_delta: number | null;
   is_extended_timestamp: boolean;
-};
-
-export const MessageType = {
-  SetChunkSize: 1,
-  Abort: 2,
-  Acknowledgement: 3,
-  UserControl: 4,
-  WindowAcknowledgementSize: 5,
-  SetPeerBandwidth: 6,
-  Audio: 8,
-  Video: 9,
-  DataAMF3: 15,
-  SharedObjectAMF3: 16,
-  CommandAMF3: 17,
-  DataAMF0: 18,
-  SharedObjectAMF0: 19,
-  CommandAMF0: 20,
-  Aggregate: 22,
-} as const;
-
-export const UserControlType = {
-  StreamBegin: 0,
-  StreamEOF: 1,
-  StreamDry: 2,
-  SetBufferLength: 3,
-  StreamIsRecorded: 4,
-  PingRequest: 6,
-  PingResponse: 7,
-} as const;
-
-export type Message = Omit<MessageInformation, 'timestamp_delta' | 'is_extended_timestamp'> & {
-  data: Buffer;
 };
 
 export default async function* read_message(reader: AsyncByteReader): AsyncIterable<Message> {

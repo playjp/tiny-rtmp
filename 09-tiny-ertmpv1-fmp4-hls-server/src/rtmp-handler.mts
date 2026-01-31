@@ -1,5 +1,5 @@
-import { MessageType } from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import type { Message } from '../../01-tiny-rtmp-server/src/message-reader.mts';
+import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
+import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 
