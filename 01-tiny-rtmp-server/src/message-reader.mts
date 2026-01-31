@@ -99,7 +99,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
           }
         }
       } else {
-        // FIXME: ここはログが欲しい
+        // FIXME(LOG): ここはログが欲しい
       }
 
       chunks.delete(cs_id);
