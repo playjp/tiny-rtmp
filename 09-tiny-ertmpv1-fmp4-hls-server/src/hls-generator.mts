@@ -83,7 +83,7 @@ export default class HLSGenerator {
         }
         return;
       case 'Data': {
-        const command = read_amf0(message.data);
+        const command = payload.values;
         if (command.length !== 3 || command[0] !== '@setDataFrame' || command[1] !== 'onMetaData' || !isAMF0Object(command[2])) {
           return;
         }

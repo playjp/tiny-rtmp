@@ -1,5 +1,5 @@
 import ByteBuilder from './byte-builder.mts';
-import type { Message } from './message.mts';
+import type { SerializedMessage } from './message.mts';
 import { MessageType } from './message.mts';
 
 
@@ -13,14 +13,14 @@ export default class MessageBuilder {
   private cs_id_map = new Map<number, number>();
   private cs_id_timestamp_information = new Map<number, TimestampInformation>();
 
-  private static cs_id_hash(message: Message, track: number = 0): number {
+  private static cs_id_hash(message: SerializedMessage, track: number = 0): number {
     if (MessageBuilder.use_system_cs_id(message) != null) {
       track = 0; // system 予約されている場合は track による多重化を行わない
     }
     const { message_stream_id, message_type_id } = message;
     return message_stream_id * (2 ** 16) + message_type_id * (2 ** 8) + track;
   }
-  private static use_system_cs_id({ message_type_id }: Message): number | null {
+  private static use_system_cs_id({ message_type_id }: SerializedMessage): number | null {
     // Protocol Control Message と User Control Message は cs_id は必ず 2 を使う
     switch (message_type_id) {
       // Protocol Control Message
@@ -36,7 +36,7 @@ export default class MessageBuilder {
     return null;
   }
 
-  private get_cs_id(message: Message, track: number = 0): number {
+  private get_cs_id(message: SerializedMessage, track: number = 0): number {
     const hash = MessageBuilder.cs_id_hash(message, track);
     if (this.cs_id_map.has(hash)) {
       return this.cs_id_map.get(hash)!;
@@ -46,23 +46,23 @@ export default class MessageBuilder {
     return cs_id;
   }
 
-  private get_timestamp_information(message: Message): TimestampInformation | undefined {
+  private get_timestamp_information(message: SerializedMessage): TimestampInformation | undefined {
     return this.cs_id_timestamp_information.get(MessageBuilder.cs_id_hash(message));
   }
-  private static calculate_timestamp(message: Message, previous?: TimestampInformation): number {
+  private static calculate_timestamp(message: SerializedMessage, previous?: TimestampInformation): number {
     return (message.timestamp - (previous?.timestamp ?? 0));
   }
-  private static is_extended_timestamp_required(message: Message, previous?: TimestampInformation): boolean {
+  private static is_extended_timestamp_required(message: SerializedMessage, previous?: TimestampInformation): boolean {
     return MessageBuilder.calculate_timestamp(message, previous) >= 0xFFFFFF;
   };
-  private set_timestamp_information(message: Message, previous?: TimestampInformation): void {
+  private set_timestamp_information(message: SerializedMessage, previous?: TimestampInformation): void {
     this.cs_id_timestamp_information.set(MessageBuilder.cs_id_hash(message), {
       timestamp: message.timestamp,
       is_extended_timestamp: MessageBuilder.is_extended_timestamp_required(message, previous),
     });
   }
 
-  public build(message: Message, track: number = 0): Buffer[] {
+  public build(message: SerializedMessage, track: number = 0): Buffer[] {
     const chunks: Buffer[] = [];
 
     const cs_id = this.get_cs_id(message, track);

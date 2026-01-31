@@ -72,7 +72,7 @@ export type AudioData = AACData & {
 export type ActionScriptData = {
   timestamp: number;
   kind: 'Data';
-  values: any[];
+  values: ReturnType<typeof read_amf0>;
 };
 
 const handle_avc = (reader: ByteReader): AVCData | null => {

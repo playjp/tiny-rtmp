@@ -46,7 +46,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(136);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'connect',
@@ -63,7 +62,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(32);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'releaseStream',
@@ -76,7 +74,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(28);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'FCPublish',
@@ -89,7 +86,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(25);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'createStream',
@@ -101,7 +97,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(1);
-      expect(message.message_length).toStrictEqual(33);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'publish',
@@ -157,7 +152,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(168);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'connect',
@@ -175,7 +169,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(32);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'releaseStream',
@@ -188,7 +181,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(28);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'FCPublish',
@@ -201,7 +193,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
-      expect(message.message_length).toStrictEqual(25);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'createStream',
@@ -213,7 +204,6 @@ describe('Regression Test', () => {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(1);
-      expect(message.message_length).toStrictEqual(33);
       expect(message.timestamp).toStrictEqual(0);
       expect(read_amf0(message.data)).toStrictEqual([
         'publish',

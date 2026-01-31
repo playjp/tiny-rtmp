@@ -5,7 +5,7 @@ import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import { MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
+import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 
 const handle_rtmp_import = async () => {
@@ -75,30 +75,34 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.into({
+          message_type_id: MessageType.WindowAcknowledgementSize,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            timestamp: 0,
-          }),
-          message_length: 4,
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.into({
+          message_type_id: MessageType.SetPeerBandwidth,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            limit_type: 2,
-            timestamp: 0,
-          }),
-          message_length: 5,
+            limit_type: 2
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 0,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
       const data = read_amf0((await gen.next()).value.data);
@@ -132,11 +136,13 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 1,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
       const data = read_amf0((await gen.next()).value.data);
@@ -255,30 +261,34 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... WindowAcknowledgementSize.into({
+            message_type_id: MessageType.WindowAcknowledgementSize,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
               ack_window_size: 2500000,
-              timestamp: 0,
-            }),
-            message_length: 4,
+            },
           },
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... SetPeerBandwidth.into({
+            message_type_id: MessageType.SetPeerBandwidth,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
               ack_window_size: 2500000,
-              limit_type: 2,
-              timestamp: 0,
-            }),
-            message_length: 5,
+              limit_type: 2
+            },
           },
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.into({
+            message_type_id: MessageType.UserControl,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
+              event_type: UserControlType.StreamBegin,
               message_stream_id: 0,
-              timestamp: 0,
-            }),
-            message_length: 6,
+            },
           },
         );
         const data = read_amf0((await gen.next()).value.data);
@@ -312,11 +322,13 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.into({
+            message_type_id: MessageType.UserControl,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
+              event_type: UserControlType.StreamBegin,
               message_stream_id: 1,
-              timestamp: 0,
-            }),
-            message_length: 6,
+            },
           },
         );
         const data = read_amf0((await gen.next()).value.data);
@@ -440,30 +452,34 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... WindowAcknowledgementSize.into({
+            message_type_id: MessageType.WindowAcknowledgementSize,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
               ack_window_size: 2500000,
-              timestamp: 0,
-            }),
-            message_length: 4,
+            },
           },
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... SetPeerBandwidth.into({
+            message_type_id: MessageType.SetPeerBandwidth,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
               ack_window_size: 2500000,
-              limit_type: 2,
-              timestamp: 0,
-            }),
-            message_length: 5,
+              limit_type: 2
+            },
           },
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.into({
+            message_type_id: MessageType.UserControl,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
+              event_type: UserControlType.StreamBegin,
               message_stream_id: 0,
-              timestamp: 0,
-            }),
-            message_length: 6,
+            },
           },
         );
         const data = read_amf0((await gen.next()).value.data);
@@ -497,11 +513,13 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.into({
+            message_type_id: MessageType.UserControl,
+            message_stream_id: 0,
+            timestamp: 0,
+            data: {
+              event_type: UserControlType.StreamBegin,
               message_stream_id: 1,
-              timestamp: 0,
-            }),
-            message_length: 6,
+            },
           },
         );
         const data = read_amf0((await gen.next()).value.data);
@@ -605,30 +623,34 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.into({
+          message_type_id: MessageType.WindowAcknowledgementSize,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            timestamp: 0,
-          }),
-          message_length: 4,
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.into({
+          message_type_id: MessageType.SetPeerBandwidth,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            limit_type: 2,
-            timestamp: 0,
-          }),
-          message_length: 5,
+            limit_type: 2
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 0,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
       const data = read_amf0((await gen.next()).value.data);
@@ -662,11 +684,13 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 1,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
       const data = read_amf0((await gen.next()).value.data);
@@ -769,30 +793,34 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.into({
+          message_type_id: MessageType.WindowAcknowledgementSize,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            timestamp: 0,
-          }),
-          message_length: 4,
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.into({
+          message_type_id: MessageType.SetPeerBandwidth,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            limit_type: 2,
-            timestamp: 0,
-          }),
-          message_length: 5,
+            limit_type: 2
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 0,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
       const data = read_amf0((await gen.next()).value.data);

@@ -1,7 +1,7 @@
 import AsyncByteReader from './async-byte-reader.mts';
 import ByteBuilder from './byte-builder.mts';
-import { MessageType } from './message.mts';
-import type { Message } from './message.mts';
+import { Message, MessageType } from './message.mts';
+import type { SerializedMessage } from './message.mts';
 
 export class InsufficientChunkError extends Error {
   constructor(message: string, option?: ErrorOptions) {
@@ -17,7 +17,7 @@ export class MessageLengthExceededError extends Error {
   }
 }
 
-type MessageInformation = Omit<Message, 'data'> & {
+type MessageInformation = Omit<SerializedMessage, 'data'> & {
   message_length: number;
   timestamp_delta: number | null;
   is_extended_timestamp: boolean;
@@ -75,21 +75,31 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
     }
     if (length === message_length) {
       const data = chunk_builder.build();
-      switch (message_type_id) {
-        case MessageType.SetChunkSize:
-          chunk_maximum_size = data.readUInt32BE(0) % (2 ** 31);
-          break;
-        case MessageType.Abort: {
-          const cs_id = data.readUInt32BE(0);
-          chunks.delete(cs_id);
-          informations.delete(cs_id);
-          break;
+      const message = Message.from({
+        message_type_id: information.message_type_id,
+        message_stream_id: information.message_stream_id,
+        timestamp: information.timestamp,
+        data
+      });
+
+      if (message != null) {
+        switch (message.message_type_id) {
+          case MessageType.SetChunkSize:
+            chunk_maximum_size = message.data.chunk_size;
+            break;
+          case MessageType.Abort: {
+            const cs_id = message.data.chunk_stream_id;
+            chunks.delete(cs_id);
+            informations.delete(cs_id);
+            break;
+          }
+          default: {
+            yield message;
+            break;
+          }
         }
-        default: {
-          const { timestamp_delta, is_extended_timestamp, ... message } = information;
-          yield { ... message, data };
-          break;
-        }
+      } else {
+        // FIXME: ここはログが欲しい
       }
 
       chunks.delete(cs_id);

@@ -5,7 +5,7 @@ import AsyncByteReader from '../src/async-byte-reader.mts';
 import read_amf0 from '../src/amf0-reader.mts';
 import write_amf0 from '../src/amf0-writer.mts';
 import read_message from '../src/message-reader.mts';
-import { MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../src/message.mts';
+import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../src/message.mts';
 import MessageBuilder from '../src/message-builder.mts';
 import rtmp_session, { AuthConfiguration } from '../src/rtmp-session.mts';
 
@@ -74,30 +74,34 @@ describe('Regression Test', () => {
 
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.into({
+          message_type_id: MessageType.WindowAcknowledgementSize,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            timestamp: 0,
-          }),
-          message_length: 4,
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.into({
+          message_type_id: MessageType.SetPeerBandwidth,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
             ack_window_size: 2500000,
-            limit_type: 2,
-            timestamp: 0,
-          }),
-          message_length: 5,
+            limit_type: 2
+          },
         },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 0,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
 
@@ -133,11 +137,13 @@ describe('Regression Test', () => {
 
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.into({
+          message_type_id: MessageType.UserControl,
+          message_stream_id: 0,
+          timestamp: 0,
+          data: {
+            event_type: UserControlType.StreamBegin,
             message_stream_id: 1,
-            timestamp: 0,
-          }),
-          message_length: 6,
+          },
         },
       );
 

@@ -5,8 +5,8 @@ import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
-import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
-import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
+import { MessageType, type SerializedMessage } from '../../01-tiny-rtmp-server/src/message.mts';
+import { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 
@@ -60,7 +60,7 @@ const streamKey = args.streamKey;
 const highWaterMark = args.highWaterMark != null ? Number.parseInt(args.highWaterMark, 10) : undefined;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
 
-const write_tag_header = (message: Message): Buffer => {
+const write_tag_header = (message: SerializedMessage): Buffer => {
   const header = Buffer.alloc(11);
   header.writeUIntBE(message.message_type_id, 0, 1);
   header.writeUIntBE(message.data.byteLength, 1, 3);
@@ -72,7 +72,7 @@ const write_tag_header = (message: Message): Buffer => {
   return header;
 };
 
-const write_previous_tag_size = (header: Buffer, message: Message): Buffer => {
+const write_previous_tag_size = (header: Buffer, message: SerializedMessage): Buffer => {
   const previousTagSize = Buffer.alloc(4);
   previousTagSize.writeUInt32BE(header.byteLength + message.data.byteLength, 0);
   return previousTagSize;
@@ -81,12 +81,13 @@ const write_previous_tag_size = (header: Buffer, message: Message): Buffer => {
 type StreamingInformation = [writeFn: (buffer: Buffer) => void, exitFn: () => void, initialized: boolean];
 const streaming = new Map<number, StreamingInformation>();
 const handle = async (connection: Duplex) => {
-  let onMetadataMessage: Message | null = null;
-  let avcConfigMessage: Message | null = null;
-  let aacConfigMessage: Message | null = null;
+  let onMetadataMessage: SerializedMessage | null = null;
+  let avcConfigMessage: SerializedMessage | null = null;
+  let aacConfigMessage: SerializedMessage | null = null;
 
   try {
-    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
+    for await (const decoded of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
+      const message = Message.into(decoded);
       const reader = new ByteReader(message.data);
       switch (message.message_type_id) {
         case MessageType.Video: {

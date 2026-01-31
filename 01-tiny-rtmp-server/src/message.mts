@@ -1,7 +1,7 @@
 import ByteBuilder from './byte-builder.mts';
 import ByteReader from './byte-reader.mts';
 
-export type Message = {
+export type SerializedMessage = {
   message_type_id: number;
   message_stream_id: number;
   timestamp: number;
@@ -50,7 +50,7 @@ const is_valid_user_control_event_type = (event_type: number): event_type is All
   return allUserControlType.has(event_type);
 };
 
-export type DecodedUserControl = {
+export type UserControl = {
   event_type: typeof UserControlType.StreamBegin;
   message_stream_id: number;
 } | {
@@ -73,8 +73,8 @@ export type DecodedUserControl = {
   event_type: typeof UserControlType.PingResponse;
   event_timestamp: number;
 };
-const DecodedUserControl = {
-  from(data: Buffer): DecodedUserControl | null {
+const UserControl = {
+  from(data: Buffer): UserControl | null {
     const reader = new ByteReader(data);
     const event_type = reader.readU16BE();
     if (!is_valid_user_control_event_type(event_type)) { return null; }
@@ -96,8 +96,9 @@ const DecodedUserControl = {
         return { event_type, event_timestamp: reader.readU32BE() };
     }
   },
-  into(control: DecodedUserControl): Buffer {
+  into(control: UserControl): Buffer {
     const builder = new ByteBuilder();
+    builder.writeU16BE(control.event_type);
     switch (control.event_type) {
       case UserControlType.StreamBegin:
         builder.writeU32BE(control.message_stream_id);
@@ -126,7 +127,7 @@ const DecodedUserControl = {
   },
 };
 
-export type DecodedMessage = Omit<Message, 'message_type_id' | 'data'> & ({
+export type Message = Omit<SerializedMessage, 'message_type_id' | 'data'> & ({
   message_type_id: typeof MessageType.SetChunkSize;
   data: {
     chunk_size: number;
@@ -134,7 +135,7 @@ export type DecodedMessage = Omit<Message, 'message_type_id' | 'data'> & ({
 } | {
   message_type_id: typeof MessageType.Abort;
   data: {
-    message_stream_id: number;
+    chunk_stream_id: number;
   };
 } | {
   message_type_id: typeof MessageType.Acknowledgement;
@@ -143,7 +144,7 @@ export type DecodedMessage = Omit<Message, 'message_type_id' | 'data'> & ({
   };
 } | {
   message_type_id: typeof MessageType.UserControl;
-  data: DecodedUserControl;
+  data: UserControl;
 } | {
   message_type_id: typeof MessageType.WindowAcknowledgementSize;
   data: {
@@ -159,8 +160,8 @@ export type DecodedMessage = Omit<Message, 'message_type_id' | 'data'> & ({
   message_type_id: Exclude<AllMessageType, ControlMessageType>;
   data: Buffer;
 });
-export const DecodedMessage = {
-  from({ message_type_id, data, ... message }: Message): DecodedMessage | null {
+export const Message = {
+  from({ message_type_id, data, ... message }: SerializedMessage): Message | null {
     if (!is_valid_message_type_id(message_type_id)) { return null; }
 
     const reader = new ByteReader(data);
@@ -178,7 +179,7 @@ export const DecodedMessage = {
           ... message,
           message_type_id,
           data: {
-            message_stream_id: reader.readU32BE(),
+            chunk_stream_id: reader.readU32BE(),
           },
         };
       case MessageType.Acknowledgement:
@@ -190,7 +191,7 @@ export const DecodedMessage = {
           },
         };
       case MessageType.UserControl: {
-        const user_control = DecodedUserControl.from(reader.read());
+        const user_control = UserControl.from(reader.read());
         if (user_control == null) { return null; }
         return {
           ... message,
@@ -223,20 +224,20 @@ export const DecodedMessage = {
         };
     }
   },
-  into({ message_type_id, data, ... message }: DecodedMessage): Message {
+  into({ message_type_id, data, ... message }: Message): SerializedMessage {
     const builder = new ByteBuilder();
     switch (message_type_id) {
       case MessageType.SetChunkSize:
         builder.writeU32BE(data.chunk_size % 2 ** 31);
         break;
       case MessageType.Abort:
-        builder.writeU32BE(data.message_stream_id);
+        builder.writeU32BE(data.chunk_stream_id);
         break;
       case MessageType.Acknowledgement:
         builder.writeU32BE(data.sequence_number);
         break;
       case MessageType.UserControl:
-        builder.write(DecodedUserControl.into(data));
+        builder.write(UserControl.into(data));
         break;
       case MessageType.WindowAcknowledgementSize:
         builder.writeU32BE(data.ack_window_size);
@@ -257,8 +258,8 @@ export const DecodedMessage = {
 };
 
 export const SetChunkSize = {
-  into({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.SetChunkSize,
       timestamp,
@@ -269,20 +270,20 @@ export const SetChunkSize = {
   },
 };
 export const Abort = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ chunk_stream_id, timestamp }: { chunk_stream_id: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.Abort,
       timestamp,
       data: {
-        message_stream_id,
+        chunk_stream_id,
       },
     });
   },
 };
 export const Acknowledgement = {
-  into({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.Acknowledgement,
       timestamp,
@@ -293,8 +294,8 @@ export const Acknowledgement = {
   },
 };
 export const WindowAcknowledgementSize = {
-  into({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.WindowAcknowledgementSize,
       timestamp,
@@ -305,8 +306,8 @@ export const WindowAcknowledgementSize = {
   },
 };
 export const SetPeerBandwidth = {
-  into({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.SetPeerBandwidth,
       timestamp,
@@ -318,8 +319,8 @@ export const SetPeerBandwidth = {
   },
 };
 export const StreamBegin = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -331,8 +332,8 @@ export const StreamBegin = {
   },
 };
 export const StreamEOF = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -344,8 +345,8 @@ export const StreamEOF = {
   },
 };
 export const StreamDry = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -357,8 +358,8 @@ export const StreamDry = {
   },
 };
 export const SetBufferLength = {
-  into({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -371,8 +372,8 @@ export const SetBufferLength = {
   },
 };
 export const StreamIsRecorded = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -384,8 +385,8 @@ export const StreamIsRecorded = {
   },
 };
 export const PingRequest = {
-  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -397,8 +398,8 @@ export const PingRequest = {
   },
 };
 export const PingResponse = {
-  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): Message {
-    return DecodedMessage.into({
+  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): SerializedMessage {
+    return Message.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
