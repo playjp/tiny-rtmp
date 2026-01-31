@@ -171,7 +171,7 @@ export const Message = {
           ... message,
           message_type_id,
           data: {
-            chunk_size: reader.readU32BE() % 2 ** 31,
+            chunk_size: Math.max(1, reader.readU32BE() % 2 ** 31),
           },
         };
       case MessageType.Abort:
@@ -228,7 +228,7 @@ export const Message = {
     const builder = new ByteBuilder();
     switch (message_type_id) {
       case MessageType.SetChunkSize:
-        builder.writeU32BE(data.chunk_size % 2 ** 31);
+        builder.writeU32BE(Math.max(1, data.chunk_size) % 2 ** 31);
         break;
       case MessageType.Abort:
         builder.writeU32BE(data.chunk_stream_id);
