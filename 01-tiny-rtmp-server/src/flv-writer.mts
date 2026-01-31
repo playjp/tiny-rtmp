@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream';
 import { MessageType } from './message.mts';
-import type { LengthOmittedMessage, Message } from './message.mts';
+import type { Message } from './message.mts';
 import read_amf0, { isAMF0Object } from './amf0-reader.mts';
 
 export default class FLVWriter {
@@ -11,7 +11,7 @@ export default class FLVWriter {
     this.output = output;
   }
 
-  private is_valid_flv_tag(message: LengthOmittedMessage): boolean {
+  private is_valid_flv_tag(message: Message): boolean {
     if (message.message_type_id === MessageType.Audio) { return true; }
     if (message.message_type_id === MessageType.Video) { return true; }
     if (message.message_type_id === MessageType.DataAMF0) { return true; }
@@ -33,7 +33,7 @@ export default class FLVWriter {
     this.initialized = true;
   }
 
-  public write(message: LengthOmittedMessage): void {
+  public write(message: Message): void {
     if (!this.is_valid_flv_tag(message)) { return; }
     if (!this.initialized) {
       const scriptdata = message.message_type_id === MessageType.DataAMF0 ? read_amf0(message.data) : undefined;

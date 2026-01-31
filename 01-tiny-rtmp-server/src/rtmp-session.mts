@@ -6,7 +6,7 @@ import { setTimeout } from 'node:timers/promises';
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message from './message-reader.mts';
 import { MessageType, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin } from './message.mts';
-import { Message } from './message.mts';
+import type { Message } from './message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import MessageBuilder from './message-builder.mts';

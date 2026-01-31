@@ -18,6 +18,7 @@ export class MessageLengthExceededError extends Error {
 }
 
 type MessageInformation = Omit<Message, 'data'> & {
+  message_length: number;
   timestamp_delta: number | null;
   is_extended_timestamp: boolean;
 };

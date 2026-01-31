@@ -4,20 +4,8 @@ import ByteReader from './byte-reader.mts';
 export type Message = {
   message_type_id: number;
   message_stream_id: number;
-  message_length: number;
   timestamp: number;
   data: Buffer;
-};
-
-export type LengthOmittedMessage = Omit<Message, 'message_length'>;
-
-export const Message = {
-  from(message: LengthOmittedMessage): Message {
-    return {
-      ... message,
-      message_length: message.data.byteLength,
-    };
-  }
 };
 
 export const MessageType = {
@@ -138,7 +126,7 @@ const DecodedUserControl = {
   },
 };
 
-export type DecodedMessage = Omit<Message, 'message_type_id' | 'message_length' | 'data'> & ({
+export type DecodedMessage = Omit<Message, 'message_type_id' | 'data'> & ({
   message_type_id: typeof MessageType.SetChunkSize;
   data: {
     chunk_size: number;
@@ -235,7 +223,7 @@ export const DecodedMessage = {
         };
     }
   },
-  into({ message_type_id, data, ... message }: DecodedMessage): LengthOmittedMessage {
+  into({ message_type_id, data, ... message }: DecodedMessage): Message {
     const builder = new ByteBuilder();
     switch (message_type_id) {
       case MessageType.SetChunkSize:
@@ -269,7 +257,7 @@ export const DecodedMessage = {
 };
 
 export const SetChunkSize = {
-  into({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): LengthOmittedMessage {
+  into({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.SetChunkSize,
@@ -281,7 +269,7 @@ export const SetChunkSize = {
   },
 };
 export const Abort = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.Abort,
@@ -293,7 +281,7 @@ export const Abort = {
   },
 };
 export const Acknowledgement = {
-  into({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): LengthOmittedMessage {
+  into({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.Acknowledgement,
@@ -305,7 +293,7 @@ export const Acknowledgement = {
   },
 };
 export const WindowAcknowledgementSize = {
-  into({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): LengthOmittedMessage {
+  into({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.WindowAcknowledgementSize,
@@ -317,7 +305,7 @@ export const WindowAcknowledgementSize = {
   },
 };
 export const SetPeerBandwidth = {
-  into({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): LengthOmittedMessage {
+  into({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.SetPeerBandwidth,
@@ -330,7 +318,7 @@ export const SetPeerBandwidth = {
   },
 };
 export const StreamBegin = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
@@ -343,7 +331,7 @@ export const StreamBegin = {
   },
 };
 export const StreamEOF = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
@@ -356,7 +344,7 @@ export const StreamEOF = {
   },
 };
 export const StreamDry = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
@@ -369,7 +357,7 @@ export const StreamDry = {
   },
 };
 export const SetBufferLength = {
-  into({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): LengthOmittedMessage {
+  into({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
@@ -383,7 +371,7 @@ export const SetBufferLength = {
   },
 };
 export const StreamIsRecorded = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
@@ -396,7 +384,7 @@ export const StreamIsRecorded = {
   },
 };
 export const PingRequest = {
-  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): LengthOmittedMessage {
+  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
@@ -409,7 +397,7 @@ export const PingRequest = {
   },
 };
 export const PingResponse = {
-  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): LengthOmittedMessage {
+  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): Message {
     return DecodedMessage.into({
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
