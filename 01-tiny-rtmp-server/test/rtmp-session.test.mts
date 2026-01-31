@@ -78,7 +78,7 @@ describe('Regression Test', () => {
             timestamp: 0,
           }),
           message_length: 4,
-        }
+        },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
@@ -88,7 +88,7 @@ describe('Regression Test', () => {
             timestamp: 0,
           }),
           message_length: 5,
-        }
+        },
       );
       expect((await gen.next()).value).toStrictEqual(
         {
@@ -97,7 +97,7 @@ describe('Regression Test', () => {
             timestamp: 0,
           }),
           message_length: 6,
-        }
+        },
       );
 
       const data = read_amf0((await gen.next()).value.data);
@@ -137,7 +137,7 @@ describe('Regression Test', () => {
             timestamp: 0,
           }),
           message_length: 6,
-        }
+        },
       );
 
       const data = read_amf0((await gen.next()).value.data);
