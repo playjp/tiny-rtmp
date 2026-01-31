@@ -258,56 +258,56 @@ export const Message = {
 };
 
 export const SetChunkSize = {
-  into({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.SetChunkSize,
       timestamp,
       data: {
         chunk_size,
       },
-    });
+    };
   },
 };
 export const Abort = {
-  into({ chunk_stream_id, timestamp }: { chunk_stream_id: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ chunk_stream_id, timestamp }: { chunk_stream_id: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.Abort,
       timestamp,
       data: {
         chunk_stream_id,
       },
-    });
+    };
   },
 };
 export const Acknowledgement = {
-  into({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.Acknowledgement,
       timestamp,
       data: {
         sequence_number,
       },
-    });
+    };
   },
 };
 export const WindowAcknowledgementSize = {
-  into({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.WindowAcknowledgementSize,
       timestamp,
       data: {
         ack_window_size,
       },
-    });
+    };
   },
 };
 export const SetPeerBandwidth = {
-  into({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.SetPeerBandwidth,
       timestamp,
@@ -315,12 +315,12 @@ export const SetPeerBandwidth = {
         ack_window_size,
         limit_type,
       },
-    });
+    };
   },
 };
 export const StreamBegin = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -328,12 +328,12 @@ export const StreamBegin = {
         event_type: UserControlType.StreamBegin,
         message_stream_id,
       },
-    });
+    };
   },
 };
 export const StreamEOF = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -341,12 +341,12 @@ export const StreamEOF = {
         event_type: UserControlType.StreamEOF,
         message_stream_id,
       },
-    });
+    };
   },
 };
 export const StreamDry = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -354,12 +354,12 @@ export const StreamDry = {
         event_type: UserControlType.StreamDry,
         message_stream_id,
       },
-    });
+    };
   },
 };
 export const SetBufferLength = {
-  into({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -368,12 +368,12 @@ export const SetBufferLength = {
         message_stream_id,
         buffer_length,
       },
-    });
+    };
   },
 };
 export const StreamIsRecorded = {
-  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -381,12 +381,12 @@ export const StreamIsRecorded = {
         event_type: UserControlType.StreamIsRecorded,
         message_stream_id,
       },
-    });
+    };
   },
 };
 export const PingRequest = {
-  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -394,12 +394,12 @@ export const PingRequest = {
         event_type: UserControlType.PingRequest,
         event_timestamp,
       },
-    });
+    };
   },
 };
 export const PingResponse = {
-  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): SerializedMessage {
-    return Message.into({
+  from({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): Message {
+    return {
       message_stream_id: 0,
       message_type_id: MessageType.UserControl,
       timestamp,
@@ -407,6 +407,6 @@ export const PingResponse = {
         event_type: UserControlType.PingResponse,
         event_timestamp,
       },
-    });
+    };
   },
 };
