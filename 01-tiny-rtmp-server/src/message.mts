@@ -1,5 +1,5 @@
-import ByteBuilder from "./byte-builder.mts";
-import ByteReader from "./byte-reader.mts";
+import ByteBuilder from './byte-builder.mts';
+import ByteReader from './byte-reader.mts';
 
 export type Message = {
   message_type_id: number;
@@ -126,7 +126,7 @@ const DecodedUserControl = {
         break;
     }
     return builder.build();
-  }
+  },
 };
 
 export type DecodedMessage = Omit<Message, 'message_type_id' | 'message_length' | 'data'> & ({
@@ -151,13 +151,13 @@ export type DecodedMessage = Omit<Message, 'message_type_id' | 'message_length' 
   message_type_id: typeof MessageType.WindowAcknowledgementSize;
   data: {
     ack_window_size: number;
-  }
+  };
 } | {
   message_type_id: typeof MessageType.SetPeerBandwidth;
   data: {
     ack_window_size: number;
     limit_type: number;
-  }
+  };
 } | {
   message_type_id: Exclude<AllMessageType, ControlMessageType>;
   data: Buffer;
@@ -174,7 +174,7 @@ export const DecodedMessage = {
           message_type_id,
           data: {
             chunk_size: reader.readU32BE() % 2 ** 31,
-          }
+          },
         };
       case MessageType.Abort:
         return {
@@ -182,7 +182,7 @@ export const DecodedMessage = {
           message_type_id,
           data: {
             message_stream_id: reader.readU32BE(),
-          }
+          },
         };
       case MessageType.Acknowledgement:
         return {
@@ -190,7 +190,7 @@ export const DecodedMessage = {
           message_type_id,
           data: {
             sequence_number: reader.readU32BE(),
-          }
+          },
         };
       case MessageType.UserControl: {
         const user_control = DecodedUserControl.from(reader.read());
@@ -207,7 +207,7 @@ export const DecodedMessage = {
           message_type_id,
           data: {
             ack_window_size: reader.readU32BE(),
-          }
+          },
         };
       case MessageType.SetPeerBandwidth:
         return {
@@ -216,7 +216,7 @@ export const DecodedMessage = {
           data: {
             ack_window_size: reader.readU32BE(),
             limit_type: reader.readU8(),
-          }
+          },
         };
       default:
         return {
@@ -230,7 +230,7 @@ export const DecodedMessage = {
     const builder = new ByteBuilder();
     switch (message_type_id) {
       case MessageType.SetChunkSize:
-        builder.writeU32BE(data.chunk_size);
+        builder.writeU32BE(data.chunk_size % 2 ** 31);
         break;
       case MessageType.Abort:
         builder.writeU32BE(data.message_stream_id);
@@ -249,7 +249,7 @@ export const DecodedMessage = {
         builder.writeU8(data.limit_type);
         break;
       default:
-        builder.write(data)
+        builder.write(data);
     }
     return {
       ... message,
@@ -267,6 +267,18 @@ export const SetChunkSize = {
       timestamp,
       data: {
         chunk_size,
+      },
+    });
+  },
+};
+export const Abort = {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.Abort,
+      timestamp,
+      data: {
+        message_stream_id,
       },
     });
   },
