@@ -13,7 +13,6 @@ import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 
 import BandwidthEstimator from './bandwidth-estimator.mts';
-import IdleTimer from './idle-timer.mts';
 
 const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // C0/S0
@@ -319,7 +318,6 @@ export type RTMPOption = {
   limit?: {
     bandwidth?: number;
     highWaterMark?: number;
-    timeout?: number;
   };
 };
 
@@ -329,13 +327,10 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   using reader = new AsyncByteReader({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
   const builder = new MessageBuilder();
   using estimator = new BandwidthEstimator(option?.limit?.bandwidth ?? Number.POSITIVE_INFINITY, controller);
-  const timeout = () => { controller.abort(new DisconnectError('Timeout!')); };
-  using timer = new IdleTimer(timeout, option?.limit?.timeout);
   connection.pipe(new Writable({
     write(data, _, cb) {
       reader.feed(data);
       estimator.feed(data.byteLength);
-      timer.tick();
       cb();
     },
   }));
