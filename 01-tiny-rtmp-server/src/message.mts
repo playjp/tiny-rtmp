@@ -1,3 +1,4 @@
+import ByteBuilder from "./byte-builder.mts";
 import ByteReader from "./byte-reader.mts";
 
 export type Message = {
@@ -7,6 +8,8 @@ export type Message = {
   timestamp: number;
   data: Buffer;
 };
+
+export type LengthOmittedMessage = Omit<Message, 'message_length'>;
 
 export const MessageType = {
   SetChunkSize: 1,
@@ -96,33 +99,71 @@ const DecodedUserControl = {
         return { event_type, event_timestamp: reader.readU32BE() };
     }
   },
+  into(control: DecodedUserControl): Buffer {
+    const builder = new ByteBuilder();
+    switch (control.event_type) {
+      case UserControlType.StreamBegin:
+        builder.writeU32BE(control.message_stream_id);
+        break;
+      case UserControlType.StreamEOF:
+        builder.writeU32BE(control.message_stream_id);
+        break;
+      case UserControlType.StreamDry:
+        builder.writeU32BE(control.message_stream_id);
+        break;
+      case UserControlType.SetBufferLength:
+        builder.writeU32BE(control.message_stream_id);
+        builder.writeU32BE(control.buffer_length);
+        break;
+      case UserControlType.StreamIsRecorded:
+        builder.writeU32BE(control.message_stream_id);
+        break;
+      case UserControlType.PingRequest:
+        builder.writeU32BE(control.event_timestamp);
+        break;
+      case UserControlType.PingResponse:
+        builder.writeU32BE(control.event_timestamp);
+        break;
+    }
+    return builder.build();
+  }
 };
 
-export type DecodedMessage = Omit<Message, 'message_type_id' | 'data'> & ({
+export type DecodedMessage = Omit<Message, 'message_type_id' | 'message_length' | 'data'> & ({
   message_type_id: typeof MessageType.SetChunkSize;
-  chunk_size: number;
+  data: {
+    chunk_size: number;
+  };
 } | {
   message_type_id: typeof MessageType.Abort;
-  message_stream_id: number;
+  data: {
+    message_stream_id: number;
+  };
 } | {
   message_type_id: typeof MessageType.Acknowledgement;
-  sequence_number: number;
+  data: {
+    sequence_number: number;
+  };
 } | {
   message_type_id: typeof MessageType.UserControl;
-  user_control: DecodedUserControl;
+  data: DecodedUserControl;
 } | {
   message_type_id: typeof MessageType.WindowAcknowledgementSize;
-  ack_window_size: number;
+  data: {
+    ack_window_size: number;
+  }
 } | {
   message_type_id: typeof MessageType.SetPeerBandwidth;
-  ack_window_size: number;
-  limit_type: number;
+  data: {
+    ack_window_size: number;
+    limit_type: number;
+  }
 } | {
   message_type_id: Exclude<AllMessageType, ControlMessageType>;
   data: Buffer;
 });
 export const DecodedMessage = {
-  from({ data, message_type_id, ... message }: Message): DecodedMessage | null {
+  from({ message_type_id, data, ... message }: Message): DecodedMessage | null {
     if (!is_valid_message_type_id(message_type_id)) { return null; }
 
     const reader = new ByteReader(data);
@@ -131,19 +172,25 @@ export const DecodedMessage = {
         return {
           ... message,
           message_type_id,
-          chunk_size: reader.readU32BE() % 2 ** 31,
+          data: {
+            chunk_size: reader.readU32BE() % 2 ** 31,
+          }
         };
       case MessageType.Abort:
         return {
           ... message,
           message_type_id,
-          message_stream_id: reader.readU32BE(),
+          data: {
+            message_stream_id: reader.readU32BE(),
+          }
         };
       case MessageType.Acknowledgement:
         return {
           ... message,
           message_type_id,
-          sequence_number: reader.readU32BE(),
+          data: {
+            sequence_number: reader.readU32BE(),
+          }
         };
       case MessageType.UserControl: {
         const user_control = DecodedUserControl.from(reader.read());
@@ -151,21 +198,25 @@ export const DecodedMessage = {
         return {
           ... message,
           message_type_id,
-          user_control,
+          data: user_control,
         };
       }
       case MessageType.WindowAcknowledgementSize:
         return {
           ... message,
           message_type_id,
-          ack_window_size: reader.readU32BE(),
+          data: {
+            ack_window_size: reader.readU32BE(),
+          }
         };
       case MessageType.SetPeerBandwidth:
         return {
           ... message,
           message_type_id,
-          ack_window_size: reader.readU32BE(),
-          limit_type: reader.readU8(),
+          data: {
+            ack_window_size: reader.readU32BE(),
+            limit_type: reader.readU8(),
+          }
         };
       default:
         return {
@@ -174,5 +225,178 @@ export const DecodedMessage = {
           data,
         };
     }
+  },
+  into({ message_type_id, data, ... message }: DecodedMessage): LengthOmittedMessage {
+    const builder = new ByteBuilder();
+    switch (message_type_id) {
+      case MessageType.SetChunkSize:
+        builder.writeU32BE(data.chunk_size);
+        break;
+      case MessageType.Abort:
+        builder.writeU32BE(data.message_stream_id);
+        break;
+      case MessageType.Acknowledgement:
+        builder.writeU32BE(data.sequence_number);
+        break;
+      case MessageType.UserControl:
+        builder.write(DecodedUserControl.into(data));
+        break;
+      case MessageType.WindowAcknowledgementSize:
+        builder.writeU32BE(data.ack_window_size);
+        break;
+      case MessageType.SetPeerBandwidth:
+        builder.writeU32BE(data.ack_window_size);
+        builder.writeU8(data.limit_type);
+        break;
+      default:
+        builder.write(data)
+    }
+    return {
+      ... message,
+      message_type_id,
+      data: builder.build(),
+    };
+  },
+};
+
+export const SetChunkSize = {
+  into({ chunk_size, timestamp }: { chunk_size: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.SetChunkSize,
+      timestamp,
+      data: {
+        chunk_size,
+      },
+    });
+  },
+};
+export const Acknowledgement = {
+  into({ sequence_number, timestamp }: { sequence_number: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.Acknowledgement,
+      timestamp,
+      data: {
+        sequence_number,
+      },
+    });
+  },
+};
+export const WindowAcknowledgementSize = {
+  into({ ack_window_size, timestamp }: { ack_window_size: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.WindowAcknowledgementSize,
+      timestamp,
+      data: {
+        ack_window_size,
+      },
+    });
+  },
+};
+export const SetPeerBandwidth = {
+  into({ ack_window_size, limit_type, timestamp }: { ack_window_size: number; limit_type: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.SetPeerBandwidth,
+      timestamp,
+      data: {
+        ack_window_size,
+        limit_type,
+      },
+    });
+  },
+};
+export const StreamBegin = {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.StreamBegin,
+        message_stream_id,
+      },
+    });
+  },
+};
+export const StreamEOF = {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.StreamEOF,
+        message_stream_id,
+      },
+    });
+  },
+};
+export const StreamDry = {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.StreamDry,
+        message_stream_id,
+      },
+    });
+  },
+};
+export const SetBufferLength = {
+  into({ message_stream_id, buffer_length, timestamp }: { message_stream_id: number; buffer_length: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.SetBufferLength,
+        message_stream_id,
+        buffer_length,
+      },
+    });
+  },
+};
+export const StreamIsRecorded = {
+  into({ message_stream_id, timestamp }: { message_stream_id: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.StreamIsRecorded,
+        message_stream_id,
+      },
+    });
+  },
+};
+export const PingRequest = {
+  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.PingRequest,
+        event_timestamp,
+      },
+    });
+  },
+};
+export const PingResponse = {
+  into({ event_timestamp, timestamp }: { event_timestamp: number; timestamp: number; }): LengthOmittedMessage {
+    return DecodedMessage.into({
+      message_stream_id: 0,
+      message_type_id: MessageType.UserControl,
+      timestamp,
+      data: {
+        event_type: UserControlType.PingResponse,
+        event_timestamp,
+      },
+    });
   },
 };

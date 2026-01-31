@@ -5,9 +5,9 @@ import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
+import { MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
-import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message-builder.mts';
+import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 
@@ -151,15 +151,15 @@ const TRANSITION = {
 
     // Connect を伝達する前に WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin を伝達する
     {
-      const chunks = builder.build(WindowAcknowledgementSize.from({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, timestamp: 0 }));
+      const chunks = builder.build(WindowAcknowledgementSize.into({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, timestamp: 0 }));
       for (const chunk of chunks) { connection.write(chunk); }
     }
     {
-      const chunks = builder.build(SetPeerBandwidth.from({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, limit_type: 2, timestamp: 0 }));
+      const chunks = builder.build(SetPeerBandwidth.into({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, limit_type: 2, timestamp: 0 }));
       for (const chunk of chunks) { connection.write(chunk); }
     }
     {
-      const chunks = builder.build(StreamBegin.from({ message_stream_id: 0, timestamp: 0 }));
+      const chunks = builder.build(StreamBegin.into({ message_stream_id: 0, timestamp: 0 }));
       for (const chunk of chunks) { connection.write(chunk); }
     }
 
@@ -214,7 +214,7 @@ const TRANSITION = {
 
     // 利用開始する Message Stream ID を Stream Begin で伝達する
     {
-      const chunks = builder.build(StreamBegin.from({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
+      const chunks = builder.build(StreamBegin.into({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
       for (const chunk of chunks) { connection.write(chunk); }
     }
     // CreateStream で作った Message Stream ID を返却する

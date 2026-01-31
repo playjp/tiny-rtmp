@@ -5,8 +5,8 @@ import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
-import MessageBuilder, { SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message-builder.mts';
+import { MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
+import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 
 const handle_rtmp_import = async () => {
   vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
@@ -75,7 +75,7 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.from({
+          ... WindowAcknowledgementSize.into({
             ack_window_size: 2500000,
             timestamp: 0,
           }),
@@ -84,7 +84,7 @@ describe('Regression Test', () => {
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.from({
+          ... SetPeerBandwidth.into({
             ack_window_size: 2500000,
             limit_type: 2,
             timestamp: 0,
@@ -94,7 +94,7 @@ describe('Regression Test', () => {
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.from({
+          ... StreamBegin.into({
             message_stream_id: 0,
             timestamp: 0,
           }),
@@ -132,7 +132,7 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.from({
+          ... StreamBegin.into({
             message_stream_id: 1,
             timestamp: 0,
           }),
@@ -255,7 +255,7 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... WindowAcknowledgementSize.from({
+            ... WindowAcknowledgementSize.into({
               ack_window_size: 2500000,
               timestamp: 0,
             }),
@@ -264,7 +264,7 @@ describe('Regression Test', () => {
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... SetPeerBandwidth.from({
+            ... SetPeerBandwidth.into({
               ack_window_size: 2500000,
               limit_type: 2,
               timestamp: 0,
@@ -274,7 +274,7 @@ describe('Regression Test', () => {
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.from({
+            ... StreamBegin.into({
               message_stream_id: 0,
               timestamp: 0,
             }),
@@ -312,7 +312,7 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.from({
+            ... StreamBegin.into({
               message_stream_id: 1,
               timestamp: 0,
             }),
@@ -440,7 +440,7 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... WindowAcknowledgementSize.from({
+            ... WindowAcknowledgementSize.into({
               ack_window_size: 2500000,
               timestamp: 0,
             }),
@@ -449,7 +449,7 @@ describe('Regression Test', () => {
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... SetPeerBandwidth.from({
+            ... SetPeerBandwidth.into({
               ack_window_size: 2500000,
               limit_type: 2,
               timestamp: 0,
@@ -459,7 +459,7 @@ describe('Regression Test', () => {
         );
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.from({
+            ... StreamBegin.into({
               message_stream_id: 0,
               timestamp: 0,
             }),
@@ -497,7 +497,7 @@ describe('Regression Test', () => {
         for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
-            ... StreamBegin.from({
+            ... StreamBegin.into({
               message_stream_id: 1,
               timestamp: 0,
             }),
@@ -605,7 +605,7 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.from({
+          ... WindowAcknowledgementSize.into({
             ack_window_size: 2500000,
             timestamp: 0,
           }),
@@ -614,7 +614,7 @@ describe('Regression Test', () => {
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.from({
+          ... SetPeerBandwidth.into({
             ack_window_size: 2500000,
             limit_type: 2,
             timestamp: 0,
@@ -624,7 +624,7 @@ describe('Regression Test', () => {
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.from({
+          ... StreamBegin.into({
             message_stream_id: 0,
             timestamp: 0,
           }),
@@ -662,7 +662,7 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.from({
+          ... StreamBegin.into({
             message_stream_id: 1,
             timestamp: 0,
           }),
@@ -769,7 +769,7 @@ describe('Regression Test', () => {
       for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... WindowAcknowledgementSize.from({
+          ... WindowAcknowledgementSize.into({
             ack_window_size: 2500000,
             timestamp: 0,
           }),
@@ -778,7 +778,7 @@ describe('Regression Test', () => {
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... SetPeerBandwidth.from({
+          ... SetPeerBandwidth.into({
             ack_window_size: 2500000,
             limit_type: 2,
             timestamp: 0,
@@ -788,7 +788,7 @@ describe('Regression Test', () => {
       );
       expect((await gen.next()).value).toStrictEqual(
         {
-          ... StreamBegin.from({
+          ... StreamBegin.into({
             message_stream_id: 0,
             timestamp: 0,
           }),
