@@ -79,7 +79,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
         message_type_id: information.message_type_id,
         message_stream_id: information.message_stream_id,
         timestamp: information.timestamp,
-        data
+        data,
       });
 
       if (message != null) {

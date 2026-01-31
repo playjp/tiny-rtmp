@@ -90,7 +90,7 @@ describe('Regression Test', () => {
           timestamp: 0,
           data: {
             ack_window_size: 2500000,
-            limit_type: 2
+            limit_type: 2,
           },
         },
       );
@@ -276,7 +276,7 @@ describe('Regression Test', () => {
             timestamp: 0,
             data: {
               ack_window_size: 2500000,
-              limit_type: 2
+              limit_type: 2,
             },
           },
         );
@@ -467,7 +467,7 @@ describe('Regression Test', () => {
             timestamp: 0,
             data: {
               ack_window_size: 2500000,
-              limit_type: 2
+              limit_type: 2,
             },
           },
         );
@@ -638,7 +638,7 @@ describe('Regression Test', () => {
           timestamp: 0,
           data: {
             ack_window_size: 2500000,
-            limit_type: 2
+            limit_type: 2,
           },
         },
       );
@@ -808,7 +808,7 @@ describe('Regression Test', () => {
           timestamp: 0,
           data: {
             ack_window_size: 2500000,
-            limit_type: 2
+            limit_type: 2,
           },
         },
       );
