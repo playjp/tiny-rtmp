@@ -34,9 +34,12 @@ export const MessageType = {
   Audio: 8,
   Video: 9,
   DataAMF3: 15,
+  SharedObjectAMF3: 16,
   CommandAMF3: 17,
   DataAMF0: 18,
+  SharedObjectAMF0: 19,
   CommandAMF0: 20,
+  Aggregate: 22,
 } as const;
 
 export const UserControlType = {
