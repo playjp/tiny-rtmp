@@ -39,16 +39,16 @@ export default (duplex: Duplex) => {
     input.addListener('close', () => { controller.abort(); });
     (async () => {
       await reader.read(1);
-      logger.debug('CLIENT: C0');
+      logger.debug('CLIENT -> SERVER C0');
       await reader.read(1536);
-      logger.debug('CLIENT: C1');
+      logger.debug('CLIENT -> SERVER C1');
       await reader.read(1536);
-      logger.debug('CLIENT: C2');
+      logger.debug('CLIENT -> SERVER C2');
       for await (const message of read_message(reader)) {
         if (message.message_type_id === MessageType.CommandAMF0) {
-          logger.debug(`CLIENT: ${message_name(message)}`, { ... message, data: read_amf0(message.data) });
+          logger.debug(`CLIENT -> SERVER ${message_name(message)}`, { ... message, data: read_amf0(message.data) });
         } else {
-          logger.debug(`CLIENT: ${message_name(message)}`, message);
+          logger.debug(`CLIENT -> SERVER ${message_name(message)}`, message);
         }
       }
     })();
@@ -63,16 +63,16 @@ export default (duplex: Duplex) => {
     output.addListener('close', () => { controller.abort(); });
     (async () => {
       await reader.read(1);
-      logger.debug('SERVER: S0');
+      logger.debug('SERVER -> CLIENT S0');
       await reader.read(1536);
-      logger.debug('SERVER: S1');
+      logger.debug('SERVER -> CLIENT S1');
       await reader.read(1536);
-      logger.debug('SERVER: S2');
+      logger.debug('SERVER -> CLIENT S2');
       for await (const message of read_message(reader)) {
         if (message.message_type_id === MessageType.CommandAMF0) {
-          logger.debug(`SERVER: ${message_name(message)}`, { ... message, data: read_amf0(message.data) });
+          logger.debug(`SERVER -> CLIENT ${message_name(message)}`, { ... message, data: read_amf0(message.data) });
         } else {
-          logger.debug(`SERVER: ${message_name(message)}`, message);
+          logger.debug(`SERVER -> CLIENT ${message_name(message)}`, message);
         }
       }
     })();
