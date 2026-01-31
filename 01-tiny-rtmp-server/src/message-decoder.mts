@@ -7,6 +7,9 @@ export default async function *(iterable: AsyncIterable<Message>): AsyncIterable
       const decoded = DecodedMessage.from(message);
       if (decoded == null) { continue; }
       yield decoded;
-    } catch { continue; }
+    } catch {
+      // FIXME: ここはログが欲しい
+      continue;
+    }
   }
 }
