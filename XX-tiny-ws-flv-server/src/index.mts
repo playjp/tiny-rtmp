@@ -80,11 +80,10 @@ const handle = async (connection: Duplex) => {
   let aacConfigMessage: SerializedMessage | null = null;
 
   try {
-    for await (const decoded of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
-      const message = Message.into(decoded);
-      const reader = new ByteReader(message.data);
+    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
       switch (message.message_type_id) {
         case MessageType.Video: {
+          const reader = new ByteReader(message.data);
           const codec = reader.readU8() & 0x0F;
           if (codec !== 0x07) { continue; } // Accept AVC
           const packetType = reader.readU8();
@@ -92,6 +91,7 @@ const handle = async (connection: Duplex) => {
           break;
         }
         case MessageType.Audio: {
+          const reader = new ByteReader(message.data);
           const codec = reader.readU8() >> 4;
           if (codec !== 10) { continue; } // Accept AAC
           const packetType = reader.readU8();
