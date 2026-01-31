@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp, { AuthConfiguration } from './rtmp-session.mts';
+import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
 import intercepter from './rtmp-intercepter.mts';
 
 const options = {

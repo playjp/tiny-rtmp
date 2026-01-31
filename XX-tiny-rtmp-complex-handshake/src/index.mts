@@ -5,7 +5,7 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 
 import intercepter from '../../01-tiny-rtmp-server/src/rtmp-intercepter.mts';
 
-import handle_rtmp, { AuthConfiguration } from './rtmp-session.mts';
+import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
 
 const options = {
   port: {
