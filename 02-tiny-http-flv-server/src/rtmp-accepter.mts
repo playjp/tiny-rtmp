@@ -10,6 +10,7 @@ import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
+import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 
 import BandwidthEstimator from './bandwidth-estimator.mts';
 
@@ -143,7 +144,7 @@ const TRANSITION = {
         return auth.app(app);
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        // FIXME(LOG): ここはログが欲しい
+        logger.error(`Auth app Failed`);
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -248,7 +249,7 @@ const TRANSITION = {
         return auth.streamKey(streamKey);
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        // FIXME(LOG): ここはログが欲しい
+        logger.error(`Auth streamKey Failed`);
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -363,7 +364,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
             return auth.keepAlive(context.app!, context.streamKey!);
           } catch {
             // keepAlive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
-            // FIXME(LOG): ここはログが欲しい
+            logger.error(`Auth keepAlive Failed`);
             return AuthResult.OK;
           }
         })();

@@ -11,6 +11,7 @@ import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-read
 import write_amf0 from './amf0-writer.mts';
 import MessageBuilder from './message-builder.mts';
 import FLVWriter from './flv-writer.mts';
+import { logger } from './logger.mts';
 
 const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // C0/S0
@@ -142,7 +143,7 @@ const TRANSITION = {
         return auth.app(app);
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        // FIXME(LOG): ここはログが欲しい
+        logger.error(`Auth app Failed`);
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -247,7 +248,7 @@ const TRANSITION = {
         return auth.streamKey(streamKey);
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        // FIXME(LOG): ここはログが欲しい
+        logger.error(`Auth streamKey Failed`);
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -343,7 +344,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
             return auth.keepAlive(context.app!, context.streamKey!);
           } catch {
             // keepAlive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
-            // FIXME(LOG): ここはログが欲しい
+            logger.error(`Auth keepAlive Failed`);
             return AuthResult.OK;
           }
         })();

@@ -2,6 +2,7 @@ import AsyncByteReader from './async-byte-reader.mts';
 import ByteBuilder from './byte-builder.mts';
 import { Message, MessageType } from './message.mts';
 import type { SerializedMessage } from './message.mts';
+import { logger } from './logger.mts';
 
 export class InsufficientChunkError extends Error {
   constructor(message: string, option?: ErrorOptions) {
@@ -46,7 +47,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
     const message_stream_id = fmt === 0 ? await reader.readU32LE() : information?.message_stream_id;
     // fmt === 3 の時は extended_timestamp があるかどうかも以前を引き継ぐ
     const is_extended_timestamp = fmt !== 3 ? timestamp === 0xFFFFFF : information?.is_extended_timestamp;
-    // チャンクに必要な情報がない時は何もできないしパースもできないため、例外で通知する
+    // チャンクに必要な情報がない時は何もできないしパースもできず、そのあとが保証できないので、例外で通知する
     if (timestamp == null || message_length == null || message_type_id == null || message_stream_id == null || is_extended_timestamp == null) {
       throw new InsufficientChunkError('Insufficient Chunk Information in RTMP Message Recieving');
     }
@@ -55,6 +56,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
     let timestamp_delta = null;
     if (fmt === 1 || fmt === 2) {
       if (information?.timestamp == null) {
+        // チャンクに必要な情報がない時は何もできないしパースもできず、そのあとが保証できないので、例外で通知する
         throw new InsufficientChunkError('Insufficient Chunk Information in RTMP Message Recieving');
       }
       timestamp_delta = extended_timestamp ?? timestamp; // // if fmt === 1 or fmt === 2, timestamp is delta
@@ -99,7 +101,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
           }
         }
       } else {
-        // FIXME(LOG): ここはログが欲しい
+        logger.error(`Message Decoding Failed, ignore it`, information);
       }
 
       chunks.delete(cs_id);
