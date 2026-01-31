@@ -5,8 +5,8 @@ import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message from './message-reader.mts';
-import { MessageType, DecodedMessage, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin } from './message.mts';
-import type { Message } from './message.mts';
+import { MessageType, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin } from './message.mts';
+import { Message } from './message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import MessageBuilder from './message-builder.mts';
@@ -386,8 +386,8 @@ export default async (connection: Duplex, auth: AuthConfiguration, output?: Writ
         break;
       case MessageType.DataAMF0: {
         const command = read_amf0(message.data);
-        const data = command.length === 3 && command[0] === '@setDataFrame' && command[1] === 'onMetaData' ? [command[1], command[2]] : command;
-        writer?.write({ ... message, data: write_amf0(... data) });
+        const data = write_amf0(... command.length === 3 && command[0] === '@setDataFrame' && command[1] === 'onMetaData' ? [command[1], command[2]] : command);
+        writer?.write({ ... message, data });
         break;
       }
     }

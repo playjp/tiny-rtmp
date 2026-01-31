@@ -11,6 +11,15 @@ export type Message = {
 
 export type LengthOmittedMessage = Omit<Message, 'message_length'>;
 
+export const Message = {
+  from(message: LengthOmittedMessage): Message {
+    return {
+      ... message,
+      message_length: message.data.byteLength,
+    };
+  }
+};
+
 export const MessageType = {
   SetChunkSize: 1,
   Abort: 2,

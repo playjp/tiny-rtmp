@@ -19,7 +19,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.Abort,
       message_stream_id: 1,
-      message_length: 0,
       data: Buffer.from([]),
     });
 
@@ -44,7 +43,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.Video,
       message_stream_id: 1,
-      message_length: 0,
       data: Buffer.from([]),
     });
 
@@ -68,7 +66,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.Audio,
       message_stream_id: 1,
-      message_length: 0,
       data: Buffer.from([]),
     });
 
@@ -92,7 +89,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.DataAMF0,
       message_stream_id: 1,
-      message_length: 0,
       data: Buffer.from([]),
     });
 
@@ -139,7 +135,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.DataAMF0,
       message_stream_id: 1,
-      message_length: setDataFrame.byteLength,
       data: setDataFrame,
     });
 
@@ -174,7 +169,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.DataAMF0,
       message_stream_id: 1,
-      message_length: setDataFrame.byteLength,
       data: setDataFrame,
     });
 
@@ -216,7 +210,6 @@ describe('Unit Test', () => {
       timestamp: 0,
       message_type_id: MessageType.DataAMF0,
       message_stream_id: 1,
-      message_length: setDataFrame.byteLength,
       data: setDataFrame,
     });
 
@@ -240,7 +233,6 @@ describe('Unit Test', () => {
       timestamp: 12345678,
       message_type_id: MessageType.Video,
       message_stream_id: 1,
-      message_length: 2 ** 16 + 1,
       data: Buffer.alloc(2 ** 16 + 1),
     });
 
@@ -266,7 +258,6 @@ describe('Unit Test', () => {
       timestamp: 12345678,
       message_type_id: MessageType.Audio,
       message_stream_id: 1,
-      message_length: 2 ** 16 + 3,
       data: Buffer.alloc(2 ** 16 + 3),
     });
 
@@ -292,7 +283,6 @@ describe('Unit Test', () => {
       timestamp: 12354678,
       message_type_id: MessageType.DataAMF0,
       message_stream_id: 1,
-      message_length: 2 ** 16 + 2,
       data: Buffer.alloc(2 ** 16 + 2),
     });
 
