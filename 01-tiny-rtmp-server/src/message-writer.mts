@@ -113,8 +113,14 @@ export default class MessageWriter {
   private get_timestamp(message: SendingMessage): number | undefined {
     return this.cs_id_timestamp_information.get(message.chunk_stream_id);
   }
+  private static use_absolute_timestamp(message: SendingMessage, previous?: number): boolean {
+    if (previous == null) { return true; }
+    if (message.timestamp < previous) { return true; }
+    return false;
+  }
   private static calculate_timestamp(message: SendingMessage, previous?: number): number {
-    return (message.timestamp - (previous ?? 0));
+    const diff = (message.timestamp - (previous ?? 0));
+    return diff >= 0 ? diff : message.timestamp;
   }
   private set_timestamp_information(message: SendingMessage): void {
     this.cs_id_timestamp_information.set(message.chunk_stream_id, message.timestamp);
@@ -144,6 +150,7 @@ export default class MessageWriter {
         const message = queue.peek()!;
         const previous = this.get_timestamp(message);
         const timestamp = MessageWriter.calculate_timestamp(message, previous);
+        const is_absolute = MessageWriter.use_absolute_timestamp(message, previous);
         const is_extended_timestamp = timestamp >= 0xFFFFFF;
 
         const builder = new ByteBuilder();
@@ -155,7 +162,7 @@ export default class MessageWriter {
         }
         const chunk = message.binary.subarray(message.offset, next_offset);
 
-        const fmt = message.offset !== 0 ? 3 : previous != null ? 1 : 0;
+        const fmt = message.offset !== 0 ? 3 : !is_absolute ? 1 : 0;
         if (message.chunk_stream_id >= 320) {
           builder.writeU8((fmt << 6) | 1);
           builder.writeU16LE(message.chunk_stream_id - 64);
