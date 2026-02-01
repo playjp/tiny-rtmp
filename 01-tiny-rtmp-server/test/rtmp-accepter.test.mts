@@ -70,7 +70,7 @@ describe('Regression Test', () => {
           type: 'nonprivate',
           flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
           tcUrl: 'rtmp://localhost:1935/app',
-        },
+        }
       );
       writer.write({
         message_type_id: MessageType.CommandAMF0,
@@ -87,7 +87,7 @@ describe('Regression Test', () => {
           data: {
             ack_window_size: 2500000,
           },
-        },
+        }
       );
       expect((await gen.next()).value).toStrictEqual(
         {
@@ -98,7 +98,7 @@ describe('Regression Test', () => {
             ack_window_size: 2500000,
             limit_type: 2,
           },
-        },
+        }
       );
       expect((await gen.next()).value).toStrictEqual(
         {
@@ -109,7 +109,7 @@ describe('Regression Test', () => {
             event_type: UserControlType.StreamBegin,
             message_stream_id: 0,
           },
-        },
+        }
       );
 
       const data = read_amf0((await gen.next()).value.data);
@@ -132,7 +132,7 @@ describe('Regression Test', () => {
       const connect = write_amf0(
         'createStream',
         4,
-        null,
+        null
       );
       writer.write({
         message_type_id: MessageType.CommandAMF0,
@@ -150,7 +150,7 @@ describe('Regression Test', () => {
             event_type: UserControlType.StreamBegin,
             message_stream_id: 1,
           },
-        },
+        }
       );
 
       const data = read_amf0((await gen.next()).value.data);
@@ -169,7 +169,7 @@ describe('Regression Test', () => {
         5,
         null,
         'key',
-        'live',
+        'live'
       );
       writer.write({
         message_type_id: MessageType.CommandAMF0,

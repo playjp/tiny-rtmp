@@ -1,4 +1,4 @@
-class LinkedListNode<T> {
+class LinkedListNode<T,> {
   prev: LinkedListNode<T> | null = null;
   next: LinkedListNode<T> | null = null;
   elem: T | null;
@@ -8,7 +8,7 @@ class LinkedListNode<T> {
   }
 }
 
-export default class Queue<T> {
+export default class Queue<T,> {
   private begin: LinkedListNode<T>;
   private end: LinkedListNode<T>;
 
