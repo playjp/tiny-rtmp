@@ -1,7 +1,7 @@
 import ByteBuilder from './byte-builder.mts';
 import { Message } from './message.mts';
-import type { SerializedMessage } from './message.mts';
 import { MessageType } from './message.mts';
+import Queue from './queue.mts';
 
 export type MessageWithTrack = Message & {
   track?: number;
@@ -32,7 +32,7 @@ export default class MessageWriter {
   private sending_signal: AbortSignal;
   private sending_promise: Promise<void>;
   private sending_notify: () => void;
-  private sending = new Set<SendingMessage>();
+  private sending = new Queue<SendingMessage>();
 
   private ended_boolean: boolean;
   private ended_promise: Promise<void>;
@@ -118,70 +118,76 @@ export default class MessageWriter {
       this.sending_promise = promise;
       this.sending_notify = resolve;
 
-      if (this.sending.size === 0 && this.ended_boolean) {
+      if (this.sending.empty() && this.ended_boolean) {
         this.ended_notify();
         return;
       }
 
-      while (this.sending.size > 0) {
-        for (const message of Array.from(this.sending)) { //
-          const info = this.get_timestamp_information(message);
-          const is_extended_timestamp = MessageWriter.is_extended_timestamp_required(message, info);
-          const timestamp = MessageWriter.calculate_timestamp(message, info);
+      const swap = new Queue<SendingMessage>();
+      while (!this.sending.empty()) {
+        const message = this.sending.pop()!;
 
-          const builder = new ByteBuilder();
-          const chunk = message.binary.subarray(message.offset, Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size));
+        const info = this.get_timestamp_information(message);
+        const is_extended_timestamp = MessageWriter.is_extended_timestamp_required(message, info);
+        const timestamp = MessageWriter.calculate_timestamp(message, info);
 
-          const fmt = message.offset !== 0 ? 3 : info != null ? 1 : 0;
-          if (message.chunk_stream_id >= 320) {
-            builder.writeU8((fmt << 6) | 1);
-            builder.writeU16LE(message.chunk_stream_id - 64);
-          } else if (message.chunk_stream_id >= 64) {
-            builder.writeU8((fmt << 6) | 0);
-            builder.writeU8(message.chunk_stream_id - 64);
-          } else {
-            builder.writeU8((fmt << 6) | message.chunk_stream_id);
-          }
+        const builder = new ByteBuilder();
+        const chunk = message.binary.subarray(message.offset, Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size));
 
-          if (fmt === 3 || fmt === 1) {
-            if (fmt === 1) {
-              builder.writeU24BE(is_extended_timestamp ? 0xFFFFFF : timestamp);
-              builder.writeU24BE(message.binary.byteLength);
-              builder.writeU8(message.message_type_id);
-            }
-            if (is_extended_timestamp) {
-              builder.writeU32BE(timestamp);
-            }
-            builder.write(chunk);
-          } else {
+        const fmt = message.offset !== 0 ? 3 : info != null ? 1 : 0;
+        if (message.chunk_stream_id >= 320) {
+          builder.writeU8((fmt << 6) | 1);
+          builder.writeU16LE(message.chunk_stream_id - 64);
+        } else if (message.chunk_stream_id >= 64) {
+          builder.writeU8((fmt << 6) | 0);
+          builder.writeU8(message.chunk_stream_id - 64);
+        } else {
+          builder.writeU8((fmt << 6) | message.chunk_stream_id);
+        }
+
+        if (fmt === 3 || fmt === 1) {
+          if (fmt === 1) {
             builder.writeU24BE(is_extended_timestamp ? 0xFFFFFF : timestamp);
             builder.writeU24BE(message.binary.byteLength);
             builder.writeU8(message.message_type_id);
-            builder.writeU32LE(message.message_stream_id);
-            if (is_extended_timestamp) {
-              builder.writeU32BE(timestamp);
-            }
-            builder.write(chunk);
+          }
+          if (is_extended_timestamp) {
+            builder.writeU32BE(timestamp);
+          }
+          builder.write(chunk);
+        } else {
+          builder.writeU24BE(is_extended_timestamp ? 0xFFFFFF : timestamp);
+          builder.writeU24BE(message.binary.byteLength);
+          builder.writeU8(message.message_type_id);
+          builder.writeU32LE(message.message_stream_id);
+          if (is_extended_timestamp) {
+            builder.writeU32BE(timestamp);
+          }
+          builder.write(chunk);
+        }
+
+        yield builder.build();
+
+        const next = Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size)
+        if (next < (message.binary.byteLength)) {
+          message.offset = next;
+          swap.push(message);
+        } else {
+          if (message.message_type_id === MessageType.SetChunkSize) {
+            this.chunk_maximum_size = message.data.chunk_size;
           }
 
-          yield builder.build();
-
-          const next = Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size)
-          if (next < (message.binary.byteLength)) {
-            message.offset = next;
+          if (message.message_type_id === MessageType.Abort) {
+            this.delete_timestamp_information(message);
           } else {
-            if (message.message_type_id === MessageType.SetChunkSize) {
-              this.chunk_maximum_size = message.data.chunk_size;
-            }
-
-            if (message.message_type_id === MessageType.Abort) {
-              this.delete_timestamp_information(message);
-            } else {
-              this.set_timestamp_information(message, info ?? undefined);
-            }
-            this.sending.delete(message);
+            this.set_timestamp_information(message, info ?? undefined);
           }
         }
+      }
+      this.sending = swap;
+
+      if (!this.sending.empty()) {
+        this.sending_notify();
       }
     }
   }
@@ -190,7 +196,7 @@ export default class MessageWriter {
     if (this.sending_signal.aborted) { return; }
 
     const cs_id = this.get_cs_id(message);
-    this.sending.add({
+    this.sending.push({
       ... message,
       binary: Message.into(message).data,
       chunk_stream_id: cs_id,
