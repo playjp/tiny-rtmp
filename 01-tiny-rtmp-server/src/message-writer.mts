@@ -6,6 +6,14 @@ import Queue from './queue.mts';
 export type MessageWithTrack = Message & {
   track?: number;
 };
+export const MessageWithTrack = {
+  from(message: Message, track?: number): MessageWithTrack {
+    return {
+      ... message,
+      track,
+    };
+  }
+};
 
 type TimestampInformation = {
   timestamp: number;
