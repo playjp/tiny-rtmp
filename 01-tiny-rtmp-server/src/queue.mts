@@ -42,6 +42,10 @@ export default class Queue<T> {
     node.next = this.end;
   }
 
+  public peek(): T | null {
+    return this.begin.next?.elem ?? null;
+  }
+
   public pop(): T | null {
     const node = this.begin.next!;
     if (node == this.end) { return null; }
