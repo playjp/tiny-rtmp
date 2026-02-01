@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 
 import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
 
@@ -97,7 +98,8 @@ const handle = async (connection: Duplex) => {
       rtmp_to_llhls.feed(message);
     }
   } catch (e) {
-    console.error(e);
+    const message = e instanceof Error ? e.message : String(e);
+    logger.error(`RTMP session error: ${message}`, e instanceof Error ? { stack: e.stack } : undefined);
   } finally {
     rtmp_to_llhls = null;
   }

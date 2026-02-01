@@ -9,6 +9,7 @@ import { MessageType, type SerializedMessage } from '../../01-tiny-rtmp-server/s
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 
 import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
 
@@ -134,7 +135,8 @@ const handle = async (connection: Duplex) => {
       };
     }
   } catch (e) {
-    console.error(e);
+    const message = e instanceof Error ? e.message : String(e);
+    logger.error(`RTMP session error: ${message}`, e instanceof Error ? { stack: e.stack } : undefined);
   } finally {
     for (const [,end] of streaming.values()) { end(); }
   }
