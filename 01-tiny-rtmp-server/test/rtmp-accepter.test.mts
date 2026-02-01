@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { Duplex, PassThrough, Writable } from 'stream';
+import { Duplex, PassThrough, Writable } from 'node:stream';
 
 import AsyncByteReader from '../src/async-byte-reader.mts';
 import read_amf0 from '../src/amf0-reader.mts';
