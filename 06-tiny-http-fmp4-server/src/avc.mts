@@ -429,7 +429,6 @@ export const read_pic_parameter_set_data = (reader: BitReader): PictureParameter
           slice_group_map_type,
           slice_group_change_rate_minus1,
         } as const;
-
       } else if (slice_group_map_type === 6) {
         const pic_size_in_map_units_minus1 = reader.readUEG();
         for (let i = 0; i <= pic_size_in_map_units_minus1; i++) {
