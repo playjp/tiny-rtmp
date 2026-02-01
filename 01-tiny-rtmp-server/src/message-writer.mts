@@ -204,6 +204,10 @@ export default class MessageWriter {
     this.sending_notify();
   }
 
+  public [Symbol.dispose](): void {
+    this.end();
+  }
+
   public ended(): Promise<void> {
     return this.ended_promise;
   }

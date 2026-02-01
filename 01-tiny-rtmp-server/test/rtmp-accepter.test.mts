@@ -17,7 +17,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const writer = new MessageWriter();
+    using writer = new MessageWriter();
     (async () => {
       for await (const chunk of writer.retrieve()) {
         input.write(chunk);

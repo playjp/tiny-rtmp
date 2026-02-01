@@ -360,7 +360,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   connection.pipe(new Writable({
     write(data, _, cb) { reader.feed(data); cb(); },
   }));
-  const writer = new MessageWriter({ signal: controller.signal });
+  using writer = new MessageWriter({ signal: controller.signal });
   (async () => {
     for await (const chunk of writer.retrieve()) {
       if (connection.writableEnded) { break; }

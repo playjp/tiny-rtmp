@@ -309,7 +309,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       cb();
     },
   }));
-  const writer = new MessageWriter({ signal: controller.signal });
+  using writer = new MessageWriter({ signal: controller.signal });
   (async () => {
     for await (const chunk of writer.retrieve()) {
       if (connection.writableEnded) { break; }

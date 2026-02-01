@@ -23,7 +23,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const writer = new MessageWriter();
+    using writer = new MessageWriter();
     (async () => {
       for await (const chunk of writer.retrieve()) {
         input.write(chunk);
@@ -200,7 +200,7 @@ describe('Regression Test', () => {
     const connection_1 = Duplex.from({ readable: input_1, writable: output_1 });
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
-    const writer_1 = new MessageWriter();
+    using writer_1 = new MessageWriter();
     (async () => {
       for await (const chunk of writer_1.retrieve()) {
         input_1.write(chunk);
@@ -218,7 +218,7 @@ describe('Regression Test', () => {
     const connection_2 = Duplex.from({ readable: input_2, writable: output_2 });
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
-    const writer_2 = new MessageWriter();
+    using writer_2 = new MessageWriter();
     (async () => {
       for await (const chunk of writer_2.retrieve()) {
         input_2.write(chunk);
@@ -402,7 +402,7 @@ describe('Regression Test', () => {
     const connection_1 = Duplex.from({ readable: input_1, writable: output_1 });
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
-    const writer_1 = new MessageWriter();
+    using writer_1 = new MessageWriter();
     (async () => {
       for await (const chunk of writer_1.retrieve()) {
         input_1.write(chunk);
@@ -420,7 +420,7 @@ describe('Regression Test', () => {
     const connection_2 = Duplex.from({ readable: input_2, writable: output_2 });
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
-    const writer_2 = new MessageWriter();
+    using writer_2 = new MessageWriter();
     (async () => {
       for await (const chunk of writer_2.retrieve()) {
         input_2.write(chunk);
@@ -597,7 +597,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const writer = new MessageWriter();
+    using writer = new MessageWriter();
     (async () => {
       for await (const chunk of writer.retrieve()) {
         input.write(chunk);
@@ -771,7 +771,7 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const writer = new MessageWriter();
+    using writer = new MessageWriter();
     (async () => {
       for await (const chunk of writer.retrieve()) {
         input.write(chunk);
