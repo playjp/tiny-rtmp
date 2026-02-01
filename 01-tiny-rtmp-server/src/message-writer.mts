@@ -12,9 +12,8 @@ export const MessageWithTrack = {
       ... message,
       track,
     };
-  }
+  },
 };
-
 
 type SendingMessage = Message & {
   chunk_stream_id: number;
@@ -236,13 +235,13 @@ export default class MessageWriter {
 
   public write(message: MessageWithTrack): void {
     if (this.sending_signal.aborted) { return; }
-    if (this.ended_boolean) { return;}
+    if (this.ended_boolean) { return; }
 
     const cs_id = this.get_cs_id(message);
     if (!this.sending_cs_id_queues.has(cs_id)) {
       this.sending_cs_id_queues.set(cs_id, new Queue<SendingMessage>());
     }
-    const queue = this.sending_cs_id_queues.get(cs_id)!
+    const queue = this.sending_cs_id_queues.get(cs_id)!;
     const sending = {
       ... message,
       binary: Message.into(message).data,
