@@ -2,6 +2,9 @@ import ByteBuilder from './byte-builder.mts';
 import { Message } from './message.mts';
 import { MessageType } from './message.mts';
 
+export type MessageWithTrack = Message & {
+  track?: number;
+};
 
 type TimestampInformation = {
   timestamp: number;
@@ -13,14 +16,15 @@ export default class MessageBuilder {
   private cs_id_map = new Map<number, number>();
   private cs_id_timestamp_information = new Map<number, TimestampInformation>();
 
-  private static cs_id_hash(message: Message, track: number = 0): number {
-    if (MessageBuilder.use_system_cs_id(message) != null) {
-      track = 0; // system 予約されている場合は track による多重化を行わない
-    }
+  private static cs_id_hash(message: MessageWithTrack): number {
     const { message_stream_id, message_type_id } = message;
-    return message_stream_id * (2 ** 16) + message_type_id * (2 ** 8) + track;
+    if (MessageBuilder.use_system_cs_id(message) != null) {
+      // システムのメッセージの場合は track による cs_id の多重化はしない
+      return message_stream_id * (2 ** 16) + message_type_id * (2 ** 8) + 0;
+    }
+    return message_stream_id * (2 ** 16) + message_type_id * (2 ** 8) + (message.track ?? 0);
   }
-  private static use_system_cs_id({ message_type_id }: Message): number | null {
+  private static use_system_cs_id({ message_type_id }: MessageWithTrack): number | null {
     // Protocol Control Message と User Control Message は cs_id は必ず 2 を使う
     switch (message_type_id) {
       // Protocol Control Message
@@ -36,8 +40,8 @@ export default class MessageBuilder {
     return null;
   }
 
-  private get_cs_id(message: Message, track: number = 0): number {
-    const hash = MessageBuilder.cs_id_hash(message, track);
+  private get_cs_id(message: MessageWithTrack): number {
+    const hash = MessageBuilder.cs_id_hash(message);
     if (this.cs_id_map.has(hash)) {
       return this.cs_id_map.get(hash)!;
     }
@@ -46,26 +50,26 @@ export default class MessageBuilder {
     return cs_id;
   }
 
-  private get_timestamp_information(message: Message): TimestampInformation | undefined {
+  private get_timestamp_information(message: MessageWithTrack): TimestampInformation | undefined {
     return this.cs_id_timestamp_information.get(MessageBuilder.cs_id_hash(message));
   }
-  private static calculate_timestamp(message: Message, previous?: TimestampInformation): number {
+  private static calculate_timestamp(message: MessageWithTrack, previous?: TimestampInformation): number {
     return (message.timestamp - (previous?.timestamp ?? 0));
   }
-  private static is_extended_timestamp_required(message: Message, previous?: TimestampInformation): boolean {
+  private static is_extended_timestamp_required(message: MessageWithTrack, previous?: TimestampInformation): boolean {
     return MessageBuilder.calculate_timestamp(message, previous) >= 0xFFFFFF;
   };
-  private set_timestamp_information(message: Message, previous?: TimestampInformation): void {
+  private set_timestamp_information(message: MessageWithTrack, previous?: TimestampInformation): void {
     this.cs_id_timestamp_information.set(MessageBuilder.cs_id_hash(message), {
       timestamp: message.timestamp,
       is_extended_timestamp: MessageBuilder.is_extended_timestamp_required(message, previous),
     });
   }
 
-  public build(message: Message, track: number = 0): Buffer[] {
+  public build(message: MessageWithTrack): Buffer[] {
     const chunks: Buffer[] = [];
 
-    const cs_id = this.get_cs_id(message, track);
+    const cs_id = this.get_cs_id(message);
     const previous_timestamp_information = this.get_timestamp_information(message);
     const is_extended_timestamp = MessageBuilder.is_extended_timestamp_required(message, previous_timestamp_information);
     const timestamp = MessageBuilder.calculate_timestamp(message, previous_timestamp_information);
