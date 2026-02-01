@@ -12,6 +12,10 @@ export type RTMPSession = UpdatableRTMPSession & {
 
 const session = new AsyncLocalStorage<RTMPSession>();
 
+export const initialized = (): boolean => {
+  return session.getStore() != null;
+};
+
 export const load = (): RTMPSession | null => {
   return session.getStore() ?? null;
 };

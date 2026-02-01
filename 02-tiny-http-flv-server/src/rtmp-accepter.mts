@@ -11,7 +11,7 @@ import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
-import { load, store, type RTMPSession } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import { load, store, initialized, type RTMPSession } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 import BandwidthEstimator from './bandwidth-estimator.mts';
 
@@ -316,7 +316,7 @@ export type RTMPOption = {
 };
 
 export default async function* handle_rtmp(connection: Duplex, option?: RTMPOption): AsyncIterable<Message> {
-  if (load() == null) { throw new Error('RTMP session not initialized.'); }
+  if (!initialized()) { throw new Error('RTMP session not initialized.'); }
 
   const auth = option?.auth ?? AuthConfiguration.noAuth();
   const controller = new AbortController();

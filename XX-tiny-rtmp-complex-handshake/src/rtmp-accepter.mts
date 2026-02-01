@@ -12,7 +12,7 @@ import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import FLVWriter from '../../01-tiny-rtmp-server/src/flv-writer.mts';
 import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
-import { load, store, type RTMPSession } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import { load, store, initialized, type RTMPSession } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 const simple_handshake_C1S1C2S2 = async (c1: Buffer, reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // simple handshake
@@ -374,7 +374,7 @@ const TRANSITION = {
 } as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => MaybePromise<(typeof STATE)[keyof typeof STATE]>>;
 
 async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
-  if (load() == null) { throw new Error('RTMP session not initialized.'); }
+  if (!initialized()) { throw new Error('RTMP session not initialized.'); }
 
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });

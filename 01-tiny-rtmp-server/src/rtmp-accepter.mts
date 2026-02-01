@@ -12,7 +12,7 @@ import write_amf0 from './amf0-writer.mts';
 import MessageBuilder from './message-builder.mts';
 import FLVWriter from './flv-writer.mts';
 import { logger } from './logger.mts';
-import { load, store, type RTMPSession } from './rtmp-session.mts';
+import { load, store, initialized, type RTMPSession } from './rtmp-session.mts';
 
 const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // C0/S0
@@ -300,7 +300,7 @@ const TRANSITION = {
 } as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => MaybePromise<(typeof STATE)[keyof typeof STATE]>>;
 
 async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
-  if (load() == null) { throw new Error('RTMP session not initialized.'); }
+  if (!initialized()) { throw new Error('RTMP session not initialized.'); }
 
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
