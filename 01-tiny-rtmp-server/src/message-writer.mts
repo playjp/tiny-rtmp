@@ -15,10 +15,6 @@ export const MessageWithTrack = {
   }
 };
 
-type TimestampInformation = {
-  timestamp: number;
-  is_extended_timestamp: boolean;
-};
 
 type SendingMessage = Message & {
   chunk_stream_id: number;
@@ -34,7 +30,7 @@ export default class MessageWriter {
   private chunk_maximum_size = 128;
   private next_cs_id = 3;
   private cs_id_map = new Map<number, number>();
-  private cs_id_timestamp_information = new Map<number, TimestampInformation>();
+  private cs_id_timestamp_information = new Map<number, number>();
 
   private sending_controller: AbortController = new AbortController();
   private sending_signal: AbortSignal;
@@ -95,23 +91,17 @@ export default class MessageWriter {
     return cs_id;
   }
 
-  private get_timestamp_information(message: SendingMessage): TimestampInformation | undefined {
+  private get_timestamp(message: SendingMessage): number | undefined {
     return this.cs_id_timestamp_information.get(message.chunk_stream_id);
   }
-  private static calculate_timestamp(message: SendingMessage, previous?: TimestampInformation): number {
-    return (message.timestamp - (previous?.timestamp ?? 0));
+  private static calculate_timestamp(message: SendingMessage, previous?: number): number {
+    return (message.timestamp - (previous ?? 0));
   }
-  private static is_extended_timestamp_required(message: SendingMessage, previous?: TimestampInformation): boolean {
-    return MessageWriter.calculate_timestamp(message, previous) >= 0xFFFFFF;
-  };
-  private set_timestamp_information(message: SendingMessage, previous?: TimestampInformation): void {
-    this.cs_id_timestamp_information.set(message.chunk_stream_id, {
-      timestamp: message.timestamp,
-      is_extended_timestamp: MessageWriter.is_extended_timestamp_required(message, previous),
-    });
+  private set_timestamp_information(message: SendingMessage): void {
+    this.cs_id_timestamp_information.set(message.chunk_stream_id, message.timestamp);
   }
-  private delete_timestamp_information(message: SendingMessage): void {
-    this.cs_id_timestamp_information.delete(message.chunk_stream_id);
+  private delete_timestamp_information(cs_id: number): void {
+    this.cs_id_timestamp_information.delete(cs_id);
   }
 
   public async *retrieve(): AsyncIterable<Buffer> {
@@ -135,14 +125,14 @@ export default class MessageWriter {
       while (!this.sending.empty()) {
         const message = this.sending.pop()!;
 
-        const info = this.get_timestamp_information(message);
-        const is_extended_timestamp = MessageWriter.is_extended_timestamp_required(message, info);
-        const timestamp = MessageWriter.calculate_timestamp(message, info);
+        const previous = this.get_timestamp(message);
+        const timestamp = MessageWriter.calculate_timestamp(message, previous);
+        const is_extended_timestamp = timestamp >= 0xFFFFFF;
 
         const builder = new ByteBuilder();
         const chunk = message.binary.subarray(message.offset, Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size));
 
-        const fmt = message.offset !== 0 ? 3 : info != null ? 1 : 0;
+        const fmt = message.offset !== 0 ? 3 : previous != null ? 1 : 0;
         if (message.chunk_stream_id >= 320) {
           builder.writeU8((fmt << 6) | 1);
           builder.writeU16LE(message.chunk_stream_id - 64);
@@ -186,9 +176,9 @@ export default class MessageWriter {
           }
 
           if (message.message_type_id === MessageType.Abort) {
-            this.delete_timestamp_information(message);
+            this.delete_timestamp_information(message.data.chunk_stream_id);
           } else {
-            this.set_timestamp_information(message, info ?? undefined);
+            this.set_timestamp_information(message);
           }
         }
       }
