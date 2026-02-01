@@ -44,10 +44,10 @@ export default class FLVWriter {
     const header = Buffer.alloc(11);
     header.writeUIntBE(message.message_type_id, 0, 1);
     header.writeUIntBE(message.data.byteLength, 1, 3);
-    header.writeUInt8(Math.floor(message.timestamp / (2 ** 16)) % (2 ** 8), 4);
-    header.writeUInt8(Math.floor(message.timestamp / (2 **  8)) % (2 ** 8), 5);
-    header.writeUInt8(Math.floor(message.timestamp / (2 **  0)) % (2 ** 8), 6);
-    header.writeUInt8(Math.floor(message.timestamp / (2 ** 24)) % (2 ** 8), 7);
+    header.writeUInt8(Math.floor((message.timestamp % (2 ** 32)) / (2 ** 16)) % (2 ** 8), 4);
+    header.writeUInt8(Math.floor((message.timestamp % (2 ** 32)) / (2 **  8)) % (2 ** 8), 5);
+    header.writeUInt8(Math.floor((message.timestamp % (2 ** 32)) / (2 **  0)) % (2 ** 8), 6);
+    header.writeUInt8(Math.floor((message.timestamp % (2 ** 32)) / (2 ** 24)) % (2 ** 8), 7);
     header.writeUIntBE(0, 8, 3);
     this.output.write(header);
 
