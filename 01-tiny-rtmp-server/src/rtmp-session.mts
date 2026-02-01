@@ -24,7 +24,7 @@ export const store = (update: UpdatableRTMPSession) => {
   Object.assign(session.getStore() ?? {}, update);
 };
 
-export const run = <T,>(cb: () => T): T => {
+export const run = <T>(cb: () => T): T => {
   const init = { sessionId: randomUUID() };
   return session.run(init, cb);
 };

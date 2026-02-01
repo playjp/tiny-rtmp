@@ -101,7 +101,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
           }
         }
       } else {
-        logger.error(`Message Decoding Failed, ignore it`, information);
+        logger.error('Message Decoding Failed, ignore it', information);
       }
 
       chunks.delete(cs_id);

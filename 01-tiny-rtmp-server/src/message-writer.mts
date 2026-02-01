@@ -16,7 +16,7 @@ type SendingMessage = Message & {
   chunk_stream_id: number;
   binary: Buffer;
   offset: number;
-}
+};
 
 export type MessageWriterOption = {
   signal?: AbortSignal;
@@ -28,7 +28,7 @@ export default class MessageWriter {
   private cs_id_map = new Map<number, number>();
   private cs_id_timestamp_information = new Map<number, TimestampInformation>();
 
-  private sending_controller: AbortController = new AbortController();;
+  private sending_controller: AbortController = new AbortController();
   private sending_signal: AbortSignal;
   private sending_promise: Promise<void>;
   private sending_notify: () => void;
@@ -168,7 +168,7 @@ export default class MessageWriter {
 
         yield builder.build();
 
-        const next = Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size)
+        const next = Math.min(message.binary.byteLength, message.offset + this.chunk_maximum_size);
         if (next < (message.binary.byteLength)) {
           message.offset = next;
           swap.push(message);

@@ -4,8 +4,8 @@ import { load } from './rtmp-session.mts';
 export const LogLevel = {
   TRACE: 0,
   DEBUG: 1,
-  INFO:  2,
-  WARN:  3,
+  INFO: 2,
+  WARN: 3,
   ERROR: 4,
   FATAL: 5,
 } as const;
@@ -39,10 +39,10 @@ const flat = (obj: unknown): string => {
 
 const datetime = (): string => {
   const date = new Date();
-  const date_string = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
-  const time_string = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date.getMilliseconds().toString().padStart(3, '0')}`
+  const date_string = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+  const time_string = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date.getMilliseconds().toString().padStart(3, '0')}`;
   return `${date_string} ${time_string}`;
-}
+};
 
 export class ConsoleLogger implements Logger {
   private loglevel: number;

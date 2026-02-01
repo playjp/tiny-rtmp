@@ -1,9 +1,9 @@
-import { Duplex, PassThrough, Writable } from "stream";
-import AsyncByteReader from "./async-byte-reader.mts";
-import read_message from "./message-reader.mts";
-import read_amf0 from "./amf0-reader.mts";
-import { logger } from "./logger.mts";
-import { Message, MessageType } from "./message.mts";
+import { Duplex, PassThrough, Writable } from 'stream';
+import AsyncByteReader from './async-byte-reader.mts';
+import read_message from './message-reader.mts';
+import read_amf0 from './amf0-reader.mts';
+import { logger } from './logger.mts';
+import { Message, MessageType } from './message.mts';
 
 const message_name = (message: Message): string => {
   switch (message.message_type_id) {
@@ -82,4 +82,4 @@ export default (duplex: Duplex) => {
   output.pipe(duplex);
 
   return proxy;
-}
+};
