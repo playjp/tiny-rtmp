@@ -6,7 +6,7 @@ import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
-import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
+import MessageWriter from '../../01-tiny-rtmp-server/src/message-writer.mts';
 
 const handle_rtmp_import = async () => {
   vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
@@ -23,7 +23,12 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const builder = new MessageBuilder();
+    const writer = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer.retrieve()) {
+        input.write(chunk);
+      }
+    })();
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {
@@ -70,13 +75,12 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
           message_type_id: MessageType.WindowAcknowledgementSize,
@@ -131,13 +135,12 @@ describe('Regression Test', () => {
         4,
         null,
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
           message_type_id: MessageType.UserControl,
@@ -167,13 +170,12 @@ describe('Regression Test', () => {
         'key',
         'live',
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 1,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         'onStatus',
@@ -198,7 +200,12 @@ describe('Regression Test', () => {
     const connection_1 = Duplex.from({ readable: input_1, writable: output_1 });
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
-    const builder_1 = new MessageBuilder();
+    const writer_1 = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer_1.retrieve()) {
+        input_1.write(chunk);
+      }
+    })();
 
     run(() => {
       const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key') });
@@ -211,17 +218,22 @@ describe('Regression Test', () => {
     const connection_2 = Duplex.from({ readable: input_2, writable: output_2 });
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
-    const builder_2 = new MessageBuilder();
+    const writer_2 = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer_2.retrieve()) {
+        input_2.write(chunk);
+      }
+    })();
 
     run(() => {
       const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key') });
       (async () => { for await (const _ of handler_2) {} })(); // do background
     });
 
-    const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
+    const inout = [[input_1, reader_1, writer_1], [input_2, reader_2, writer_2]] satisfies [PassThrough, AsyncByteReader, MessageWriter][];
 
     for (let i = 0; i < inout.length; i++) {
-      const [input, reader, builder] = inout[i];
+      const [input, reader, writer] = inout[i];
       /*
       * Simple handshake
       */
@@ -260,13 +272,12 @@ describe('Regression Test', () => {
             tcUrl: 'rtmp://localhost:1935/app',
           },
         );
-        const chunks = builder.build({
+        writer.write({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 0,
           timestamp: 0,
           data: connect,
         });
-        for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
             message_type_id: MessageType.WindowAcknowledgementSize,
@@ -321,13 +332,12 @@ describe('Regression Test', () => {
           4,
           null,
         );
-        const chunks = builder.build({
+        writer.write({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 0,
           timestamp: 0,
           data: connect,
         });
-        for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
             message_type_id: MessageType.UserControl,
@@ -357,13 +367,12 @@ describe('Regression Test', () => {
           'key',
           'live',
         );
-        const chunks = builder.build({
+        writer.write({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 1,
           timestamp: 0,
           data: connect,
         });
-        for (const chunk of chunks) { input.write(chunk); }
         const data = read_amf0((await gen.next()).value.data);
         const expected = [
           'onStatus',
@@ -393,7 +402,12 @@ describe('Regression Test', () => {
     const connection_1 = Duplex.from({ readable: input_1, writable: output_1 });
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
-    const builder_1 = new MessageBuilder();
+    const writer_1 = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer_1.retrieve()) {
+        input_1.write(chunk);
+      }
+    })();
 
     run(() => {
       const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key0') });
@@ -406,17 +420,22 @@ describe('Regression Test', () => {
     const connection_2 = Duplex.from({ readable: input_2, writable: output_2 });
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
-    const builder_2 = new MessageBuilder();
+    const writer_2 = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer_2.retrieve()) {
+        input_2.write(chunk);
+      }
+    })();
 
     run(() => {
       const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key1') });
       (async () => { for await (const _ of handler_2) {} })(); // do background
     });
 
-    const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
+    const inout = [[input_1, reader_1, writer_1], [input_2, reader_2, writer_2]] satisfies [PassThrough, AsyncByteReader, MessageWriter][];
 
     for (let i = 0; i < inout.length; i++) {
-      const [input, reader, builder] = inout[i];
+      const [input, reader, writer] = inout[i];
       /*
       * Simple handshake
       */
@@ -455,13 +474,12 @@ describe('Regression Test', () => {
             tcUrl: 'rtmp://localhost:1935/app',
           },
         );
-        const chunks = builder.build({
+        writer.write({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 0,
           timestamp: 0,
           data: connect,
         });
-        for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
             message_type_id: MessageType.WindowAcknowledgementSize,
@@ -516,13 +534,12 @@ describe('Regression Test', () => {
           4,
           null,
         );
-        const chunks = builder.build({
+        writer.write({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 0,
           timestamp: 0,
           data: connect,
         });
-        for (const chunk of chunks) { input.write(chunk); }
         expect((await gen.next()).value).toStrictEqual(
           {
             message_type_id: MessageType.UserControl,
@@ -552,13 +569,12 @@ describe('Regression Test', () => {
           `key${i}`,
           'live',
         );
-        const chunks = builder.build({
+        writer.write({
           message_type_id: MessageType.CommandAMF0,
           message_stream_id: 1,
           timestamp: 0,
           data: connect,
         });
-        for (const chunk of chunks) { input.write(chunk); }
         const data = read_amf0((await gen.next()).value.data);
         const expected = [
           'onStatus',
@@ -581,7 +597,12 @@ describe('Regression Test', () => {
     const connection = Duplex.from({ readable: input, writable: output });
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const builder = new MessageBuilder();
+    const writer = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer.retrieve()) {
+        input.write(chunk);
+      }
+    })();
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {
@@ -628,13 +649,12 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
           message_type_id: MessageType.WindowAcknowledgementSize,
@@ -689,13 +709,12 @@ describe('Regression Test', () => {
         4,
         null,
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
           message_type_id: MessageType.UserControl,
@@ -725,13 +744,12 @@ describe('Regression Test', () => {
         'inavlid',
         'live',
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 1,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       const data = read_amf0((await gen.next()).value.data);
       const expected = [
         'onStatus',
@@ -751,9 +769,14 @@ describe('Regression Test', () => {
     const input = new PassThrough();
     const output = new PassThrough();
     const connection = Duplex.from({ readable: input, writable: output });
-    const reader = new AsyncByteReader();
+    using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
-    const builder = new MessageBuilder();
+    const writer = new MessageWriter();
+    (async () => {
+      for await (const chunk of writer.retrieve()) {
+        input.write(chunk);
+      }
+    })();
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {
@@ -800,13 +823,12 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
         },
       );
-      const chunks = builder.build({
+      writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
         timestamp: 0,
         data: connect,
       });
-      for (const chunk of chunks) { input.write(chunk); }
       expect((await gen.next()).value).toStrictEqual(
         {
           message_type_id: MessageType.WindowAcknowledgementSize,

@@ -9,7 +9,7 @@ import { MessageType, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin }
 import type { Message } from './message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
-import MessageBuilder from './message-builder.mts';
+import MessageWriter from './message-writer.mts';
 import FLVWriter from './flv-writer.mts';
 import { logger } from './logger.mts';
 import { load, store, initialized, type RTMPSession } from './rtmp-session.mts';
@@ -117,7 +117,7 @@ const need_yield = (state: (typeof STATE)[keyof typeof STATE], message: Message)
   }
 };
 const TRANSITION = {
-  [STATE.WAITING_CONNECT]: async (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => {
+  [STATE.WAITING_CONNECT]: async (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CONNECT; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CONNECT; }
     const command = read_amf0(message.data);
@@ -142,18 +142,9 @@ const TRANSITION = {
     const connectAccepted = authResult === AuthResult.OK;
 
     // Connect を伝達する前に WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin を伝達する
-    {
-      const chunks = builder.build(WindowAcknowledgementSize.from({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, timestamp: 0 }));
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
-    {
-      const chunks = builder.build(SetPeerBandwidth.from({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, limit_type: 2, timestamp: 0 }));
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
-    {
-      const chunks = builder.build(StreamBegin.from({ message_stream_id: 0, timestamp: 0 }));
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
+    writer.write(WindowAcknowledgementSize.from({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, timestamp: 0 }));
+    writer.write(SetPeerBandwidth.from({ ack_window_size: WINDOW_ACKNOWLEDGE_SIZE, limit_type: 2, timestamp: 0 }));
+    writer.write(StreamBegin.from({ message_stream_id: 0, timestamp: 0 }));
 
     const status = connectAccepted ? '_result' : '_error';
     const server = connectAccepted ? {
@@ -175,15 +166,12 @@ const TRANSITION = {
     };
 
     // connect のレスポンス
-    {
-      const chunks = builder.build({
-        message_type_id: MessageType.CommandAMF0,
-        message_stream_id: 0,
-        timestamp: 0,
-        data: write_amf0(status, transaction_id, server, info),
-      });
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
+    writer.write({
+      message_type_id: MessageType.CommandAMF0,
+      message_stream_id: 0,
+      timestamp: 0,
+      data: write_amf0(status, transaction_id, server, info),
+    });
 
     store({ app: strip_query(app) });
     const next = {
@@ -194,7 +182,7 @@ const TRANSITION = {
 
     return next[authResult];
   },
-  [STATE.WAITING_CREATESTREAM]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => {
+  [STATE.WAITING_CREATESTREAM]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CREATESTREAM; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CREATESTREAM; }
     const command = read_amf0(message.data);
@@ -205,25 +193,19 @@ const TRANSITION = {
     const transaction_id = command[1];
 
     // 利用開始する Message Stream ID を Stream Begin で伝達する
-    {
-      const chunks = builder.build(StreamBegin.from({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
+    writer.write(StreamBegin.from({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
+
     // CreateStream で作った Message Stream ID を返却する
-    {
-      const result = write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM);
-      const chunks = builder.build({
-        message_type_id: MessageType.CommandAMF0,
-        message_stream_id: 0,
-        timestamp: 0,
-        data: result,
-      });
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
+    writer.write({
+      message_type_id: MessageType.CommandAMF0,
+      message_stream_id: 0,
+      timestamp: 0,
+      data: write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM),
+    });
 
     return STATE.WAITING_PUBLISH;
   },
-  [STATE.WAITING_PUBLISH]: async (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => {
+  [STATE.WAITING_PUBLISH]: async (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
     const command = read_amf0(message.data);
@@ -259,15 +241,12 @@ const TRANSITION = {
     };
 
     // Publish のレスポンスを返す
-    {
-      const chunks = builder.build({
-        message_type_id: MessageType.CommandAMF0,
-        message_stream_id: message.message_stream_id,
-        timestamp: 0,
-        data: write_amf0('onStatus', transaction_id, null, info),
-      });
-      for (const chunk of chunks) { connection.write(chunk); }
-    }
+    writer.write({
+      message_type_id: MessageType.CommandAMF0,
+      message_stream_id: message.message_stream_id,
+      timestamp: 0,
+      data: write_amf0('onStatus', transaction_id, null, info),
+    });
 
     if (publishAccepted) {
       store({ streamKey: strip_query(streamKey) });
@@ -282,7 +261,7 @@ const TRANSITION = {
 
     return next[authResult];
   },
-  [STATE.PUBLISHED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => {
+  [STATE.PUBLISHED]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.PUBLISHED; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.PUBLISHED; }
     const command = read_amf0(message.data);
@@ -294,20 +273,26 @@ const TRANSITION = {
 
     return STATE.DISCONNECTED;
   },
-  [STATE.DISCONNECTED]: (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => {
+  [STATE.DISCONNECTED]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     return STATE.DISCONNECTED;
   },
-} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageBuilder, connection: Duplex, auth: AuthConfiguration) => MaybePromise<(typeof STATE)[keyof typeof STATE]>>;
+} as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageWriter, auth: AuthConfiguration) => MaybePromise<(typeof STATE)[keyof typeof STATE]>>;
 
 async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
   if (!initialized()) { throw new Error('RTMP session not initialized.'); }
 
   const controller = new AbortController();
   using reader = new AsyncByteReader({ signal: controller.signal });
-  const builder = new MessageBuilder();
   connection.pipe(new Writable({
     write(data, _, cb) { reader.feed(data); cb(); },
   }));
+  const writer = new MessageWriter({ signal: controller.signal });
+  (async () => {
+    for await (const chunk of writer.retrieve()) {
+      if (connection.writableEnded) { break; }
+      connection.write(chunk);
+    }
+  })();
 
   try {
     /*
@@ -360,7 +345,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
         if (need_yield(state, message)) { yield message; }
 
         // 個別のメッセージによる状態遷移
-        state = await TRANSITION[state](message, builder, connection, auth);
+        state = await TRANSITION[state](message, writer, auth);
         if (state === STATE.DISCONNECTED) { return; }
       }
     } finally {
@@ -368,6 +353,8 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
       state = STATE.DISCONNECTED;
     }
   } finally {
+    writer.end();
+    await writer.ended(); // 今の送信キューを flush して送信する
     connection.end();
 
     const session = load()!;
