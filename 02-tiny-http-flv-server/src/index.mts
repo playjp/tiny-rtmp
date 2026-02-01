@@ -6,9 +6,9 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 import { MessageType, type SerializedMessage } from '../../01-tiny-rtmp-server/src/message.mts';
-import { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
+import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
 import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
 
@@ -141,7 +141,9 @@ const handle = async (connection: Duplex) => {
 };
 
 const rtmp_server = net.createServer({ noDelay: true }, async (connection) => {
-  await handle(connection);
+  await run(async () => {
+    await handle(connection);
+  });
 });
 rtmp_server.listen(port);
 

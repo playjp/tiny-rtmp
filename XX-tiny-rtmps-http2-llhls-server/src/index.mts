@@ -5,6 +5,8 @@ import type { Duplex } from 'node:stream';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
+import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+
 import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
 
 import LLHLSGenerator from '../../05-tiny-llhls-server/src/llhls-generator.mts';
@@ -93,7 +95,9 @@ const handle = async (connection: Duplex) => {
 };
 
 const rtmp_server = tls.createServer({ noDelay: true, key, cert }, async (connection) => {
-  await handle(connection);
+  await run(async () => {
+    await handle(connection);
+  });
 });
 rtmp_server.listen(port);
 

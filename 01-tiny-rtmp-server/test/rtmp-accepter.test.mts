@@ -7,7 +7,8 @@ import write_amf0 from '../src/amf0-writer.mts';
 import read_message from '../src/message-reader.mts';
 import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../src/message.mts';
 import MessageBuilder from '../src/message-builder.mts';
-import rtmp_session, { AuthConfiguration } from '../src/rtmp-accepter.mts';
+import handle_rtmp, { AuthConfiguration } from '../src/rtmp-accepter.mts';
+import { run } from '../src/rtmp-session.mts';
 
 describe('Regression Test', () => {
   test('Publish Success', async () => {
@@ -19,12 +20,14 @@ describe('Regression Test', () => {
     const builder = new MessageBuilder();
 
     const flv = new AsyncByteReader();
-    const _ = rtmp_session(connection, AuthConfiguration.noAuth(), new Writable({
-      write(chunk, _, cb) {
-        flv.feed(chunk);
-        cb();
-      },
-    }));
+    run(() => {
+      handle_rtmp(connection, AuthConfiguration.noAuth(), new Writable({
+        write(chunk, _, cb) {
+          flv.feed(chunk);
+          cb();
+        },
+      }));
+    });
 
     /*
      * Simple handshake

@@ -5,6 +5,8 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 
 import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
 import intercepter from './rtmp-intercepter.mts';
+import { run } from './rtmp-session.mts';
+import { logger } from './logger.mts';
 
 const options = {
   port: {
@@ -17,7 +19,7 @@ const options = {
   intercept: {
     type: 'boolean',
     default: false,
-  }
+  },
 } as const satisfies ParseArgsOptionsConfig;
 const { values: args } = parseArgs({ options, tokens: true });
 if (Number.isNaN(Number.parseInt(args.port, 10))) {
@@ -29,7 +31,14 @@ const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.
 const intercept = args.intercept;
 
 const server = net.createServer({ noDelay: true }, async (connection) => {
-  const proxy = intercept ? intercepter(connection) : connection;
-  await handle_rtmp(proxy, AuthConfiguration.noAuth(), output ?? undefined);
+  await run(async () => {
+    try {
+      const proxy = intercept ? intercepter(connection) : connection;
+      await handle_rtmp(proxy, AuthConfiguration.noAuth(), output ?? undefined);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      logger.error(`RTMP session error: ${message}`, { stack: e instanceof Error ? e.stack : undefined });
+    }
+  });
 });
 server.listen(port);

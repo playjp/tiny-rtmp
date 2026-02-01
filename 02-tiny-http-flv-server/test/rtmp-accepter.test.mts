@@ -10,8 +10,10 @@ import MessageBuilder from '../../01-tiny-rtmp-server/src/message-builder.mts';
 
 const handle_rtmp_import = async () => {
   vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
-  const imported = await import('../src/rtmp-accepter.mts');
-  return [imported.default, imported.AuthConfiguration] as const;
+  // 内部状態に依存するモジュールをその都度ロードする
+  const session = await import('../../01-tiny-rtmp-server/src/rtmp-session.mts');
+  const accepter = await import('../src/rtmp-accepter.mts');
+  return [session.run, accepter.default, accepter.AuthConfiguration] as const;
 };
 
 describe('Regression Test', () => {
@@ -23,10 +25,12 @@ describe('Regression Test', () => {
     output.on('data', (chunk) => { reader.feed(chunk); });
     const builder = new MessageBuilder();
 
-    const [handle_rtmp, auth_config] = await handle_rtmp_import();
-    const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
-    // do background
-    (async () => { for await (const _ of handler) {} })();
+    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
+    run(() => {
+      const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
+      // do background
+      (async () => { for await (const _ of handler) {} })();
+    });
 
     /*
      * Simple handshake
@@ -186,7 +190,7 @@ describe('Regression Test', () => {
   });
 
   test('Lock StreamKey', async () => {
-    const [handle_rtmp, auth_config] = await handle_rtmp_import();
+    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
 
     // Connection 1
     const input_1 = new PassThrough();
@@ -196,8 +200,10 @@ describe('Regression Test', () => {
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     const builder_1 = new MessageBuilder();
 
-    const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key') });
-    (async () => { for await (const _ of handler_1) {} })(); // do background
+    run(() => {
+      const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key') });
+      (async () => { for await (const _ of handler_1) {} })(); // do background
+    });
 
     // Connection 2
     const input_2 = new PassThrough();
@@ -207,8 +213,10 @@ describe('Regression Test', () => {
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     const builder_2 = new MessageBuilder();
 
-    const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key') });
-    (async () => { for await (const _ of handler_2) {} })(); // do background
+    run(() => {
+      const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key') });
+      (async () => { for await (const _ of handler_2) {} })(); // do background
+    });
 
     const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
 
@@ -377,7 +385,7 @@ describe('Regression Test', () => {
   });
 
   test('Parallel Streaming for distinct StreamKey', async () => {
-    const [handle_rtmp, auth_config] = await handle_rtmp_import();
+    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
 
     // Connection 1
     const input_1 = new PassThrough();
@@ -387,8 +395,10 @@ describe('Regression Test', () => {
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     const builder_1 = new MessageBuilder();
 
-    const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key0') });
-    (async () => { for await (const _ of handler_1) {} })(); // do background
+    run(() => {
+      const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key0') });
+      (async () => { for await (const _ of handler_1) {} })(); // do background
+    });
 
     // Connection 2
     const input_2 = new PassThrough();
@@ -398,8 +408,10 @@ describe('Regression Test', () => {
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     const builder_2 = new MessageBuilder();
 
-    const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key1') });
-    (async () => { for await (const _ of handler_2) {} })(); // do background
+    run(() => {
+      const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key1') });
+      (async () => { for await (const _ of handler_2) {} })(); // do background
+    });
 
     const inout = [[input_1, reader_1, builder_1], [input_2, reader_2, builder_2]] satisfies [PassThrough, AsyncByteReader, MessageBuilder][];
 
@@ -571,10 +583,12 @@ describe('Regression Test', () => {
     output.on('data', (chunk) => { reader.feed(chunk); });
     const builder = new MessageBuilder();
 
-    const [handle_rtmp, auth_config] = await handle_rtmp_import();
-    const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
-    // do background
-    (async () => { for await (const _ of handler) {} })();
+    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
+    run(() => {
+      const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
+      // do background
+      (async () => { for await (const _ of handler) {} })();
+    });
 
     /*
      * Simple handshake
@@ -741,10 +755,12 @@ describe('Regression Test', () => {
     output.on('data', (chunk) => { reader.feed(chunk); });
     const builder = new MessageBuilder();
 
-    const [handle_rtmp, auth_config] = await handle_rtmp_import();
-    const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
-    // do background
-    (async () => { for await (const _ of handler) {} })();
+    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
+    run(() => {
+      const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
+      // do background
+      (async () => { for await (const _ of handler) {} })();
+    });
 
     /*
      * Simple handshake

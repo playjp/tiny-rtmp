@@ -1,4 +1,5 @@
 import { inspect } from 'node:util';
+import { load } from './rtmp-session.mts';
 
 export const LogLevel = {
   TRACE: 0,
@@ -51,32 +52,32 @@ export class ConsoleLogger implements Logger {
 
   trace(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.TRACE) { return; }
-    console.log(datetime(), '[TRACE]', message, flat(record));
+    console.log(datetime(), '[TRACE]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
   }
 
   debug(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.DEBUG) { return; }
-    console.log(datetime(), '[DEBUG]', message, flat(record));
+    console.log(datetime(), '[DEBUG]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
   }
 
   info(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.INFO) { return; }
-    console.log(datetime(), '[INFO]', message, flat(record));
+    console.log(datetime(), '[INFO]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
   }
 
   warn(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.WARN) { return; }
-    console.log(datetime(), '[WARN]', message, flat(record));
+    console.log(datetime(), '[WARN]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
   }
 
   error(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.ERROR) { return; }
-    console.log(datetime(), '[ERROR]', message, flat(record));
+    console.log(datetime(), '[ERROR]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
   }
 
   fatal(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.FATAL) { return; }
-    console.log(datetime(), '[FATAL]', message, flat(record));
+    console.log(datetime(), '[FATAL]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
   }
 }
 
