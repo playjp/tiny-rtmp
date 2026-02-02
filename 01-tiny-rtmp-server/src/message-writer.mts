@@ -59,6 +59,10 @@ export default class MessageWriter {
       this.ended_promise = promise;
       this.ended_notify = resolve;
     }
+    this.sending_signal.addEventListener('abort', () => {
+      this.ended_boolean = true;
+      this.ended_notify();
+    }, { once: true });
   }
 
   private static cs_id_hash(message: MessageWithTrack): number {
@@ -134,11 +138,8 @@ export default class MessageWriter {
 
   public async *retrieve(): AsyncIterable<Buffer> {
     while (true) {
-      if (this.sending_signal.aborted) {
-        this.ended_boolean = true;
-        this.ended_notify();
-        return;
-      }
+      if (this.sending_signal.aborted) { return; }
+
       await this.sending_promise;
       const { promise, resolve } = Promise.withResolvers<void>();
       this.sending_promise = promise;
@@ -239,12 +240,13 @@ export default class MessageWriter {
   }
 
   public write(message: MessageWithTrack): void {
-    if (this.sending_signal.aborted) { return; }
-    if (this.ended_boolean) { return; }
-
     if (this.highWaterMark < this.sending_bytes) {
       this.abort(new Error('Buffer overflow: highWaterMark exceeded'));
-      return;
+    }
+    if (this.sending_signal.aborted) {
+      throw this.sending_signal.reason;
+    } else if (this.ended_boolean) {
+      throw new Error('Cannot write to MessageWriter after end');
     }
 
     const cs_id = this.get_cs_id(message);
