@@ -20,7 +20,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
     this.passwordFn = passwordFn;
   }
 
-  public async app(app: string): Promise<AuthResultWithDescription> {
+  public async connect(app: string): Promise<AuthResultWithDescription> {
     const query_index = app.indexOf('?');
     if (query_index < 0) {
       // Adobe Auth を要求する
@@ -54,13 +54,15 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return accepted ? [AuthResult.OK, null] : [AuthResult.DISCONNECT, 'authmod=adobe :?reason=authfailed'];
   }
 
-  public streamKey(): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null] {
+  public publish(): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null] {
     return [AuthResult.OK, null];
   }
 
-  public keepAlive(app: string, key: string): typeof AuthResult.OK | typeof AuthResult.DISCONNECT {
+  public keepalive(app: string, key: string): typeof AuthResult.OK | typeof AuthResult.DISCONNECT {
     return AuthResult.OK;
   }
+
+  public disconnect(app: string, key: string): void {}
 
   private query(user: string): string {
     // Map は 挿入順 で走査できるので、古い順で取り出せる
