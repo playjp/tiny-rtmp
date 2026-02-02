@@ -21,11 +21,13 @@ type SendingMessage = Message & {
   offset: number;
 };
 
-export type MessageWriterOption = {
-  signal?: AbortSignal;
-};
+export type MessageWriterOption = Partial<{
+  signal: AbortSignal;
+  highWaterMark: number;
+}>;
 
 export default class MessageWriter {
+  private highWaterMark: number;
   private chunk_maximum_size = 128;
   private next_cs_id = 3;
   private cs_id_map = new Map<number, number>();
@@ -37,12 +39,14 @@ export default class MessageWriter {
   private sending_notify: () => void;
   private sending_ordering_queue = new Queue<SendingMessage>();
   private sending_cs_id_queues = new Map<number, Queue<SendingMessage>>();
+  private sending_bytes: number = 0;
 
   private ended_boolean: boolean;
   private ended_promise: Promise<void>;
   private ended_notify: () => void;
 
   public constructor(option?: MessageWriterOption) {
+    this.highWaterMark = option?.highWaterMark ?? Number.POSITIVE_INFINITY;
     this.sending_signal = AbortSignal.any([this.sending_controller.signal, option?.signal ?? AbortSignal.any([])]);
     {
       const { promise, resolve } = Promise.withResolvers<void>();
@@ -194,6 +198,7 @@ export default class MessageWriter {
         }
 
         yield builder.build();
+        this.sending_bytes -= next_offset - message.offset;
 
         if (next_offset < (message.binary.byteLength)) {
           message.offset = next_offset;
@@ -237,6 +242,11 @@ export default class MessageWriter {
     if (this.sending_signal.aborted) { return; }
     if (this.ended_boolean) { return; }
 
+    if (this.highWaterMark < this.sending_bytes) {
+      this.abort(new Error('Buffer overflow: highWaterMark exceeded'));
+      return;
+    }
+
     const cs_id = this.get_cs_id(message);
     if (!this.sending_cs_id_queues.has(cs_id)) {
       this.sending_cs_id_queues.set(cs_id, new Queue<SendingMessage>());
@@ -252,6 +262,7 @@ export default class MessageWriter {
     if (MessageWriter.is_input_order_sensitive(sending)) {
       this.sending_ordering_queue.push(sending);
     }
+    this.sending_bytes += sending.binary.byteLength;
     this.sending_notify();
   }
 
@@ -268,7 +279,7 @@ export default class MessageWriter {
     return this.ended_promise;
   }
 
-  public abort(): void {
-    this.sending_controller.abort();
+  public abort(reason?: unknown): void {
+    this.sending_controller.abort(reason);
   }
 }
