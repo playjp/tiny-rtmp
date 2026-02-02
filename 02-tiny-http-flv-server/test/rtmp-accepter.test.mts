@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { Duplex, PassThrough } from 'stream';
+import { Duplex, PassThrough, Readable } from 'stream';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
@@ -24,11 +24,7 @@ describe('Regression Test', () => {
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
     using writer = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer.retrieve()) {
-        input.write(chunk);
-      }
-    })();
+    Readable.from(writer.retrieve()).pipe(input);
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {
@@ -201,11 +197,7 @@ describe('Regression Test', () => {
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     using writer_1 = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer_1.retrieve()) {
-        input_1.write(chunk);
-      }
-    })();
+    Readable.from(writer_1.retrieve()).pipe(input_1);
 
     run(() => {
       const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key') });
@@ -219,11 +211,7 @@ describe('Regression Test', () => {
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     using writer_2 = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer_2.retrieve()) {
-        input_2.write(chunk);
-      }
-    })();
+    Readable.from(writer_2.retrieve()).pipe(input_2);
 
     run(() => {
       const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key') });
@@ -403,11 +391,7 @@ describe('Regression Test', () => {
     using reader_1 = new AsyncByteReader();
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     using writer_1 = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer_1.retrieve()) {
-        input_1.write(chunk);
-      }
-    })();
+    Readable.from(writer_1.retrieve()).pipe(input_1);
 
     run(() => {
       const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key0') });
@@ -421,11 +405,7 @@ describe('Regression Test', () => {
     using reader_2 = new AsyncByteReader();
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     using writer_2 = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer_2.retrieve()) {
-        input_2.write(chunk);
-      }
-    })();
+    Readable.from(writer_2.retrieve()).pipe(input_2);
 
     run(() => {
       const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key1') });
@@ -598,11 +578,7 @@ describe('Regression Test', () => {
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
     using writer = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer.retrieve()) {
-        input.write(chunk);
-      }
-    })();
+    Readable.from(writer.retrieve()).pipe(input);
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {
@@ -772,11 +748,7 @@ describe('Regression Test', () => {
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
     using writer = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer.retrieve()) {
-        input.write(chunk);
-      }
-    })();
+    Readable.from(writer.retrieve()).pipe(input);
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {

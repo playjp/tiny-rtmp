@@ -1,4 +1,4 @@
-import { Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import type { Duplex } from 'node:stream';
 import { randomBytes } from 'node:crypto';
 import { setTimeout } from 'node:timers/promises';
@@ -310,12 +310,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
     },
   }));
   using writer = new MessageWriter({ signal: controller.signal });
-  (async () => {
-    for await (const chunk of writer.retrieve()) {
-      if (connection.writableEnded) { break; }
-      connection.write(chunk);
-    }
-  })();
+  Readable.from(writer.retrieve()).pipe(connection);
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
 

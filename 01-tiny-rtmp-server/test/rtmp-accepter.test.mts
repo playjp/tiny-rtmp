@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { Duplex, PassThrough, Writable } from 'node:stream';
+import { Duplex, PassThrough, Readable, Writable } from 'node:stream';
 
 import AsyncByteReader from '../src/async-byte-reader.mts';
 import read_amf0 from '../src/amf0-reader.mts';
@@ -18,11 +18,7 @@ describe('Regression Test', () => {
     using reader = new AsyncByteReader();
     output.on('data', (chunk) => { reader.feed(chunk); });
     using writer = new MessageWriter();
-    (async () => {
-      for await (const chunk of writer.retrieve()) {
-        input.write(chunk);
-      }
-    })();
+    Readable.from(writer.retrieve()).pipe(input);
 
     const flv = new AsyncByteReader();
     run(() => {

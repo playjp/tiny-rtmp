@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import type { Duplex } from 'node:stream';
 import { setTimeout } from 'node:timers/promises';
 
@@ -287,12 +287,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     write(data, _, cb) { reader.feed(data); cb(); },
   }));
   using writer = new MessageWriter({ signal: controller.signal });
-  (async () => {
-    for await (const chunk of writer.retrieve()) {
-      if (connection.writableEnded) { break; }
-      connection.write(chunk);
-    }
-  })();
+  Readable.from(writer.retrieve()).pipe(connection);
 
   try {
     /*
