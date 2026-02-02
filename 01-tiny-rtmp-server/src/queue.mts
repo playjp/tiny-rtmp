@@ -48,7 +48,7 @@ export default class Queue<T,> {
 
   public pop(): T | null {
     const node = this.begin.next!;
-    if (node == this.end) { return null; }
+    if (node === this.end) { return null; }
     const next = node.next!;
 
     // 付け替え
