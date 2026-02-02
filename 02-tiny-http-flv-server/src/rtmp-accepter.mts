@@ -309,8 +309,8 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       cb();
     },
   }));
-  using writer = new MessageWriter({ signal: controller.signal });
-  Readable.from(writer.retrieve()).pipe(connection);
+  using writer = new MessageWriter({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
+  Readable.from(writer.retrieve(), { highWaterMark: option?.limit?.highWaterMark }).pipe(connection);
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
 
