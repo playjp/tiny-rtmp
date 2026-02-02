@@ -41,6 +41,7 @@ export default [
       "@stylistic/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
       "@stylistic/member-delimiter-style": ["error", { "multiline": { "delimiter": "semi", "requireLast": true }, "singleline": { "delimiter": "semi", "requireLast": true }}],
       "@stylistic/rest-spread-spacing": ["error", "always"],
+      "eqeqeq": ["error", "always", {"null": "ignore"}]
     }
   }
 ]

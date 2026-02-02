@@ -224,7 +224,7 @@ export default class DASHGenerator {
               { iv, subsamples: subsample },
               this.ivType.type,
               encrypted,
-              vector,
+              vector
             );
           }));
         }
@@ -254,7 +254,7 @@ export default class DASHGenerator {
             { iv, subsamples: subsample },
             this.ivType.type,
             encrypted,
-            vector,
+            vector
           );
         }));
         return;

@@ -138,7 +138,7 @@ const collect_query = (value: string): Record<string, string | undefined> | unde
     };
   }, {}) as Record<string, string | undefined>;
 };
-type MaybePromise<T> = T | Promise<T>;
+type MaybePromise<T,> = T | Promise<T>;
 export type AuthResultWithDescription = [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
 export interface AuthConfiguration {
   app(app: string): MaybePromise<AuthResultWithDescription>;
@@ -163,7 +163,7 @@ export const AuthConfiguration = {
   customAuth(
     appFn: ((app: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
     streamKeyFn: ((key: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
-    keepAliveFn: ((app: string, key: string) => (boolean | Promise<boolean>)) | null,
+    keepAliveFn: ((app: string, key: string) => (boolean | Promise<boolean>)) | null
   ): AuthConfiguration {
     return {
       app: async (app: string) => [(await (appFn?.(strip_query(app), collect_query(app))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
@@ -209,7 +209,7 @@ const TRANSITION = {
         return auth.app(app);
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        logger.error(`Auth app Failed`);
+        logger.error('Auth app Failed');
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -296,7 +296,7 @@ const TRANSITION = {
         return auth.streamKey(streamKey);
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        logger.error(`Auth streamKey Failed`);
+        logger.error('Auth streamKey Failed');
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -399,7 +399,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
             return auth.keepAlive(session.app!, session.streamKey!);
           } catch {
             // keepAlive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
-            logger.error(`Auth keepAlive Failed`);
+            logger.error('Auth keepAlive Failed');
             return AuthResult.OK;
           }
         })();

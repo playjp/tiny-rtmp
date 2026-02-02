@@ -89,8 +89,8 @@ export default class MPEGTSTransmuxer {
             0xe0,
             timestamp_from_rtmp_to_mpegts(payload.timestamp + payload.compositionTimeOffset),
             timestamp_from_rtmp_to_mpegts(payload.timestamp),
-            true,
-          ),
+            true
+          )
         );
         break;
       case 'Audio':
@@ -101,8 +101,8 @@ export default class MPEGTSTransmuxer {
             0xc0,
             timestamp_from_rtmp_to_mpegts(payload.timestamp),
             null,
-            false,
-          ),
+            false
+          )
         );
         break;
     }

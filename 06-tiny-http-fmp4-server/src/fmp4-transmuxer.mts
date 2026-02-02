@@ -83,7 +83,7 @@ export default class FMP4Transmuxer {
           ], vector, (vector) => {
             if (avc) { vector.write(avc); }
             if (aac) { vector.write(aac); }
-          },
+          }
         );
       }));
     }

@@ -145,8 +145,8 @@ export default class LLHLSGenerator {
             0xe0, // 0b1110XXXX: H.262/H.263/H.264/H.265 Video, stream number = 0
             timestamp_from_rtmp_to_mpegts(payload.timestamp + payload.compositionTimeOffset),
             timestamp_from_rtmp_to_mpegts(payload.timestamp),
-            true,
-          ),
+            true
+          )
         ), PlaylistTimestamp.fromRTMP(payload.timestamp), payload.frameType === FrameType.KEY_FRAME);
         break;
       case 'Audio':
@@ -157,8 +157,8 @@ export default class LLHLSGenerator {
             0xc0, // 0b111XXXXX: AAC Audio, stream number = 0
             timestamp_from_rtmp_to_mpegts(payload.timestamp),
             null,
-            false,
-          ),
+            false
+          )
         ), PlaylistTimestamp.fromRTMP(payload.timestamp), false); // AAC は Audio Only なら true
         break;
     }

@@ -27,7 +27,7 @@ const options = {
   intercept: {
     type: 'boolean',
     default: false,
-  }
+  },
 } as const satisfies ParseArgsOptionsConfig;
 const { values: args } = parseArgs({ options, tokens: true });
 if (Number.isNaN(Number.parseInt(args.port, 10))) {

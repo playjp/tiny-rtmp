@@ -40,7 +40,7 @@ export default class BitBuilder {
   }
 
   public writeByteAlign(fill: 0 | 1 = 0): void {
-    if ((this.bits.length % 8) == 0) { return; }
+    if ((this.bits.length % 8) === 0) { return; }
     while ((this.bits.length % 8) !== 0) {
       this.bits.push(fill);
     }
