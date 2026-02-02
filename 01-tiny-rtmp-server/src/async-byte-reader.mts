@@ -1,7 +1,7 @@
-export type AsyncByteReaderOption = {
+export type AsyncByteReaderOption = Partial<{
   signal: AbortSignal;
   highWaterMark: number;
-};
+}>;
 
 export default class AsyncByteReader {
   private buffers: Buffer[] = [];
@@ -14,7 +14,7 @@ export default class AsyncByteReader {
   private signal: AbortSignal;
   private highWaterMark: number;
 
-  public constructor(option?: Partial<AsyncByteReaderOption>) {
+  public constructor(option?: AsyncByteReaderOption) {
     this.signal = AbortSignal.any([this.controller.signal, option?.signal ?? AbortSignal.any([])]);
     this.signal.addEventListener('abort', this.abort.bind(this), { once: true });
     this.highWaterMark = option?.highWaterMark ?? Number.POSITIVE_INFINITY;
