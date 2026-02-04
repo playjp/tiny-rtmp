@@ -86,7 +86,7 @@ export const AuthConfiguration = {
       keepalive: () => AuthResult.OK,
       disconnect: (app: string, key: string) => {
         lock.delete(generate_lock_key(app, key));
-      }
+      },
     };
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
