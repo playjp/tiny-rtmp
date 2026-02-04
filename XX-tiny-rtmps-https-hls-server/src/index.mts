@@ -73,6 +73,7 @@ const app = args.app;
 const streamKey = args.streamKey;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
 const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
+const auth = AuthConfiguration.simpleAuth(app, streamKey);
 
 const page = `
 <!DOCTYPE html>
@@ -101,7 +102,7 @@ const page = `
 let rtmp_to_hls: HLSGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
-    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
+    for await (const message of handle_rtmp(connection, { auth, limit: { bandwidth } })) {
       if (rtmp_to_hls == null) { rtmp_to_hls = new HLSGenerator(3); }
       rtmp_to_hls.feed(message);
     }

@@ -45,12 +45,13 @@ const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.
 const intercept = args.intercept;
 const key = fs.readFileSync(args.key);
 const cert = fs.readFileSync(args.cert);
+const auth = AuthConfiguration.noAuth()
 
 const server = tls.createServer({ noDelay: true, key, cert }, async (connection) => {
   await run(async () => {
     try {
       const proxy = intercept ? intercepter(connection) : connection;
-      await handle_rtmp(proxy, AuthConfiguration.noAuth(), output ?? undefined);
+      await handle_rtmp(proxy, auth, output ?? undefined);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       logger.error(`RTMP session error: ${message}`, { stack: e instanceof Error ? e.stack : undefined });

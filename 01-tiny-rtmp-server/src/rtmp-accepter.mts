@@ -64,6 +64,7 @@ const collect_query = (value: string): Record<string, string> | undefined => {
     };
   }, {}) as Record<string, string>;
 };
+const generate_lock_key = (app: string, stream: string): string => `${app}/${stream}`;
 type MaybePromise<T,> = T | Promise<T>;
 export type AuthResultWithDescription = [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
 export interface AuthConfiguration {
@@ -74,19 +75,40 @@ export interface AuthConfiguration {
 };
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
+    const lock = new Set<ReturnType<typeof generate_lock_key>>();
     return {
       connect: () => [AuthResult.OK, null],
-      publish: () => [AuthResult.OK, null],
+      publish: (app: string, key: string) => {
+        if (lock.has(generate_lock_key(app, key))) {
+          return [AuthResult.DISCONNECT, null];
+        }
+        lock.add(generate_lock_key(app, key));
+        return [AuthResult.OK, null];
+      },
       keepalive: () => AuthResult.OK,
-      disconnect: () => {},
+      disconnect: (app: string, key: string) => {
+        lock.delete(generate_lock_key(app, key));
+      }
     };
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
+    const lock = new Set<ReturnType<typeof generate_lock_key>>();
     return {
       connect: (app: string) => [app === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      publish: (_: string, key: string) => [key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      publish: (app: string, key: string) => {
+        if (key !== streamKey) {
+          return [AuthResult.DISCONNECT, null];
+        }
+        if (lock.has(generate_lock_key(app, key))) {
+          return [AuthResult.DISCONNECT, null];
+        }
+        lock.add(generate_lock_key(app, key));
+        return [AuthResult.OK, null];
+      },
       keepalive: () => AuthResult.OK,
-      disconnect: () => {},
+      disconnect: (app: string, key: string) => {
+        lock.delete(generate_lock_key(app, key));
+      },
     };
   },
   customAuth(
@@ -104,9 +126,6 @@ export const AuthConfiguration = {
   },
 };
 const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
-
-const generate_key = (session: RTMPSession): string => `${session.app}/${session.stream}`;
-const lock = new Set<NonNullable<ReturnType<typeof generate_key>>>();
 
 const PUBLISH_MESSAGE_STREAM = 1;
 const WINDOW_ACKNOWLEDGE_SIZE = 2500000;
@@ -222,7 +241,7 @@ const TRANSITION = {
     if (!isAMF0String(command[3])) { return STATE.WAITING_PUBLISH; }
     const stream = command[3];
 
-    const [auth_before_lock, description_before_lock] = await (() => {
+    const [authResult, description] = await (() => {
       try {
         return auth.publish(load()!.app!, strip_query(stream), collect_query(stream));
       } catch {
@@ -231,8 +250,6 @@ const TRANSITION = {
         return [AuthResult.DISCONNECT, null];
       }
     })();
-    // stream が合致していて、配信されてない場合は配信を許可する
-    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... load()!, stream: strip_query(stream) })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
     const publishAccepted = authResult === AuthResult.OK;
 
     const info = publishAccepted ? {
@@ -255,7 +272,6 @@ const TRANSITION = {
 
     if (publishAccepted) {
       store({ stream: strip_query(stream), query: collect_query(stream) });
-      lock.add(generate_key(load()!));
     }
 
     const next = {
@@ -360,7 +376,6 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     const session = load()!;
     if (session.app != null && session.stream != null) {
       await auth.disconnect(session.app, session.stream, session.query);
-      lock.delete(generate_key(session));
     }
   }
 }

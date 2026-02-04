@@ -29,12 +29,13 @@ if (Number.isNaN(Number.parseInt(args.port, 10))) {
 const port = Number.parseInt(args.port, 10);
 const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.createWriteStream(args.flv);
 const intercept = args.intercept;
+const auth = AuthConfiguration.noAuth();
 
 const server = net.createServer({ noDelay: true }, async (connection) => {
   await run(async () => {
     try {
       const proxy = intercept ? intercepter(connection) : connection;
-      await handle_rtmp(proxy, AuthConfiguration.noAuth(), output ?? undefined);
+      await handle_rtmp(proxy, auth, output ?? undefined);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       logger.error(`RTMP session error: ${message}`, e instanceof Error ? { stack: e.stack } : undefined);

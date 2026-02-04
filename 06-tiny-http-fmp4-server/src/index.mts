@@ -58,6 +58,7 @@ const app = args.app;
 const streamKey = args.streamKey;
 const highWaterMark = args.highWaterMark != null ? Number.parseInt(args.highWaterMark, 10) : undefined;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
+const auth = AuthConfiguration.simpleAuth(app, streamKey);
 
 type StreamingInformation = [writeFn: (buffer: Buffer) => void, exitFn: () => void, initialized: boolean];
 const streaming = new Map<number, StreamingInformation>();
@@ -65,7 +66,7 @@ const handle = async (connection: Duplex) => {
   const rtmp_to_fmp4 = new FMP4Transmuxer();
 
   try {
-    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
+    for await (const message of handle_rtmp(connection, { auth, limit: { bandwidth } })) {
       const frag = rtmp_to_fmp4.feed(message);
       if (frag == null) { continue; }
 

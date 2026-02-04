@@ -27,8 +27,9 @@ describe('Regression Test', () => {
     Readable.from(writer.retrieve()).pipe(input);
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
+    const auth = auth_config.simpleAuth('app', 'key');
     run(() => {
-      const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
+      const handler = handle_rtmp(connection, { auth });
       // do background
       (async () => { for await (const _ of handler) {} })();
     });
@@ -189,6 +190,7 @@ describe('Regression Test', () => {
 
   test('Lock StreamKey', async () => {
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
+    const auth = auth_config.simpleAuth('app', 'key')
 
     // Connection 1
     const input_1 = new PassThrough();
@@ -200,7 +202,7 @@ describe('Regression Test', () => {
     Readable.from(writer_1.retrieve()).pipe(input_1);
 
     run(() => {
-      const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key') });
+      const handler_1 = handle_rtmp(connection_1, { auth });
       (async () => { for await (const _ of handler_1) {} })(); // do background
     });
 
@@ -214,7 +216,7 @@ describe('Regression Test', () => {
     Readable.from(writer_2.retrieve()).pipe(input_2);
 
     run(() => {
-      const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key') });
+      const handler_2 = handle_rtmp(connection_2, { auth });
       (async () => { for await (const _ of handler_2) {} })(); // do background
     });
 
@@ -392,9 +394,10 @@ describe('Regression Test', () => {
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     using writer_1 = new MessageWriter();
     Readable.from(writer_1.retrieve()).pipe(input_1);
+    const auth_1 = auth_config.simpleAuth('app', 'key0');
 
     run(() => {
-      const handler_1 = handle_rtmp(connection_1, { auth: auth_config.simpleAuth('app', 'key0') });
+      const handler_1 = handle_rtmp(connection_1, { auth: auth_1 });
       (async () => { for await (const _ of handler_1) {} })(); // do background
     });
 
@@ -406,9 +409,10 @@ describe('Regression Test', () => {
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     using writer_2 = new MessageWriter();
     Readable.from(writer_2.retrieve()).pipe(input_2);
+    const auth_2 = auth_config.simpleAuth('app', 'key1')
 
     run(() => {
-      const handler_2 = handle_rtmp(connection_2, { auth: auth_config.simpleAuth('app', 'key1') });
+      const handler_2 = handle_rtmp(connection_2, { auth: auth_2 });
       (async () => { for await (const _ of handler_2) {} })(); // do background
     });
 
@@ -581,8 +585,9 @@ describe('Regression Test', () => {
     Readable.from(writer.retrieve()).pipe(input);
 
     const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
+    const auth = auth_config.simpleAuth('app', 'key');
     run(() => {
-      const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
+      const handler = handle_rtmp(connection, { auth });
       // do background
       (async () => { for await (const _ of handler) {} })();
     });

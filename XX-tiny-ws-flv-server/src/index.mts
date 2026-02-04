@@ -56,6 +56,7 @@ const web = Number.parseInt(args.web, 10);
 const app = args.app;
 const streamKey = args.streamKey;
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
+const auth = AuthConfiguration.simpleAuth(app, streamKey);
 
 const write_tag_header = (message: SerializedMessage): Buffer => {
   const header = Buffer.alloc(11);
@@ -83,7 +84,7 @@ const handle = async (connection: Duplex) => {
   let aacConfigMessage: SerializedMessage | null = null;
 
   try {
-    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
+    for await (const message of handle_rtmp(connection, { auth, limit: { bandwidth } })) {
       switch (message.message_type_id) {
         case MessageType.Video: {
           const reader = new ByteReader(message.data);

@@ -47,7 +47,6 @@ const user = args.user;
 const password = args.password;
 const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.createWriteStream(args.flv);
 const intercept = args.intercept;
-
 const auth = new AdobeAuthSession((userName) => user === userName ? password : null);
 
 const server = net.createServer({ noDelay: true }, async (connection) => {

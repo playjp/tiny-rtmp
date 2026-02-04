@@ -66,6 +66,7 @@ const streamKey = args.streamKey;
 const encryptionFormat = EncryptionFormat.from(args.encryptionScheme);
 const bandwidth = args.bandwidth != null ? Number.parseInt(args.bandwidth, 10) : undefined;
 const maxage = args.maxage != null ? Number.parseInt(args.maxage, 10) : 36000;
+const auth = AuthConfiguration.simpleAuth(app, streamKey);
 
 // Widevine のテスト用 KID/Key を用いる
 const encryptionKeyId = Buffer.from('90351951686b5e1ba222439ecec1f12a', 'hex');
@@ -107,7 +108,7 @@ const page = `
 let rtmp_to_dash: DASHGenerator | null = null;
 const handle = async (connection: Duplex) => {
   try {
-    for await (const message of handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth(app, streamKey), limit: { bandwidth } })) {
+    for await (const message of handle_rtmp(connection, { auth, limit: { bandwidth } })) {
       if (rtmp_to_dash == null) { rtmp_to_dash = new DASHGenerator(encryptionFormat, encryptionKeyId, encryptionKey, 3); }
       rtmp_to_dash.feed(message);
     }
