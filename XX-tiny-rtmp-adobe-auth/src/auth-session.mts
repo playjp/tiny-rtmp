@@ -15,6 +15,7 @@ export type AdobeAuthSessionInformation = {
 export default class AdobeAuthSession implements AuthConfiguration {
   private passwordFn: (user: string) => Promise<string | null> | (string | null);
   private sessions = new Map<string, AdobeAuthSessionInformation>();
+  private lock = new Set<string>();
 
   constructor(passwordFn: (user: string) => Promise<string | null> | (string | null)) {
     this.passwordFn = passwordFn;
@@ -37,7 +38,10 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return accepted ? [AuthResult.OK, null] : [AuthResult.DISCONNECT, 'authmod=adobe :?reason=authfailed'];
   }
 
-  public publish(): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null] {
+  public publish(app: string, stream: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null] {
+    const key = `${app}/${stream}`;
+    if (this.lock.has(key)) { return [ AuthResult.DISCONNECT, null ]; }
+    this.lock.add(key);
     return [AuthResult.OK, null];
   }
 
@@ -45,7 +49,10 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return AuthResult.OK;
   }
 
-  public disconnect(): void {}
+  public disconnect(app: string, stream: string): void {
+    const key = `${app}/${stream}`;
+    this.lock.delete(key);
+  }
 
   private query(user: string): string {
     // Map は 挿入順 で走査できるので、古い順で取り出せる
