@@ -197,8 +197,11 @@ export const AuthConfiguration = {
       },
       keepalive: async (app: string, key: string, query?: Record<string, string>) => (await (keepaliveFn?.(app, key, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT,
       disconnect: async (app: string, key: string, query?: Record<string, string>) => {
-        await disconnectFn?.(app, key, query);
-        lock.delete(generate_lock_key(app, key));
+        try {
+          await disconnectFn?.(app, key, query);
+        } finally {
+          lock.delete(generate_lock_key(app, key));
+        }
       },
     };
   },
