@@ -1,4 +1,5 @@
-import { inspect } from 'node:util';
+import { inspect, styleText } from 'node:util';
+
 import { load } from './rtmp-session.mts';
 
 export const LogLevel = {
@@ -44,6 +45,10 @@ const datetime = (): string => {
   return `${date_string} ${time_string}`;
 };
 
+const is_empty = (record: Record<string, unknown>): boolean => {
+  return Object.keys(record).length === 0;
+};
+
 export class ConsoleLogger implements Logger {
   private loglevel: number;
   public constructor(loglevel?: number) {
@@ -52,32 +57,68 @@ export class ConsoleLogger implements Logger {
 
   trace(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.TRACE) { return; }
-    console.log(datetime(), '[TRACE]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
+    const level = styleText(['gray', 'bgBlack', 'dim'], '[TRACE]', { stream: process.stderr });
+    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    if (is_empty(record)) {
+      console.error(datetime(), level, message);
+    } else {
+      console.error(datetime(), level, message, flat(record));
+    }
   }
 
   debug(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.DEBUG) { return; }
-    console.log(datetime(), '[DEBUG]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
+    const level = styleText(['gray', 'bgBlack'], '[DEBUG]', { stream: process.stderr });
+    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    if (is_empty(record)) {
+      console.error(datetime(), level, message);
+    } else {
+      console.error(datetime(), level, message, flat(record));
+    }
   }
 
   info(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.INFO) { return; }
-    console.log(datetime(), '[INFO]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
+    const level = styleText(['white', 'bgBlack'], '[INFO]', { stream: process.stderr });
+    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    if (is_empty(record)) {
+      console.error(datetime(), level, message);
+    } else {
+      console.error(datetime(), level, message, flat(record));
+    }
   }
 
   warn(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.WARN) { return; }
-    console.log(datetime(), '[WARN]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
+    const level = styleText(['white', 'bgYellow'], '[WARN]', { stream: process.stderr });
+    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    if (is_empty(record)) {
+      console.error(datetime(), level, message);
+    } else {
+      console.error(datetime(), level, message, flat(record));
+    }
   }
 
   error(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.ERROR) { return; }
-    console.log(datetime(), '[ERROR]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
+    const level = styleText(['white', 'bgRed'], '[ERROR]', { stream: process.stderr });
+    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    if (is_empty(record)) {
+      console.error(datetime(), level, message);
+    } else {
+      console.error(datetime(), level, message, flat(record));
+    }
   }
 
   fatal(message: string, record: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.FATAL) { return; }
-    console.log(datetime(), '[FATAL]', message, flat({ ... (load() ?? {}),  ... (record ?? {}) }));
+    const level = styleText(['white', 'bgRed', 'bold'], '[FATAL]', { stream: process.stderr });
+    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    if (is_empty(record)) {
+      console.error(datetime(), level, message);
+    } else {
+      console.error(datetime(), level, message, flat(record));
+    }
   }
 }
 
