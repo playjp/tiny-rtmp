@@ -79,9 +79,7 @@ export const AuthConfiguration = {
     return {
       connect: () => [AuthResult.OK, null],
       publish: (app: string, key: string) => {
-        if (lock.has(generate_lock_key(app, key))) {
-          return [AuthResult.DISCONNECT, null];
-        }
+        if (lock.has(generate_lock_key(app, key))) { return [AuthResult.DISCONNECT, null]; }
         lock.add(generate_lock_key(app, key));
         return [AuthResult.OK, null];
       },
@@ -96,12 +94,8 @@ export const AuthConfiguration = {
     return {
       connect: (app: string) => [app === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
       publish: (app: string, key: string) => {
-        if (key !== streamKey) {
-          return [AuthResult.DISCONNECT, null];
-        }
-        if (lock.has(generate_lock_key(app, key))) {
-          return [AuthResult.DISCONNECT, null];
-        }
+        if (key !== streamKey) { return [AuthResult.DISCONNECT, null]; }
+        if (lock.has(generate_lock_key(app, key))) { return [AuthResult.DISCONNECT, null]; }
         lock.add(generate_lock_key(app, key));
         return [AuthResult.OK, null];
       },
@@ -117,11 +111,21 @@ export const AuthConfiguration = {
     keepaliveFn: ((app: string, key: string, query?: Record<string, string>) => (boolean | Promise<boolean>)) | null,
     disconnectFn: ((app: string, key: string, query?: Record<string, string>) => (void | Promise<void>)) | null
   ): AuthConfiguration {
+    const lock = new Set<ReturnType<typeof generate_lock_key>>();
     return {
       connect: async (app: string, query?: Record<string, string>) => [(await (connectFn?.(app, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      publish: async (app: string, key: string, query?: Record<string, string>) => [(await (publishFn?.(app, key, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      publish: async (app: string, key: string, query?: Record<string, string>) => {
+        const ok = await (publishFn?.(app, key, query)) ?? true;
+        if (!ok) { return [AuthResult.DISCONNECT, null]; }
+        if (lock.has(generate_lock_key(app, key))) { return [AuthResult.DISCONNECT, null]; }
+        lock.add(generate_lock_key(app, key));
+        return [AuthResult.OK, null];
+      },
       keepalive: async (app: string, key: string, query?: Record<string, string>) => (await (keepaliveFn?.(app, key, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT,
-      disconnect: async (app: string, key: string, query?: Record<string, string>) => (await disconnectFn?.(app, key, query)),
+      disconnect: async (app: string, key: string, query?: Record<string, string>) => {
+        await disconnectFn?.(app, key, query);
+        lock.delete(generate_lock_key(app, key));
+      },
     };
   },
 };
