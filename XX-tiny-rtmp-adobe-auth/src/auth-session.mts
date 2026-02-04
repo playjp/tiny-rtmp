@@ -20,25 +20,8 @@ export default class AdobeAuthSession implements AuthConfiguration {
     this.passwordFn = passwordFn;
   }
 
-  public async connect(app: string): Promise<AuthResultWithDescription> {
-    const query_index = app.indexOf('?');
-    if (query_index < 0) {
-      // Adobe Auth を要求する
-      // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
-      return [AuthResult.DISCONNECT, 'authmod=adobe code=403 need auth'];
-    }
-    // クエリパラメータをパース
-    const appName = app.slice(0, query_index);
-    const query = app.slice(query_index + 1).split('&').reduce((a, b) => {
-      const index = b.indexOf('=');
-      const key = index >= 0 ? b.slice(0, index) : b;
-      const value = index >= 0 ? b.slice(index + 1) : '';
-      return {
-        ... a,
-        [key]: value,
-      };
-    }, {}) as Record<string, string | undefined>;
-    const { user, authmod, challenge, opaque, response } = query;
+  public async connect(app: string, query?: Record<string, string>): Promise<AuthResultWithDescription> {
+    const { user, authmod, challenge, opaque, response } = query ?? {};
     // Adobe Auth でなければ Adobe Auth を要求して切断 (authmod, user は必須)
     // (FFmpeg は切断してくるので、こちらから切断してエラーにならないようにする)
     if (authmod !== 'adobe' || user == null) {
@@ -58,11 +41,11 @@ export default class AdobeAuthSession implements AuthConfiguration {
     return [AuthResult.OK, null];
   }
 
-  public keepalive(app: string, key: string): typeof AuthResult.OK | typeof AuthResult.DISCONNECT {
+  public keepalive(): typeof AuthResult.OK | typeof AuthResult.DISCONNECT {
     return AuthResult.OK;
   }
 
-  public disconnect(app: string, key: string): void {}
+  public disconnect(): void {}
 
   private query(user: string): string {
     // Map は 挿入順 で走査できるので、古い順で取り出せる

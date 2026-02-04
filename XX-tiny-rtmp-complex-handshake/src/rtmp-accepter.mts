@@ -125,7 +125,7 @@ const strip_query = (value: string): string => {
   if (query_index < 0) { return value; }
   return value.slice(0, query_index);
 };
-const collect_query = (value: string): Record<string, string | undefined> | undefined => {
+const collect_query = (value: string): Record<string, string> | undefined => {
   const query_index = value.indexOf('?');
   if (query_index < 0) { return undefined; }
   return value.slice(query_index + 1).split('&').reduce((a, b) => {
@@ -136,15 +136,15 @@ const collect_query = (value: string): Record<string, string | undefined> | unde
       ... a,
       [key]: value,
     };
-  }, {}) as Record<string, string | undefined>;
+  }, {}) as Record<string, string>;
 };
 type MaybePromise<T,> = T | Promise<T>;
 export type AuthResultWithDescription = [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null];
 export interface AuthConfiguration {
-  connect(app: string): MaybePromise<AuthResultWithDescription>;
-  publish(key: string): MaybePromise<AuthResultWithDescription>;
-  keepalive(app: string, key: string): MaybePromise<typeof AuthResult.OK | typeof AuthResult.DISCONNECT>;
-  disconnect(app: string, key: string): MaybePromise<void>;
+  connect(app: string, query?: Record<string, string>): MaybePromise<AuthResultWithDescription>;
+  publish(app: string, key: string, query?: Record<string, string>): MaybePromise<AuthResultWithDescription>;
+  keepalive(app: string, key: string, query?: Record<string, string>): MaybePromise<typeof AuthResult.OK | typeof AuthResult.DISCONNECT>;
+  disconnect(app: string, key: string, query?: Record<string, string>): MaybePromise<void>;
 };
 export const AuthConfiguration = {
   noAuth(): AuthConfiguration {
@@ -157,29 +157,29 @@ export const AuthConfiguration = {
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
     return {
-      connect: (app: string) => [strip_query(app) === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      publish: (key: string) => [strip_query(key) === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      connect: (app: string) => [app === appName ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      publish: (_: string, key: string) => [key === streamKey ? AuthResult.OK : AuthResult.DISCONNECT, null],
       keepalive: () => AuthResult.OK,
       disconnect: () => {},
     };
   },
   customAuth(
-    connectFn: ((app: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
-    publishFn: ((key: string, query?: Record<string, string | undefined>) => (boolean | Promise<boolean>)) | null,
-    keepaliveFn: ((app: string, key: string) => (boolean | Promise<boolean>)) | null,
-    disconnectFn: ((app: string, key: string) => (void | Promise<void>)) | null
+    connectFn: ((app: string, query?: Record<string, string>) => (boolean | Promise<boolean>)) | null,
+    publishFn: ((app: string, key: string, query?: Record<string, string>) => (boolean | Promise<boolean>)) | null,
+    keepaliveFn: ((app: string, key: string, query?: Record<string, string>) => (boolean | Promise<boolean>)) | null,
+    disconnectFn: ((app: string, key: string, query?: Record<string, string>) => (void | Promise<void>)) | null
   ): AuthConfiguration {
     return {
-      connect: async (app: string) => [(await (connectFn?.(strip_query(app), collect_query(app))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      publish: async (key: string) => [(await (publishFn?.(strip_query(key), collect_query(key))) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
-      keepalive: async (app: string, key: string) => (await (keepaliveFn?.(app, key)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT,
-      disconnect: async (app: string, key: string) => (await disconnectFn?.(app, key)),
+      connect: async (app: string, query?: Record<string, string>) => [(await (connectFn?.(app, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      publish: async (app: string, key: string, query?: Record<string, string>) => [(await (publishFn?.(app, key, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT, null],
+      keepalive: async (app: string, key: string, query?: Record<string, string>) => (await (keepaliveFn?.(app, key, query)) ?? true) ? AuthResult.OK : AuthResult.DISCONNECT,
+      disconnect: async (app: string, key: string, query?: Record<string, string>) => (await disconnectFn?.(app, key, query)),
     };
   },
 };
 const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
 
-const generate_key = (session: RTMPSession): string => `${session.app}/${session.streamKey}`;
+const generate_key = (session: RTMPSession): string => `${session.app}/${session.stream}`;
 const lock = new Set<NonNullable<ReturnType<typeof generate_key>>>();
 
 const PUBLISH_MESSAGE_STREAM = 1;
@@ -211,10 +211,10 @@ const TRANSITION = {
 
     const [authResult, description] = await (() => {
       try {
-        return auth.connect(app);
+        return auth.connect(strip_query(app), collect_query(app));
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        logger.error('Auth app Failed');
+        logger.error('Connect Auth Failed');
         return [AuthResult.DISCONNECT, null];
       }
     })();
@@ -294,19 +294,19 @@ const TRANSITION = {
     if (!isAMF0Number(command[1])) { return STATE.WAITING_PUBLISH; }
     const transaction_id = command[1];
     if (!isAMF0String(command[3])) { return STATE.WAITING_PUBLISH; }
-    const streamKey = command[3];
+    const stream = command[3];
 
     const [auth_before_lock, description_before_lock] = await (() => {
       try {
-        return auth.publish(streamKey);
+        return auth.publish(load()!.app!, strip_query(stream), collect_query(stream));
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
-        logger.error('Auth streamKey Failed');
+        logger.error('Publish Auth Failed');
         return [AuthResult.DISCONNECT, null];
       }
     })();
-    // streamKey が合致していて、配信されてない場合は配信を許可する
-    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... load()!, streamKey: strip_query(streamKey) })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
+    // stream が合致していて、配信されてない場合は配信を許可する
+    const [authResult, description] = auth_before_lock === AuthResult.OK && lock.has(generate_key({ ... load()!, stream: strip_query(stream) })) ?  [AuthResult.DISCONNECT, null] : [auth_before_lock, description_before_lock];
     const publishAccepted = authResult === AuthResult.OK;
 
     const info = publishAccepted ? {
@@ -328,7 +328,7 @@ const TRANSITION = {
     });
 
     if (publishAccepted) {
-      store({ streamKey: strip_query(streamKey) });
+      store({ stream: strip_query(stream), query: collect_query(stream) });
       lock.add(generate_key(load()!));
     }
 
@@ -394,9 +394,9 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
         if (state !== STATE.PUBLISHED) { continue; }
         const keepalive = await (() => {
           try {
-            // PUBLISHED なら session 内であり app と streamKey は必ず存在する
+            // PUBLISHED なら session 内であり app と stream は必ず存在する
             const session = load()!;
-            return auth.keepalive(session.app!, session.streamKey!);
+            return auth.keepalive(session.app!, session.stream!, session.query);
           } catch {
             // keepalive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
             logger.error('Auth keepalive Failed');
@@ -432,8 +432,8 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     connection.end();
 
     const session = load()!;
-    if (session.app != null && session.streamKey != null) {
-      await auth.disconnect(session.app, session.streamKey);
+    if (session.app != null && session.stream != null) {
+      await auth.disconnect(session.app, session.stream, session.query);
       lock.delete(generate_key(session));
     }
   }

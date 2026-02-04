@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 
 export type UpdatableRTMPSession =  Partial<{
   app: string;
-  streamKey: string;
+  stream: string;
+  query: Record<string, string>;
 }>;
 
 export type RTMPSession = UpdatableRTMPSession & {
