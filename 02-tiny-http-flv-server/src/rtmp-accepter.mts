@@ -205,7 +205,9 @@ const TRANSITION = {
       data: write_amf0(status, transaction_id, server, info),
     });
 
-    store({ app: strip_query(app) });
+    if (connectAccepted) {
+      store({ app: strip_query(app) });
+    }
     const next = {
       [AuthResult.OK]: STATE.WAITING_CREATESTREAM,
       [AuthResult.RETRY]: STATE.WAITING_CONNECT,
