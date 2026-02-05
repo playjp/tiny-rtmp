@@ -116,6 +116,6 @@ export default class ByteBuilder {
   }
 
   public build(): Buffer {
-    return Buffer.concat(this.buffers);
+    return Buffer.concat(this.buffers, this.length);
   }
 }
