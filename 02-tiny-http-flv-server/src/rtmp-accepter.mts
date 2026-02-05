@@ -330,7 +330,6 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   using reader = new AsyncByteReader({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
   using estimator = new BandwidthEstimator(option?.limit?.bandwidth ?? Number.POSITIVE_INFINITY, controller);
   connection.pipe(new Writable({
-    highWaterMark: option?.limit?.highWaterMark,
     write(data, _, cb) {
       reader.feed(data);
       estimator.feed(data.byteLength);
@@ -338,7 +337,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
     },
   }));
   using writer = new MessageWriter({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
-  Readable.from(writer.retrieve(), { highWaterMark: option?.limit?.highWaterMark }).pipe(connection);
+  Readable.from(writer.retrieve()).pipe(connection);
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
 
