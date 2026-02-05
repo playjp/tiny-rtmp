@@ -413,7 +413,11 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     // 配信セッションの定期的な生存確認
     (async () => {
       while (state !== STATE.DISCONNECTED) {
-        await setTimeout(KEEPALIVE_INTERVAL);
+        try {
+          await setTimeout(KEEPALIVE_INTERVAL, undefined, { signal: controller.signal });
+        } catch {
+          break;
+        }
         if (state !== STATE.PUBLISHED) { continue; }
         const keepalive = await (() => {
           try {
