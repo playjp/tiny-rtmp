@@ -27,7 +27,7 @@ export default class ByteVector {
   public write(buffer: Buffer, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + buffer.byteLength);
@@ -38,7 +38,7 @@ export default class ByteVector {
   public writeUIntBE(value: number, length: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + length);
@@ -49,7 +49,7 @@ export default class ByteVector {
   public writeIntBE(value: number, length: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + length);
@@ -60,7 +60,7 @@ export default class ByteVector {
   public writeUIntLE(value: number, length: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + length);
@@ -71,7 +71,7 @@ export default class ByteVector {
   public writeIntLE(value: number, length: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + length);
@@ -138,7 +138,7 @@ export default class ByteVector {
   public writeF32BE(float: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + 4);
@@ -149,7 +149,7 @@ export default class ByteVector {
   public writeF64BE(double: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + 8);
