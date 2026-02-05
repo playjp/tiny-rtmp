@@ -363,10 +363,12 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       state = STATE.DISCONNECTED;
     }, { once: true });
     // 配信セッションの定期的な生存確認
+    const keepalive_controller = new AbortController();
     (async () => {
+      const signal = AbortSignal.any([controller.signal, keepalive_controller.signal]);
       while (state !== STATE.DISCONNECTED) {
         try {
-          await setTimeout(KEEPALIVE_INTERVAL, undefined, { signal: controller.signal });
+          await setTimeout(KEEPALIVE_INTERVAL, undefined, { signal: signal });
         } catch {
           break;
         }
@@ -404,6 +406,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
     } finally {
       // ループが異常な理由で終了しても切断状態にする
       state = STATE.DISCONNECTED;
+      keepalive_controller.abort();
     }
   } finally {
     connection.removeListener('close', disconnected);
