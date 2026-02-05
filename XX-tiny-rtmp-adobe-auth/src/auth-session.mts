@@ -95,8 +95,9 @@ export default class AdobeAuthSession implements AuthConfiguration {
     const password = await this.passwordFn(user);
     if (password == null) { return false; }
 
+    // なんでハッシュ化したパスワードじゃなくて生パスワードなんだろうね...
     const firststep = crypto.createHash('md5').update(user).update(session.salt.toString('base64')).update(password).digest('base64');
-    // FFmpeg は opaque を優先して使い opaque がない時に client challenge を使う... なんで???
+    // 上述の通り、正しいのは challenge を使う方なので challenge を用いる
     const secondstep = crypto.createHash('md5').update(firststep).update(session.challenge.toString('base64')).update(challenge).digest('base64');
     return response === secondstep;
   }

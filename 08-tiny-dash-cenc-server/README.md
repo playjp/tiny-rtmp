@@ -75,3 +75,8 @@ http://localhost:8000/myapp/mystreamkey/audio_init.mp4
 http://localhost:8000/myapp/mystreamkey/video_{番号}.m4s
 http://localhost:8000/myapp/mystreamkey/audio_{番号}.m4s
 ```
+
+## メモ
+
+cbcs は Constant IV にするのが一般的らしい  
+Chrome はどの指定でも動くが、Firefox は cbcs だと Constant IV でなければ動かない  
