@@ -55,7 +55,7 @@ export class ConsoleLogger implements Logger {
     this.loglevel = loglevel ?? LogLevel.INFO;
   }
 
-  trace(message: string, record: Record<string, unknown>): void {
+  trace(message: string, record?: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.TRACE) { return; }
     const level = styleText(['gray', 'bgBlack', 'dim'], '[TRACE]', { stream: process.stderr });
     record = { ... (load() ?? {}),  ... (record ?? {}) };
@@ -66,7 +66,7 @@ export class ConsoleLogger implements Logger {
     }
   }
 
-  debug(message: string, record: Record<string, unknown>): void {
+  debug(message: string, record?: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.DEBUG) { return; }
     const level = styleText(['gray', 'bgBlack'], '[DEBUG]', { stream: process.stderr });
     record = { ... (load() ?? {}),  ... (record ?? {}) };
@@ -77,7 +77,7 @@ export class ConsoleLogger implements Logger {
     }
   }
 
-  info(message: string, record: Record<string, unknown>): void {
+  info(message: string, record?: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.INFO) { return; }
     const level = styleText(['white', 'bgBlack'], '[INFO]', { stream: process.stderr });
     record = { ... (load() ?? {}),  ... (record ?? {}) };
@@ -88,7 +88,7 @@ export class ConsoleLogger implements Logger {
     }
   }
 
-  warn(message: string, record: Record<string, unknown>): void {
+  warn(message: string, record?: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.WARN) { return; }
     const level = styleText(['white', 'bgYellow'], '[WARN]', { stream: process.stderr });
     record = { ... (load() ?? {}),  ... (record ?? {}) };
@@ -99,7 +99,7 @@ export class ConsoleLogger implements Logger {
     }
   }
 
-  error(message: string, record: Record<string, unknown>): void {
+  error(message: string, record?: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.ERROR) { return; }
     const level = styleText(['white', 'bgRed'], '[ERROR]', { stream: process.stderr });
     record = { ... (load() ?? {}),  ... (record ?? {}) };
@@ -110,7 +110,7 @@ export class ConsoleLogger implements Logger {
     }
   }
 
-  fatal(message: string, record: Record<string, unknown>): void {
+  fatal(message: string, record?: Record<string, unknown>): void {
     if (this.loglevel > LogLevel.FATAL) { return; }
     const level = styleText(['white', 'bgRed', 'bold'], '[FATAL]', { stream: process.stderr });
     record = { ... (load() ?? {}),  ... (record ?? {}) };
