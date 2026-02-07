@@ -399,7 +399,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
 
     // メッセージループ
     try {
-      for await (const message of read_message(reader)) {
+      for await (const message of read_message(reader, { highWaterMark: option?.limit?.highWaterMark })) {
         // 共通で処理するメッセージはここで処理する
         if (message.message_type_id === MessageType.WindowAcknowledgementSize) {
           counter.window(message.data.ack_window_size);

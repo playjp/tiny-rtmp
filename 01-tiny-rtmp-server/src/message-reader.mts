@@ -18,13 +18,27 @@ export class MessageLengthExceededError extends Error {
   }
 }
 
+export class ReceiveBufferLimitError extends Error {
+  constructor(message: string, option?: ErrorOptions) {
+    super(message, option);
+    this.name = this.constructor.name;
+  }
+}
+
 type MessageInformation = Omit<SerializedMessage, 'data'> & {
   message_length: number;
   timestamp_delta: number | null;
   is_extended_timestamp: boolean;
 };
 
-export default async function* read_message(reader: AsyncByteReader): AsyncIterable<Message> {
+export type MessageReaderOption = Partial<{
+  highWaterMark: number;
+}>;
+
+export default async function* read_message(reader: AsyncByteReader, option?: MessageReaderOption): AsyncIterable<Message> {
+  const highWaterMark = option?.highWaterMark ?? Number.POSITIVE_INFINITY;
+  let buffered = 0;
+
   let chunk_maximum_size = 128; // システムメッセージにより変化する
   const informations = new Map<number, MessageInformation>();
   const chunks = new Map<number, ByteBuilder>();
@@ -37,7 +51,10 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
       case 0: cs_id = 64 + await reader.readU8(); break;
       case 1: cs_id = 64 + await reader.readU16LE(); break;
     }
-    if (fmt !== 3 || !chunks.has(cs_id)) { chunks.set(cs_id, new ByteBuilder()); }
+    if (fmt !== 3 || !chunks.has(cs_id)) {
+      buffered -= chunks.get(cs_id)?.byteLength() ?? 0;
+      chunks.set(cs_id, new ByteBuilder());
+    }
     const chunk_builder = chunks.get(cs_id)!;
 
     let information = informations.get(cs_id);
@@ -71,6 +88,11 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
     information = { message_type_id, message_stream_id, message_length, timestamp, timestamp_delta, is_extended_timestamp } satisfies MessageInformation;
     const current_chunk = await reader.read(Math.min(message_length - chunk_builder.byteLength(), chunk_maximum_size));
     chunk_builder.write(current_chunk);
+    buffered += current_chunk.byteLength;
+    if (buffered >= highWaterMark) {
+      throw new ReceiveBufferLimitError(`Message Buffer Limit Exceeded`);
+    }
+
     const length = chunk_builder.byteLength();
     if (length > message_length) {
       throw new MessageLengthExceededError(`Message Overflow (expected: ${message_length}, actual: ${length})`);
@@ -91,6 +113,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
             break;
           case MessageType.Abort: {
             const cs_id = message.data.chunk_stream_id;
+            buffered -= chunks.get(cs_id)?.byteLength() ?? 0;
             chunks.delete(cs_id);
             informations.delete(cs_id);
             break;
@@ -105,6 +128,7 @@ export default async function* read_message(reader: AsyncByteReader): AsyncItera
       }
 
       chunks.delete(cs_id);
+      buffered -= data.byteLength;
     }
     informations.set(cs_id, information);
   }
