@@ -176,15 +176,15 @@ const skip_dec_ref_pic_marking = (nal_unit_type: number, reader: BitReader): voi
 };
 
 export const skip_slice_header = ({ nal_ref_idc, nal_unit_type }: NALUnitHeader, reader: BitReader, all_sps: Buffer[], all_pps: Buffer[]): void => {
-  const ssps = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(sps)));
-  const ppps = all_pps.map((pps) => read_pic_parameter_set_data(strip_nal_unit_header(pps)));
+  const spss = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(sps)));
+  const ppss = all_pps.map((pps) => read_pic_parameter_set_data(strip_nal_unit_header(pps)));
 
   reader.skipUEG(); // first_mb_in_slice
   const slice_type = reader.readUEG();
   const pic_parameter_set_id = reader.readUEG();
   // TODO: ほんとは当てはまらない再生できないやつをエラーさせるべき
-  const pps = ppps.find((pps) => pps.pic_parameter_set_id === pic_parameter_set_id)!;
-  const sps = ssps.find((sps) => sps.seq_parameter_set_id === pps.seq_parameter_set_id)!;
+  const pps = ppss.find((pps) => pps.pic_parameter_set_id === pic_parameter_set_id)!;
+  const sps = spss.find((sps) => sps.seq_parameter_set_id === pps.seq_parameter_set_id)!;
 
   if (sps.separate_colour_plane_flag) {
     reader.skipBits(2); // colour_plane_id
