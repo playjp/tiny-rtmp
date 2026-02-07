@@ -207,7 +207,7 @@ const read_vui_parameters = (reader: BitReader): VUIParameters => {
   };
 };
 
-const read_scaling_list = (sizeOfScalingList: number, reader: BitReader): void => {
+const skip_scaling_list = (sizeOfScalingList: number, reader: BitReader): void => {
   let lastScale = 8, nextScale = 8;
   for (let j = 0; j < sizeOfScalingList; j++) {
     if (nextScale !== 0) {
@@ -284,9 +284,9 @@ export const read_seq_parameter_set_data = (reader: BitReader): SequenceParamete
           const seq_scaling_list_present_flag = reader.readBool();
           if (seq_scaling_list_present_flag) {
             if (i < 6) {
-              read_scaling_list(16, reader);
+              skip_scaling_list(16, reader);
             } else {
-              read_scaling_list(64, reader);
+              skip_scaling_list(64, reader);
             }
           }
         }
