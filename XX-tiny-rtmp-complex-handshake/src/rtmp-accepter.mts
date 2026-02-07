@@ -5,14 +5,15 @@ import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import { MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
+import { Acknowledgement, MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import FLVWriter from '../../01-tiny-rtmp-server/src/flv-writer.mts';
 import MessageWriter from '../../01-tiny-rtmp-server/src/message-writer.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
-import { load, store, initialized, type RTMPSession } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import { load, store, initialized } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+import AckCounter from '../../01-tiny-rtmp-server/src/ack-counter.mts';
 
 const simple_handshake_C1S1C2S2 = async (c1: Buffer, reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // simple handshake
@@ -386,12 +387,19 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   if (!initialized()) { throw new Error('RTMP session not initialized.'); }
 
   const controller = new AbortController();
-  using reader = new AsyncByteReader({ signal: controller.signal });
-  connection.pipe(new Writable({
-    write(data, _, cb) { reader.feed(data); cb(); },
-  }));
   using writer = new MessageWriter({ signal: controller.signal });
   Readable.from(writer.retrieve()).pipe(connection);
+  const counter = new AckCounter((bytes: number) => {
+    writer.write(Acknowledgement.from({ sequence_number: bytes, timestamp: 0 }));
+  });
+  using reader = new AsyncByteReader({ signal: controller.signal });
+  connection.pipe(new Writable({
+    write(data, _, cb) {
+      reader.feed(data);
+      counter.feed(data.byteLength);
+      cb();
+    },
+  }));
   const disconnected = controller.abort.bind(controller);
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
@@ -448,6 +456,9 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     try {
       for await (const message of read_message(reader)) {
         // 共通で処理するメッセージはここで処理する
+        if (message.message_type_id === MessageType.WindowAcknowledgementSize) {
+          counter.window(message.data.ack_window_size);
+        }
 
         // 上位に伝える映像/音声/データのメッセージだったら伝える
         if (need_yield(state, message)) { yield message; }

@@ -5,7 +5,8 @@ import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
-import { MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
+import AckCounter from '../../01-tiny-rtmp-server/src/ack-counter.mts';
+import { Acknowledgement, MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageWriter from '../../01-tiny-rtmp-server/src/message-writer.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
@@ -329,17 +330,21 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
 
   const auth = option?.auth ?? AuthConfiguration.noAuth();
   const controller = new AbortController();
+  using writer = new MessageWriter({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
+  Readable.from(writer.retrieve()).pipe(connection);
+  const counter = new AckCounter((bytes: number) => {
+    writer.write(Acknowledgement.from({ sequence_number: bytes, timestamp: 0 }));
+  });
   using reader = new AsyncByteReader({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
   using estimator = new BandwidthEstimator(option?.limit?.bandwidth ?? Number.POSITIVE_INFINITY, controller);
   connection.pipe(new Writable({
     write(data, _, cb) {
       reader.feed(data);
+      counter.feed(data.byteLength);
       estimator.feed(data.byteLength);
       cb();
     },
   }));
-  using writer = new MessageWriter({ signal: controller.signal, highWaterMark: option?.limit?.highWaterMark });
-  Readable.from(writer.retrieve()).pipe(connection);
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
@@ -396,6 +401,9 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
     try {
       for await (const message of read_message(reader)) {
         // 共通で処理するメッセージはここで処理する
+        if (message.message_type_id === MessageType.WindowAcknowledgementSize) {
+          counter.window(message.data.ack_window_size);
+        }
 
         // 上位に伝える映像/音声/データのメッセージだったら伝える
         if (need_yield(state, message)) { yield message; }

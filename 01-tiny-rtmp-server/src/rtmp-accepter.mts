@@ -5,14 +5,15 @@ import { setTimeout } from 'node:timers/promises';
 
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message from './message-reader.mts';
-import { MessageType, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin } from './message.mts';
+import { MessageType, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin, Acknowledgement } from './message.mts';
 import type { Message } from './message.mts';
 import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import MessageWriter from './message-writer.mts';
 import FLVWriter from './flv-writer.mts';
 import { logger } from './logger.mts';
-import { load, store, initialized, type RTMPSession } from './rtmp-session.mts';
+import { load, store, initialized } from './rtmp-session.mts';
+import AckCounter from './ack-counter.mts';
 
 const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // C0/S0
@@ -312,12 +313,20 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   if (!initialized()) { throw new Error('RTMP session not initialized.'); }
 
   const controller = new AbortController();
-  using reader = new AsyncByteReader({ signal: controller.signal });
-  connection.pipe(new Writable({
-    write(data, _, cb) { reader.feed(data); cb(); },
-  }));
   using writer = new MessageWriter({ signal: controller.signal });
   Readable.from(writer.retrieve()).pipe(connection);
+  const counter = new AckCounter((bytes: number) => {
+    // MEMO: システム系はあんま timestamp に意味ない? らしい...? ので 0 にしてる
+    writer.write(Acknowledgement.from({ sequence_number: bytes, timestamp: 0 }));
+  });
+  using reader = new AsyncByteReader({ signal: controller.signal });
+  connection.pipe(new Writable({
+    write(data, _, cb) {
+      reader.feed(data);
+      counter.feed(data.byteLength);
+      cb();
+    },
+  }));
   const disconnected = controller.abort.bind(controller);
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
@@ -374,6 +383,9 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
     try {
       for await (const message of read_message(reader)) {
         // 共通で処理するメッセージはここで処理する
+        if (message.message_type_id === MessageType.WindowAcknowledgementSize) {
+          counter.window(message.data.ack_window_size);
+        }
 
         // 上位に伝える映像/音声/データのメッセージだったら伝える
         if (need_yield(state, message)) { yield message; }
