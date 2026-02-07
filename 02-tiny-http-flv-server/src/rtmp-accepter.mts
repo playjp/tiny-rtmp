@@ -1,7 +1,8 @@
 import { Readable, Writable } from 'node:stream';
 import type { Duplex } from 'node:stream';
 import { randomBytes } from 'node:crypto';
-import { setTimeout } from 'node:timers/promises';
+import { setTimeout as wait } from 'node:timers/promises';
+import { setTimeout } from 'node:timers';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
@@ -135,6 +136,7 @@ export const AuthConfiguration = {
   },
 };
 const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
+const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 
 const PUBLISH_MESSAGE_STREAM = 1;
 const WINDOW_ACKNOWLEDGE_SIZE = 2500000;
@@ -348,6 +350,8 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
+  const timeout = () => { controller.abort(new Error('Timeout Exceeded')); }
+  let timeoutId: NodeJS.Timeout = setTimeout(timeout, IDLE_TIMEOUT);
 
   try {
     /*
@@ -374,7 +378,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       const signal = AbortSignal.any([controller.signal, keepalive_controller.signal]);
       while (state !== STATE.DISCONNECTED) {
         try {
-          await setTimeout(KEEPALIVE_INTERVAL, undefined, { signal: signal });
+          await wait(KEEPALIVE_INTERVAL, undefined, { signal: signal });
         } catch {
           break;
         }
@@ -406,7 +410,13 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
         }
 
         // 上位に伝える映像/音声/データのメッセージだったら伝える
-        if (need_yield(state, message)) { yield message; }
+        if (need_yield(state, message)) {
+          // 有効なメッセージなので有効期間を延長
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(timeout, IDLE_TIMEOUT);
+          // 上位に伝達
+          yield message;
+        }
 
         // 個別のメッセージによる状態遷移
         state = await TRANSITION[state](message, writer, auth);
@@ -418,7 +428,9 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       keepalive_controller.abort();
     }
   } finally {
+    clearTimeout(timeoutId);
     connection.removeListener('close', disconnected);
+    connection.removeListener('error', disconnected);
     writer.end();
     await writer.ended(); // 今の送信キューを flush して送信する
     connection.end();
