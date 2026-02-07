@@ -4,7 +4,7 @@ import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
 import ByteBuilder from '../../01-tiny-rtmp-server/src/byte-builder.mts';
 import { read_avc_decoder_configuration_record, type AVCDecoderConfigurationRecord } from '../../03-tiny-http-ts-server/src/avc.mts';
 import BitReader from '../../03-tiny-http-ts-server/src/bit-reader.mts';
-import { is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
+import { is_idr_nal, read_nal_unit_header, read_pic_parameter_set_data, read_seq_parameter_set_data, strip_nal_unit_header, sufficient_bits, type NALUnitHeader, type SequenceParameterSet } from '../../06-tiny-http-fmp4-server/src/avc.mts';
 import EBSPBitReader from '../../06-tiny-http-fmp4-server/src/ebsp-bit-reader.mts';
 import { avcC, make, track } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 import { EncryptionFormat, EncryptionScheme, encv, frma, IVType, padIV, schi, schm, sinf, tenc, type EncryptionFormatCBCS, type EncryptionFormatCENC, type SubsampleInformation } from './cenc.mts';
@@ -175,7 +175,7 @@ const skip_dec_ref_pic_marking = (nal_unit_type: number, reader: BitReader): voi
   }
 };
 
-export const skip_slice_header = (nal_ref_idc: number, nal_unit_type: number, reader: BitReader, all_sps: Buffer[], all_pps: Buffer[]): void => {
+export const skip_slice_header = ({ nal_ref_idc, nal_unit_type }: NALUnitHeader, reader: BitReader, all_sps: Buffer[], all_pps: Buffer[]): void => {
   const ssps = all_sps.map((sps) => read_seq_parameter_set_data(strip_nal_unit_header(sps)));
   const ppps = all_pps.map((pps) => read_pic_parameter_set_data(strip_nal_unit_header(pps)));
 
@@ -306,7 +306,8 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const { nal_ref_idc, nal_unit_type, consumed_bytes } = read_nal_unit_header(nalu);
+    const nalu_header = read_nal_unit_header(nalu);
+    const { nal_unit_type, consumed_bytes } = nalu_header;
     const bit_reader = new EBSPBitReader(nalu.subarray(consumed_bytes));
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
@@ -314,7 +315,7 @@ export const encrypt_avc_cenc = (format: EncryptionFormatCENC, key: Buffer, iv: 
     if (isVCL) {
       // CENCv3 から slice_header は clear である必要がある
       // CENCv1 では そのような記載がないため nal header くらいがあれば十分
-      skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
+      skip_slice_header(nalu_header, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
       const clearBytes = consumed_bytes + Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
@@ -347,7 +348,8 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
     const length = nalu_reader.readUIntBE(naluLengthSize);
     const nalu = nalu_reader.read(length);
 
-    const { nal_ref_idc, nal_unit_type, consumed_bytes } = read_nal_unit_header(nalu);
+    const nalu_header = read_nal_unit_header(nalu);
+    const { nal_unit_type, consumed_bytes } = nalu_header;
     const bit_reader = new EBSPBitReader(nalu.subarray(consumed_bytes));
     const isVCL = 1 <= nal_unit_type && nal_unit_type <= 5;
 
@@ -355,7 +357,7 @@ export const encrypt_avc_cbcs = (format: EncryptionFormatCBCS, key: Buffer, iv: 
     if (isVCL) {
       // CENCv3 から slice_header は clear である必要がある
       // CENCv1 では そのような記載がないため nal header くらいがあれば十分
-      skip_slice_header(nal_ref_idc, nal_unit_type, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
+      skip_slice_header(nalu_header, bit_reader, avcDecoderConfigurationRecord.SequenceParameterSets, avcDecoderConfigurationRecord.PictureParameterSets);
       const clearBytes = consumed_bytes + Math.floor((bit_reader.consumedBits() + 8 - 1) / 8);
       builder.write(nalu.subarray(0, clearBytes));
 
