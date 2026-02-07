@@ -17,7 +17,7 @@ export default class AckCounter {
 
   public feed(byteLength: number): void {
     this.difference += byteLength;
-    this.total += byteLength;
+    this.total = (this.total + byteLength) % 2 ** 32;
     this.call();
   }
 
