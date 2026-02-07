@@ -106,7 +106,7 @@ const aspect_ratio_table = [
   [2, 1],
 ] as const satisfies [number, number][];
 
-const read_hrd_parameters = (reader: BitReader): void => {
+const skip_hrd_parameters = (reader: BitReader): void => {
   const cpb_cnt_minus1 = reader.readUEG();
   const bit_rate_scale = reader.readBits(4);
   const cpb_size_scale = reader.readBits(4);
@@ -180,11 +180,11 @@ const read_vui_parameters = (reader: BitReader): VUIParameters => {
   })();
   const nal_hrd_parameters_present_flag = reader.readBool();
   if (nal_hrd_parameters_present_flag) {
-    read_hrd_parameters(reader);
+    skip_hrd_parameters(reader);
   }
   const vcl_hrd_parameters_present_flag = reader.readBool();
   if (vcl_hrd_parameters_present_flag) {
-    read_hrd_parameters(reader);
+    skip_hrd_parameters(reader);
   }
   if (nal_hrd_parameters_present_flag || vcl_hrd_parameters_present_flag) {
     const low_delay_hrd_flag = reader.readBool();
