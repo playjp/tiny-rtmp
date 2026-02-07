@@ -342,6 +342,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   Readable.from(writer.retrieve()).pipe(connection);
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
+  connection.addListener('error', disconnected);
 
   try {
     /*

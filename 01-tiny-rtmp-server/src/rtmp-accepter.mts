@@ -318,6 +318,9 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   }));
   using writer = new MessageWriter({ signal: controller.signal });
   Readable.from(writer.retrieve()).pipe(connection);
+  const disconnected = controller.abort.bind(controller);
+  connection.addListener('close', disconnected);
+  connection.addListener('error', disconnected);
 
   try {
     /*
