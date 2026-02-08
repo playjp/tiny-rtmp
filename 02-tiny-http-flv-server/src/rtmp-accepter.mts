@@ -135,8 +135,6 @@ export const AuthConfiguration = {
     };
   },
 };
-const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
-const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 
 const PUBLISH_MESSAGE_STREAM = 1;
 const WINDOW_ACKNOWLEDGE_SIZE = 2500000;
@@ -319,11 +317,17 @@ export class DisconnectError extends Error {
   }
 }
 
+const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
+const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 export type RTMPOption = {
   auth?: AuthConfiguration;
   limit?: {
     bandwidth?: number;
     highWaterMark?: number;
+    timeout?: number;
+  };
+  interval?: {
+    keepalive?: number;
   };
 };
 
@@ -351,7 +355,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
   const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); };
-  let idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
+  let idle_timeout_id = setTimeout(idle_timeout, option?.limit?.timeout ?? IDLE_TIMEOUT);
 
   try {
     /*
@@ -378,7 +382,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       const signal = AbortSignal.any([controller.signal, keepalive_controller.signal]);
       while (state !== STATE.DISCONNECTED) {
         try {
-          await wait(KEEPALIVE_INTERVAL, undefined, { signal });
+          await wait(option?.interval?.keepalive ?? KEEPALIVE_INTERVAL, undefined, { signal });
         } catch {
           break;
         }

@@ -134,8 +134,6 @@ export const AuthConfiguration = {
     };
   },
 };
-const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
-const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 
 const PUBLISH_MESSAGE_STREAM = 1;
 const WINDOW_ACKNOWLEDGE_SIZE = 2500000;
@@ -310,6 +308,9 @@ const TRANSITION = {
     return STATE.DISCONNECTED;
   },
 } as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageWriter, auth: AuthConfiguration) => MaybePromise<(typeof STATE)[keyof typeof STATE]>>;
+
+const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
+const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 
 async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
   if (!initialized()) { throw new Error('RTMP session not initialized.'); }
