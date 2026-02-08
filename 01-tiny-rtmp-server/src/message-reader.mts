@@ -90,7 +90,7 @@ export default async function* read_message(reader: AsyncByteReader, option?: Me
     chunk_builder.write(current_chunk);
     buffered += current_chunk.byteLength;
     if (buffered >= highWaterMark) {
-      throw new ReceiveBufferLimitError(`Message Buffer Limit Exceeded`);
+      throw new ReceiveBufferLimitError('Message Buffer Limit Exceeded');
     }
 
     const length = chunk_builder.byteLength();

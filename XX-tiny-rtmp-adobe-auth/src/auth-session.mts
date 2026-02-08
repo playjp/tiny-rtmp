@@ -40,7 +40,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
 
   public publish(app: string, stream: string): [authResult: (typeof AuthResult)[keyof typeof AuthResult], description: string | null] {
     const key = `${app}/${stream}`;
-    if (this.lock.has(key)) { return [ AuthResult.DISCONNECT, null ]; }
+    if (this.lock.has(key)) { return [AuthResult.DISCONNECT, null]; }
     this.lock.add(key);
     return [AuthResult.OK, null];
   }

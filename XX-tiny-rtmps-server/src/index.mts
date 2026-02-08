@@ -45,7 +45,7 @@ const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.
 const intercept = args.intercept;
 const key = fs.readFileSync(args.key);
 const cert = fs.readFileSync(args.cert);
-const auth = AuthConfiguration.noAuth()
+const auth = AuthConfiguration.noAuth();
 
 const server = tls.createServer({ noDelay: true, key, cert }, async (connection) => {
   await run(async () => {

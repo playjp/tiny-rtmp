@@ -89,7 +89,7 @@ export const AuthConfiguration = {
       keepalive: () => AuthResult.OK,
       disconnect: (app: string, key: string) => {
         lock.delete(generate_lock_key(app, key));
-      }
+      },
     };
   },
   simpleAuth(appName: string, streamKey: string): AuthConfiguration {
@@ -350,7 +350,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
-  const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); }
+  const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); };
   let idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
 
   try {

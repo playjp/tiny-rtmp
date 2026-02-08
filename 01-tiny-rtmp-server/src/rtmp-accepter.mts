@@ -332,7 +332,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   const disconnected = controller.abort.bind(controller);
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
-  const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); }
+  const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); };
   let idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
 
   try {
