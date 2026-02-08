@@ -350,8 +350,8 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   const disconnected = () => { controller.abort(new DisconnectError('Disconnected!')); };
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
-  const timeout = () => { controller.abort(new Error('Timeout Exceeded')); }
-  let timeoutId: NodeJS.Timeout = setTimeout(timeout, IDLE_TIMEOUT);
+  const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); }
+  let idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
 
   try {
     /*
@@ -412,8 +412,8 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
         // 上位に伝える映像/音声/データのメッセージだったら伝える
         if (need_yield(state, message)) {
           // 有効なメッセージなので有効期間を延長
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(timeout, IDLE_TIMEOUT);
+          clearTimeout(idle_timeout_id);
+          idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
           // 上位に伝達
           yield message;
         }
@@ -428,7 +428,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       keepalive_controller.abort();
     }
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(idle_timeout_id);
     connection.removeListener('close', disconnected);
     connection.removeListener('error', disconnected);
     writer.end();
