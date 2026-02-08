@@ -378,7 +378,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       const signal = AbortSignal.any([controller.signal, keepalive_controller.signal]);
       while (state !== STATE.DISCONNECTED) {
         try {
-          await wait(KEEPALIVE_INTERVAL, undefined, { signal: signal });
+          await wait(KEEPALIVE_INTERVAL, undefined, { signal });
         } catch {
           break;
         }
