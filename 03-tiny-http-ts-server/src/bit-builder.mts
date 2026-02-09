@@ -1,8 +1,8 @@
 export default class BitBuilder {
-  private bits: number[] = [];
-  private data: number[] = [];
+  protected bits: number[] = [];
+  protected data: number[] = [];
 
-  private fill(): void {
+  protected fill(): void {
     while (this.bits.length >= 8) {
       let datum = 0;
       for (let i = 0; i < 8; i++) {
@@ -32,7 +32,7 @@ export default class BitBuilder {
   }
 
   public writeSEG(value: number): void {
-    this.writeUEG(value < 0 ? -2 * value : 2 * value - 1);
+    this.writeUEG(value <= 0 ? -2 * value : 2 * value - 1);
   }
 
   public writeByte(value: number): void {
