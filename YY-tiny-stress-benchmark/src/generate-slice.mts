@@ -1,5 +1,17 @@
 import EBSPBitBuilder from './ebsp-bit-builder.mts'
 
+const y_pos = (x: number, y: number, width: number, height: number): number => {
+  return y * width + x;
+};
+
+const u_pos = (x: number, y: number, width: number, height: number): number => {
+  return (height * width) + y * Math.floor(width / 2) + x;
+};
+
+const v_pos = (x: number, y: number, width: number, height: number): number => {
+  return (height * width) + Math.floor(height * width / 4) + y * Math.floor(width / 2) + x;
+};
+
 const rbsp_trailing_bit = (writer: EBSPBitBuilder): void => {
   writer.writeBits(1, 1); // rbsp_stop_one_bit
   writer.writeByteAlign(0); // rbsp_alignment_zero_bit
@@ -37,18 +49,24 @@ const slice_data = (yuv: Buffer, width: number, height: number, writer: EBSPBitB
   const width_mb_length = Math.ceil(width / 16);
   const height_mb_lendth = Math.ceil(height / 16);
   for (let count = 0; count < width_mb_length * height_mb_lendth; count++) {
-    const height_mb = Math.floor(count / width_mb_length);
-    const width_mb = (count % width_mb_length);
-    const y_all = (height_mb_lendth * 16) * (width_mb_length * 16);
-    const u_all = (height_mb_lendth * 8) * (width_mb_length * 8);
-    const y_offset = ((height_mb * width_mb_length) * 16 + width_mb * 16);
-    const u_offset = y_all + ((height_mb * width_mb_length) * 8 + width_mb * 8);
-    const v_offset = y_all + u_all + ((height_mb * width_mb_length) * 8 + width_mb * 8);
+    const y_mb = Math.floor(count / width_mb_length);
+    const x_mb = (count % width_mb_length);
+    const y_data = Buffer.alloc(16 * 16);
+    const u_data = Buffer.alloc(8 * 8);
+    const v_data = Buffer.alloc(8 * 8);
 
-    const y = yuv.subarray(y_offset, y_offset + 16 * 16);
-    const u = yuv.subarray(u_offset, u_offset + 8 * 8);
-    const v = yuv.subarray(v_offset, v_offset + 8 * 8);
-    macroblock_layer(y, u, v, writer);
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        y_data[((y * 2) + 0) * 8 * 2 + (x * 2 + 0)] = yuv[y_pos(x_mb * 16 + (x * 2 + 0), y_mb * 16 + ((y * 2) + 0), width, height)];
+        y_data[((y * 2) + 0) * 8 * 2 + (x * 2 + 1)] = yuv[y_pos(x_mb * 16 + (x * 2 + 1), y_mb * 16 + ((y * 2) + 0), width, height)];
+        y_data[((y * 2) + 1) * 8 * 2 + (x * 2 + 0)] = yuv[y_pos(x_mb * 16 + (x * 2 + 0), y_mb * 16 + ((y * 2) + 1), width, height)];
+        y_data[((y * 2) + 1) * 8 * 2 + (x * 2 + 1)] = yuv[y_pos(x_mb * 16 + (x * 2 + 1), y_mb * 16 + ((y * 2) + 1), width, height)];
+        u_data[((y * 1) + 0) * 8 * 1 + (x * 1 + 0)] = yuv[u_pos(x_mb *  8 + (x * 1 + 0), y_mb *  8 + ((y * 1) + 0), width, height)];
+        v_data[((y * 1) + 0) * 8 * 1 + (x * 1 + 0)] = yuv[v_pos(x_mb *  8 + (x * 1 + 0), y_mb *  8 + ((y * 1) + 0), width, height)];
+      }
+    }
+
+    macroblock_layer(y_data, u_data, v_data, writer);
   }
 }
 
