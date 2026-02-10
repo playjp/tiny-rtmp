@@ -227,9 +227,6 @@ const TRANSITION = {
     if (!isAMF0Number(command[1])) { return STATE.WAITING_CREATESTREAM; }
     const transaction_id = command[1];
 
-    // 利用開始する Message Stream ID を Stream Begin で伝達する
-    writer.write(StreamBegin.from({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
-
     // CreateStream で作った Message Stream ID を返却する
     writer.write({
       message_type_id: MessageType.CommandAMF0,
@@ -262,6 +259,11 @@ const TRANSITION = {
       }
     })();
     const publishAccepted = authResult === AuthResult.OK;
+
+    if (publishAccepted) {
+      // 利用開始する Message Stream ID を Stream Begin で伝達する
+      writer.write(StreamBegin.from({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
+    }
 
     const info = publishAccepted ? {
       level: 'status', // 正常系
