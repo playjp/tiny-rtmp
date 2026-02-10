@@ -1,34 +1,88 @@
+type Query = {
+  operation: 'UIntBE',
+  value: number;
+  byteLength: number,
+} | {
+  operation: 'UIntLE',
+  value: number;
+  byteLength: number,
+} | {
+  operation: 'IntBE',
+  value: number
+  byteLength: number,
+} | {
+  operation: 'IntLE',
+  value: number
+  byteLength: number,
+} | {
+  operation: 'F32BE';
+  value: number
+  byteLength: 4,
+} | {
+  operation: 'F32LE';
+  value: number
+  byteLength: 4,
+} | {
+  operation: 'F64BE';
+  value: number
+  byteLength: 8,
+} | {
+  operation: 'F64LE';
+  value: number
+  byteLength: 8,
+} | {
+  operation: 'Buffer';
+  value: Buffer;
+  byteLength: number;
+};
+
 export default class ByteBuilder {
-  private buffers: Buffer[] = [];
+  private queries: Query[] = [];
   private length = 0;
 
   public write(buffer: Buffer): void {
     this.length += buffer.byteLength;
-    this.buffers.push(buffer);
+    this.queries.push({
+      operation: 'Buffer',
+      value: buffer,
+      byteLength: buffer.byteLength,
+    });
   }
 
   public writeUIntBE(value: number, length: number): void {
-    const buffer = Buffer.alloc(length);
-    buffer.writeUIntBE(value, 0, length);
-    this.write(buffer);
+    this.length += length;
+    this.queries.push({
+      operation: 'UIntBE',
+      value,
+      byteLength: length,
+    });
   }
 
   public writeIntBE(value: number, length: number): void {
-    const buffer = Buffer.alloc(length);
-    buffer.writeIntBE(value, 0, length);
-    this.write(buffer);
+    this.length += length;
+    this.queries.push({
+      operation: 'IntBE',
+      value,
+      byteLength: length,
+    });
   }
 
   public writeUIntLE(value: number, length: number): void {
-    const buffer = Buffer.alloc(length);
-    buffer.writeUIntLE(value, 0, length);
-    this.write(buffer);
+    this.length += length;
+    this.queries.push({
+      operation: 'UIntLE',
+      value,
+      byteLength: length,
+    });
   }
 
   public writeIntLE(value: number, length: number): void {
-    const buffer = Buffer.alloc(length);
-    buffer.writeIntLE(value, 0, length);
-    this.write(buffer);
+    this.length += length;
+    this.queries.push({
+      operation: 'IntLE',
+      value,
+      byteLength: length,
+    });
   }
 
   public writeU8(value: number) {
@@ -88,27 +142,39 @@ export default class ByteBuilder {
   }
 
   public writeF32BE(float: number): void {
-    const buffer = Buffer.alloc(4);
-    buffer.writeFloatBE(float, 0);
-    this.write(buffer);
+    this.length += 4;
+    this.queries.push({
+      operation: 'F32BE',
+      value: float,
+      byteLength: 4,
+    });
   }
 
   public writeF64BE(double: number): void {
-    const buffer = Buffer.alloc(8);
-    buffer.writeDoubleBE(double, 0);
-    this.write(buffer);
+    this.length += 8;
+    this.queries.push({
+      operation: 'F64BE',
+      value: double,
+      byteLength: 8,
+    });
   }
 
   public writeF32LE(float: number): void {
-    const buffer = Buffer.alloc(4);
-    buffer.writeFloatLE(float, 0);
-    this.write(buffer);
+    this.length += 4;
+    this.queries.push({
+      operation: 'F32LE',
+      value: float,
+      byteLength: 4,
+    });
   }
 
   public writeF64LE(double: number): void {
-    const buffer = Buffer.alloc(8);
-    buffer.writeDoubleLE(double, 0);
-    this.write(buffer);
+    this.length += 8;
+    this.queries.push({
+      operation: 'F64LE',
+      value: double,
+      byteLength: 8,
+    });
   }
 
   public byteLength(): number {
@@ -116,6 +182,24 @@ export default class ByteBuilder {
   }
 
   public build(): Buffer {
-    return Buffer.concat(this.buffers, this.length);
+    const buffer = Buffer.alloc(this.length);
+
+    let offset = 0;
+    for (const { operation, value, byteLength, } of this.queries) {
+      switch (operation) {
+        case 'UIntBE': buffer.writeUIntBE(value, offset, byteLength); break;
+        case 'UIntLE': buffer.writeUIntLE(value, offset, byteLength); break;
+        case 'IntBE': buffer.writeIntBE(value, offset, byteLength); break;
+        case 'IntLE': buffer.writeIntLE(value, offset, byteLength); break;
+        case 'F32BE': buffer.writeFloatBE(value, offset); break;
+        case 'F32LE': buffer.writeFloatLE(value, offset); break;
+        case 'F64BE': buffer.writeDoubleBE(value, offset); break;
+        case 'F64LE': buffer.writeDoubleLE(value, offset); break;
+        case 'Buffer': buffer.set(value, offset);
+      }
+      offset += byteLength;
+    }
+
+    return buffer;
   }
 }
