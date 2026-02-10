@@ -5,8 +5,7 @@ import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
-import { MessageType, type SerializedMessage } from '../../01-tiny-rtmp-server/src/message.mts';
-import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
+import { Message, MessageType, type SerializedMessage } from '../../01-tiny-rtmp-server/src/message.mts';
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
@@ -107,9 +106,9 @@ const handle = async (connection: Duplex) => {
           break;
         }
         case MessageType.DataAMF0: {
-          const command = read_amf0(message.data);
+          const command = message.data;
           if (command.length !== 3 || command[0] !== '@setDataFrame' || command[1] !== 'onMetaData') { continue; }
-          onMetadataMessage ={ ... message, data: write_amf0(command[1], command[2]) };
+          onMetadataMessage = { ... message, data: write_amf0(command[1], command[2]) };
           break;
         }
         default: continue;
@@ -127,10 +126,11 @@ const handle = async (connection: Duplex) => {
           }
         }
         {
-          const header = write_tag_header(message);
+          const serialize = Message.into(message);
+          const header = write_tag_header(serialize);
           write(header);
-          write(message.data);
-          write(write_previous_tag_size(header, message));
+          write(serialize.data);
+          write(write_previous_tag_size(header, serialize));
         }
         stream[2] = false;
       };

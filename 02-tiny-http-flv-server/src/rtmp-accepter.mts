@@ -10,8 +10,7 @@ import AckCounter from '../../01-tiny-rtmp-server/src/ack-counter.mts';
 import { Acknowledgement, MessageType, SetPeerBandwidth, StreamBegin, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageWriter from '../../01-tiny-rtmp-server/src/message-writer.mts';
-import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
-import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
+import { isAMF0Number, isAMF0Object, isAMF0String } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 import { load, store, initialized, type RTMPSession } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
@@ -153,7 +152,7 @@ const TRANSITION = {
   [STATE.WAITING_CONNECT]: async (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CONNECT; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CONNECT; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'connect') { return STATE.WAITING_CONNECT; }
@@ -203,7 +202,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0(status, transaction_id, server, info),
+      data: [status, transaction_id, server, info],
     });
 
     if (connectAccepted) {
@@ -220,7 +219,7 @@ const TRANSITION = {
   [STATE.WAITING_CREATESTREAM]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CREATESTREAM; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CREATESTREAM; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'createStream') { return STATE.WAITING_CREATESTREAM; }
@@ -232,7 +231,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM),
+      data: ['_result', transaction_id, null, PUBLISH_MESSAGE_STREAM],
     });
 
     return STATE.WAITING_PUBLISH;
@@ -240,7 +239,7 @@ const TRANSITION = {
   [STATE.WAITING_PUBLISH]: async (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'publish') { return STATE.WAITING_PUBLISH; }
@@ -280,7 +279,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
-      data: write_amf0('onStatus', transaction_id, null, info),
+      data: ['onStatus', transaction_id, null, info],
     });
 
     if (publishAccepted) {
@@ -298,7 +297,7 @@ const TRANSITION = {
   [STATE.PUBLISHED]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.PUBLISHED; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.PUBLISHED; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'deleteStream') { return STATE.PUBLISHED; }

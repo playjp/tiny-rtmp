@@ -154,8 +154,7 @@ export const handle_audio = (message: AudioMessage): AudioData | null => {
 };
 
 export const handle_amf0_data = (message: AMF0DataMessage): ActionScriptData | null => {
-  const values = read_amf0(message.data);
-  return { kind: 'Data', timestamp: message.timestamp, values };
+  return { kind: 'Data', timestamp: message.timestamp, values: message.data };
 };
 
 export default (message: Message): VideoData | AudioData | ActionScriptData | null => {

@@ -1,7 +1,6 @@
 import { Duplex, PassThrough, Writable } from 'node:stream';
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message from './message-reader.mts';
-import read_amf0 from './amf0-reader.mts';
 import { logger } from './logger.mts';
 import { Message, MessageType } from './message.mts';
 
@@ -46,11 +45,7 @@ export default (duplex: Duplex) => {
         await reader.read(1536);
         logger.debug('CLIENT -> SERVER C2');
         for await (const message of read_message(reader)) {
-          if (message.message_type_id === MessageType.CommandAMF0) {
-            logger.debug(`CLIENT -> SERVER ${message_name(message)}`, { ... message, data: read_amf0(message.data) });
-          } else {
-            logger.debug(`CLIENT -> SERVER ${message_name(message)}`, message);
-          }
+          logger.debug(`CLIENT -> SERVER ${message_name(message)}`, message);
         }
       } finally {
         reader.feedEOF();
@@ -74,11 +69,7 @@ export default (duplex: Duplex) => {
         await reader.read(1536);
         logger.debug('SERVER -> CLIENT S2');
         for await (const message of read_message(reader)) {
-          if (message.message_type_id === MessageType.CommandAMF0) {
-            logger.debug(`SERVER -> CLIENT ${message_name(message)}`, { ... message, data: read_amf0(message.data) });
-          } else {
-            logger.debug(`SERVER -> CLIENT ${message_name(message)}`, message);
-          }
+          logger.debug(`SERVER -> CLIENT ${message_name(message)}`, message);
         }
       } finally {
         reader.feedEOF();

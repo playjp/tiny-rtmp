@@ -58,7 +58,7 @@ describe('Regression Test', () => {
      */
     // connect
     {
-      const connect = write_amf0(
+      const connect = [
         'connect',
         1,
         {
@@ -67,7 +67,7 @@ describe('Regression Test', () => {
           flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
           tcUrl: 'rtmp://localhost:1935/app',
         }
-      );
+      ];
       writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
@@ -108,7 +108,7 @@ describe('Regression Test', () => {
         }
       );
 
-      const data = read_amf0((await gen.next()).value.data);
+      const data = (await gen.next()).value.data;
       const expected = [
         '_result',
         1,
@@ -125,14 +125,39 @@ describe('Regression Test', () => {
     }
     // createStream
     {
-      const connect = write_amf0(
+      const connect = [
         'createStream',
         4,
         null
-      );
+      ];
       writer.write({
         message_type_id: MessageType.CommandAMF0,
         message_stream_id: 0,
+        timestamp: 0,
+        data: connect,
+      });
+
+      const data = (await gen.next()).value.data;
+      const expected = [
+        '_result',
+        4,
+        null,
+        1,
+      ];
+      expect(data).toStrictEqual(expected);
+    }
+    // publish
+    {
+      const connect = [
+        'publish',
+        5,
+        null,
+        'key',
+        'live'
+      ];
+      writer.write({
+        message_type_id: MessageType.CommandAMF0,
+        message_stream_id: 1,
         timestamp: 0,
         data: connect,
       });
@@ -149,31 +174,7 @@ describe('Regression Test', () => {
         }
       );
 
-      const data = read_amf0((await gen.next()).value.data);
-      const expected = [
-        '_result',
-        4,
-        null,
-        1,
-      ];
-      expect(data).toStrictEqual(expected);
-    }
-    // publish
-    {
-      const connect = write_amf0(
-        'publish',
-        5,
-        null,
-        'key',
-        'live'
-      );
-      writer.write({
-        message_type_id: MessageType.CommandAMF0,
-        message_stream_id: 1,
-        timestamp: 0,
-        data: connect,
-      });
-      const data = read_amf0((await gen.next()).value.data);
+      const data = (await gen.next()).value.data;
       const expected = [
         'onStatus',
         5,

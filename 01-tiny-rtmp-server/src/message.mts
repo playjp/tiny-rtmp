@@ -1,3 +1,6 @@
+import read_amf0 from './amf0-reader.mts';
+import type { AMF0Value } from './amf0-reader.mts';
+import write_amf0 from './amf0-writer.mts';
 import ByteBuilder from './byte-builder.mts';
 import ByteReader from './byte-reader.mts';
 
@@ -44,6 +47,7 @@ export const UserControlType = {
 
 type AllMessageType = (typeof MessageType)[keyof typeof MessageType];
 type ControlMessageType = (typeof MessageType.SetChunkSize | typeof MessageType.Abort | typeof MessageType.Acknowledgement | typeof MessageType.UserControl | typeof MessageType.WindowAcknowledgementSize | typeof MessageType.SetPeerBandwidth);
+type AMF0MessageType = (typeof MessageType.DataAMF0 | typeof MessageType.CommandAMF0);
 type AllUserControlType = (typeof UserControlType)[keyof typeof UserControlType];
 const allMessageType = new Set<number>(Object.values(MessageType));
 const allUserControlType = new Set<number>(Object.values(UserControlType));
@@ -167,7 +171,13 @@ export type Message = Omit<SerializedMessage, 'message_type_id' | 'data'> & ({
     limit_type: number;
   };
 } | {
-  message_type_id: Exclude<AllMessageType, ControlMessageType>;
+  message_type_id: typeof MessageType.CommandAMF0;
+  data: ReturnType<typeof read_amf0>,
+} | {
+  message_type_id: typeof MessageType.DataAMF0;
+  data: ReturnType<typeof read_amf0>,
+} | {
+  message_type_id: Exclude<AllMessageType, ControlMessageType | AMF0MessageType>;
   data: Buffer;
 });
 export const Message = {
@@ -226,6 +236,18 @@ export const Message = {
             limit_type: reader.readU8(),
           },
         };
+      case MessageType.DataAMF0:
+        return {
+          ... message,
+          message_type_id,
+          data: read_amf0(reader.read()),
+        };
+      case MessageType.CommandAMF0:
+        return {
+          ... message,
+          message_type_id,
+          data: read_amf0(reader.read()),
+        };
       default:
         return {
           ... message,
@@ -255,6 +277,12 @@ export const Message = {
       case MessageType.SetPeerBandwidth:
         builder.writeU32BE(data.ack_window_size);
         builder.writeU8(data.limit_type);
+        break;
+      case MessageType.DataAMF0:
+        builder.write(write_amf0(... data));
+        break;
+      case MessageType.CommandAMF0:
+        builder.write(write_amf0(... data));
         break;
       default:
         builder.write(data);

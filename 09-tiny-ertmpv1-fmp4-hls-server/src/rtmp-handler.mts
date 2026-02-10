@@ -1,7 +1,6 @@
 import { MessageType } from '../../01-tiny-rtmp-server/src/message.mts';
 import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 import ByteReader from '../../01-tiny-rtmp-server/src/byte-reader.mts';
-import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 
 type VideoMessage = Message & {
   message_type_id: (typeof MessageType.Video);
@@ -213,8 +212,7 @@ export const handle_audio = (message: AudioMessage): AudioData | null => {
 };
 
 export const handle_amf0_data = (message: AMF0DataMessage): ActionScriptData | null => {
-  const values = read_amf0(message.data);
-  return { kind: 'Data', timestamp: message.timestamp, values };
+  return { kind: 'Data', timestamp: message.timestamp, values: message.data };
 };
 
 export default (message: Message): VideoData | AudioData | ActionScriptData | null => {

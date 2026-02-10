@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import type { Message } from '../../01-tiny-rtmp-server/src/message.mts';
 
 import type { AMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
-import read_amf0, { isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
+import { isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 
 import { read_audio_specific_config } from '../../03-tiny-http-ts-server/src/aac.mts';
 import handle_rtmp_payload, { FrameType } from '../../03-tiny-http-ts-server/src/rtmp-handler.mts';

@@ -8,7 +8,7 @@ import AsyncByteReader from './async-byte-reader.mts';
 import read_message from './message-reader.mts';
 import { MessageType, WindowAcknowledgementSize, SetPeerBandwidth, StreamBegin, Acknowledgement } from './message.mts';
 import type { Message } from './message.mts';
-import read_amf0, { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
+import { isAMF0Number, isAMF0Object, isAMF0String } from './amf0-reader.mts';
 import write_amf0 from './amf0-writer.mts';
 import MessageWriter from './message-writer.mts';
 import FLVWriter from './flv-writer.mts';
@@ -152,7 +152,7 @@ const TRANSITION = {
   [STATE.WAITING_CONNECT]: async (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CONNECT; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CONNECT; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'connect') { return STATE.WAITING_CONNECT; }
@@ -202,7 +202,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0(status, transaction_id, server, info),
+      data: [status, transaction_id, server, info],
     });
 
     if (connectAccepted) {
@@ -219,7 +219,7 @@ const TRANSITION = {
   [STATE.WAITING_CREATESTREAM]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.WAITING_CREATESTREAM; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_CREATESTREAM; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'createStream') { return STATE.WAITING_CREATESTREAM; }
@@ -231,7 +231,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: 0,
       timestamp: 0,
-      data: write_amf0('_result', transaction_id, null, PUBLISH_MESSAGE_STREAM),
+      data: ['_result', transaction_id, null, PUBLISH_MESSAGE_STREAM],
     });
 
     return STATE.WAITING_PUBLISH;
@@ -239,7 +239,7 @@ const TRANSITION = {
   [STATE.WAITING_PUBLISH]: async (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== PUBLISH_MESSAGE_STREAM) { return STATE.WAITING_PUBLISH; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.WAITING_PUBLISH; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'publish') { return STATE.WAITING_PUBLISH; }
@@ -279,7 +279,7 @@ const TRANSITION = {
       message_type_id: MessageType.CommandAMF0,
       message_stream_id: message.message_stream_id,
       timestamp: 0,
-      data: write_amf0('onStatus', transaction_id, null, info),
+      data: ['onStatus', transaction_id, null, info],
     });
 
     if (publishAccepted) {
@@ -297,7 +297,7 @@ const TRANSITION = {
   [STATE.PUBLISHED]: (message: Message, writer: MessageWriter, auth: AuthConfiguration) => {
     if (message.message_stream_id !== 0) { return STATE.PUBLISHED; }
     if (message.message_type_id !== MessageType.CommandAMF0) { return STATE.PUBLISHED; }
-    const command = read_amf0(message.data);
+    const command = message.data;
 
     const name = command[0];
     if (name !== 'deleteStream') { return STATE.PUBLISHED; }
@@ -434,7 +434,7 @@ export default async (connection: Duplex, auth: AuthConfiguration, output?: Writ
         writer?.write(message);
         break;
       case MessageType.DataAMF0: {
-        const command = read_amf0(message.data);
+        const command = message.data;
         const data = write_amf0(... command.length === 3 && command[0] === '@setDataFrame' && command[1] === 'onMetaData' ? [command[1], command[2]] : command);
         writer?.write({ ... message, data });
         break;
