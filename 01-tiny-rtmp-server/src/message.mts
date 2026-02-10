@@ -1,6 +1,12 @@
 import ByteBuilder from './byte-builder.mts';
 import ByteReader from './byte-reader.mts';
 
+class ExhaustiveError extends Error {
+  constructor(value: never, message = `Unsupported type: ${value}`) {
+    super(message);
+  }
+}
+
 export type SerializedMessage = {
   message_type_id: number;
   message_stream_id: number;
@@ -94,6 +100,8 @@ const UserControl = {
         return { event_type, event_timestamp: reader.readU32BE() };
       case UserControlType.PingResponse:
         return { event_type, event_timestamp: reader.readU32BE() };
+      default:
+        throw new ExhaustiveError(event_type);
     }
   },
   into(control: UserControl): Buffer {
@@ -122,6 +130,8 @@ const UserControl = {
       case UserControlType.PingResponse:
         builder.writeU32BE(control.event_timestamp);
         break;
+      default:
+        throw new ExhaustiveError(control);
     }
     return builder.build();
   },
