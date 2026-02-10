@@ -179,6 +179,10 @@ export default class ByteVector {
     this.length = Math.max(this.length, position + 8);
   }
 
+  public build(): Buffer {
+    return this.read();
+  }
+
   public read(begin?: number, end?: number): Buffer {
     begin ??= 0;
     end ??= this.length;

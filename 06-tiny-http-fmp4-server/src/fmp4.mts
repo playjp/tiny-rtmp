@@ -18,7 +18,7 @@ const unit_composition_matrix = (() => {
   vector.writeU32BE(0x00000000);   // [2, 1] 2.30 固定小数点
   vector.writeU32BE(0x40000000);   // [2, 2] 2.30 固定小数点
   // finaize
-  return vector.read();
+  return vector.build();
 })();
 
 export type callback = (vector: ByteVector) => void;
@@ -26,7 +26,7 @@ export type callback = (vector: ByteVector) => void;
 export const make = (cb?: callback): Buffer => {
   const vector = new ByteVector();
   cb?.(vector);
-  return vector.read();
+  return vector.build();
 };
 
 export const box = (name: string, vector: ByteVector, cb?: callback): void => {
