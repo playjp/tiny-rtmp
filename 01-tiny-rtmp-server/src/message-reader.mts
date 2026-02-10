@@ -1,8 +1,8 @@
 import AsyncByteReader from './async-byte-reader.mts';
 import ByteBuilder from './byte-builder.mts';
+import { logger } from './logger.mts';
 import { Message, MessageType } from './message.mts';
 import type { SerializedMessage } from './message.mts';
-import { logger } from './logger.mts';
 
 export class InsufficientChunkError extends Error {
   constructor(message: string, option?: ErrorOptions) {
@@ -99,12 +99,20 @@ export default async function* read_message(reader: AsyncByteReader, option?: Me
     }
     if (length === message_length) {
       const data = chunk_builder.build();
-      const message = Message.from({
-        message_type_id: information.message_type_id,
-        message_stream_id: information.message_stream_id,
-        timestamp: information.timestamp,
-        data,
-      });
+
+      let message = null;
+      try {
+        message = Message.from({
+          message_type_id: information.message_type_id,
+          message_stream_id: information.message_stream_id,
+          timestamp: information.timestamp,
+          data,
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        const record = e instanceof Error ? { stack: e.stack, ... information } : information;
+        logger.error(`Message Decoding error: ${message}`, record);
+      }
 
       if (message != null) {
         switch (message.message_type_id) {
