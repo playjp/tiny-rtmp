@@ -12,7 +12,28 @@ const v_pos = (x: number, y: number, width: number, height: number): number => {
   return (height * width) + Math.floor(height * width / 4) + y * Math.floor(width / 2) + x;
 };
 
-export default (width: number, height: number): Buffer => {
+const brand = Symbol();
+export type ColorbarConfig = {
+  width: number;
+  height: number;
+  [brand]: never;
+};
+export const ColorbarConfig = {
+  from(width: number, height: number, objectFit: 'cover' | 'contain' = 'contain'): ColorbarConfig {
+    const x_magnification = (objectFit === 'cover' ? Math.ceil : Math.floor)(width / 32);
+    const y_magnification = (objectFit === 'cover' ? Math.ceil : Math.floor)(height / 18);
+    const magnification = (objectFit === 'cover' ? Math.max : Math.min)(x_magnification, y_magnification);
+    width = 32 * magnification;
+    height = 18 * magnification;
+
+    return {
+      width,
+      height
+    } as ColorbarConfig;
+  }
+}
+
+export default ({ width, height }: ColorbarConfig): Buffer => {
   const yuv = Buffer.alloc(Math.floor(width * height * 3 / 2));
 
   const a = width;
@@ -95,7 +116,6 @@ export default (width: number, height: number): Buffer => {
           yuv[v_pos(i * 1 + 0, y * 1 + 0, width, height)] = 120;
           break;
       }
-
     }
   }
 
