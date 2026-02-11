@@ -1,15 +1,12 @@
 import BitBuilder from "../../03-tiny-http-ts-server/src/bit-builder.mts";
 
-import EBSPBitReader from "../../06-tiny-http-fmp4-server/src/ebsp-bit-reader.mts";
-import { read_seq_parameter_set_data, read_pic_parameter_set_data } from "../../06-tiny-http-fmp4-server/src/avc.mts";
-
 import generate_sps from "./generete-sps.mts";
 import generate_pps from "./generate-pps.mts";
 import generate_slice from "./generate-slice.mts";
 import colorbar from "./colorbar.mts";
 
-const width = 128;
-const height = 128;
+const width = 320;
+const height = 180;
 const yuv = colorbar(width, height);
 
 const nal_unit = (nal_unit_type: number) => {
