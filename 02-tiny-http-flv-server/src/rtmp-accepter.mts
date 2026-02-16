@@ -319,7 +319,6 @@ export class DisconnectError extends Error {
 }
 
 const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
-const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 export type RTMPOption = {
   auth?: AuthConfiguration;
   limit?: {
@@ -356,7 +355,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
   const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); };
-  let idle_timeout_id = setTimeout(idle_timeout, option?.limit?.timeout ?? IDLE_TIMEOUT);
+  let idle_timeout_id = option?.limit?.timeout == null ? null : setTimeout(idle_timeout, option?.limit?.timeout);
 
   try {
     /*
@@ -417,8 +416,8 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
         // 上位に伝える映像/音声/データのメッセージだったら伝える
         if (need_yield(state, message)) {
           // 有効なメッセージなので有効期間を延長
-          clearTimeout(idle_timeout_id);
-          idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
+          if (idle_timeout_id != null) { clearTimeout(idle_timeout_id); }
+          idle_timeout_id = option?.limit?.timeout == null ? null : setTimeout(idle_timeout, option?.limit?.timeout);
           // 上位に伝達
           yield message;
         }
@@ -433,7 +432,7 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
       keepalive_controller.abort();
     }
   } finally {
-    clearTimeout(idle_timeout_id);
+    if (idle_timeout_id != null) { clearTimeout(idle_timeout_id); }
     connection.removeListener('close', disconnected);
     connection.removeListener('error', disconnected);
     writer.end();

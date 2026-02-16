@@ -386,7 +386,6 @@ const TRANSITION = {
 } as const satisfies Record<(typeof STATE)[keyof typeof STATE], (message: Message, builder: MessageWriter, auth: AuthConfiguration) => MaybePromise<(typeof STATE)[keyof typeof STATE]>>;
 
 const KEEPALIVE_INTERVAL = 10 * 1000; // MEMO: アプリケーション変数
-const IDLE_TIMEOUT = 10 * 1000; // MEMO: アプリケーション変数
 
 async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncIterable<Message> {
   if (!initialized()) { throw new Error('RTMP session not initialized.'); }
@@ -409,8 +408,6 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
   const disconnected = controller.abort.bind(controller);
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
-  const idle_timeout = () => { controller.abort(new Error('Timeout Exceeded')); };
-  let idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
 
   try {
     /*
@@ -469,13 +466,7 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
         }
 
         // 上位に伝える映像/音声/データのメッセージだったら伝える
-        if (need_yield(state, message)) {
-          // 有効なメッセージなので有効期間を延長
-          clearTimeout(idle_timeout_id);
-          idle_timeout_id = setTimeout(idle_timeout, IDLE_TIMEOUT);
-          // 上位に伝達
-          yield message;
-        }
+        if (need_yield(state, message)) { yield message; }
 
         // 個別のメッセージによる状態遷移
         state = await TRANSITION[state](message, writer, auth);
@@ -487,7 +478,6 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
       keepalive_controller.abort();
     }
   } finally {
-    clearTimeout(idle_timeout_id);
     writer.end();
     await writer.ended(); // 今の送信キューを flush して送信する
     connection.end();
