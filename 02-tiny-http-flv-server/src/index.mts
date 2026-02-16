@@ -9,8 +9,9 @@ import { Message, MessageType, type SerializedMessage } from '../../01-tiny-rtmp
 import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
+import { AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
 
-import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
+import handle_rtmp from './rtmp-accepter.mts';
 
 const options = {
   rtmp: {

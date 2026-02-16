@@ -7,7 +7,8 @@ import write_amf0 from '../src/amf0-writer.mts';
 import read_message from '../src/message-reader.mts';
 import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../src/message.mts';
 import MessageWriter from '../src/message-writer.mts';
-import handle_rtmp, { AuthConfiguration } from '../src/rtmp-accepter.mts';
+import handle_rtmp from '../src/rtmp-accepter.mts';
+import { AuthConfiguration } from '../src/auth.mts';
 import { run } from '../src/rtmp-session.mts';
 
 describe('Regression Test', () => {

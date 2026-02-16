@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
+import handle_rtmp from './rtmp-accepter.mts';
+import { AuthConfiguration } from './auth.mts';
 import intercepter from './rtmp-intercepter.mts';
 import { run } from './rtmp-session.mts';
 import { logger } from './logger.mts';

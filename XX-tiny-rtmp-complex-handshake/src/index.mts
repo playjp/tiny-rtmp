@@ -7,7 +7,8 @@ import intercepter from '../../01-tiny-rtmp-server/src/rtmp-intercepter.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
-import handle_rtmp, { AuthConfiguration } from './rtmp-accepter.mts';
+import handle_rtmp from './rtmp-accepter.mts';
+import { AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
 
 const options = {
   port: {

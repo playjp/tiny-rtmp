@@ -7,14 +7,10 @@ import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageWriter from '../../01-tiny-rtmp-server/src/message-writer.mts';
+import handle_rtmp from '../src/rtmp-accepter.mts';
+import { AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
+import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 
-const handle_rtmp_import = async () => {
-  vi.resetModules(); // 内部のモジュール変数に依存するため、毎回キャッシュを破棄する
-  // 内部状態に依存するモジュールをその都度ロードする
-  const session = await import('../../01-tiny-rtmp-server/src/rtmp-session.mts');
-  const accepter = await import('../src/rtmp-accepter.mts');
-  return [session.run, accepter.default, accepter.AuthConfiguration] as const;
-};
 
 describe('Regression Test', () => {
   test('Publish Success', async () => {
@@ -26,8 +22,7 @@ describe('Regression Test', () => {
     using writer = new MessageWriter();
     Readable.from(writer.retrieve()).pipe(input);
 
-    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
-    const auth = auth_config.simpleAuth('app', 'key');
+    const auth = AuthConfiguration.simpleAuth('app', 'key');
     run(() => {
       const handler = handle_rtmp(connection, { auth });
       // do background
@@ -189,8 +184,7 @@ describe('Regression Test', () => {
   });
 
   test('Lock StreamKey', async () => {
-    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
-    const auth = auth_config.simpleAuth('app', 'key');
+    const auth = AuthConfiguration.simpleAuth('app', 'key');
 
     // Connection 1
     const input_1 = new PassThrough();
@@ -386,8 +380,6 @@ describe('Regression Test', () => {
   });
 
   test('Parallel Streaming for distinct StreamKey', async () => {
-    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
-
     // Connection 1
     const input_1 = new PassThrough();
     const output_1 = new PassThrough();
@@ -396,7 +388,7 @@ describe('Regression Test', () => {
     output_1.on('data', (chunk) => { reader_1.feed(chunk); });
     using writer_1 = new MessageWriter();
     Readable.from(writer_1.retrieve()).pipe(input_1);
-    const auth_1 = auth_config.simpleAuth('app', 'key0');
+    const auth_1 = AuthConfiguration.simpleAuth('app', 'key0');
 
     run(() => {
       const handler_1 = handle_rtmp(connection_1, { auth: auth_1 });
@@ -411,7 +403,7 @@ describe('Regression Test', () => {
     output_2.on('data', (chunk) => { reader_2.feed(chunk); });
     using writer_2 = new MessageWriter();
     Readable.from(writer_2.retrieve()).pipe(input_2);
-    const auth_2 = auth_config.simpleAuth('app', 'key1');
+    const auth_2 = AuthConfiguration.simpleAuth('app', 'key1');
 
     run(() => {
       const handler_2 = handle_rtmp(connection_2, { auth: auth_2 });
@@ -586,8 +578,7 @@ describe('Regression Test', () => {
     using writer = new MessageWriter();
     Readable.from(writer.retrieve()).pipe(input);
 
-    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
-    const auth = auth_config.simpleAuth('app', 'key');
+    const auth = AuthConfiguration.simpleAuth('app', 'key');
     run(() => {
       const handler = handle_rtmp(connection, { auth });
       // do background
@@ -746,9 +737,8 @@ describe('Regression Test', () => {
     using writer = new MessageWriter();
     Readable.from(writer.retrieve()).pipe(input);
 
-    const [run, handle_rtmp, auth_config] = await handle_rtmp_import();
     run(() => {
-      const handler = handle_rtmp(connection, { auth: auth_config.simpleAuth('app', 'key') });
+      const handler = handle_rtmp(connection, { auth: AuthConfiguration.simpleAuth('app', 'key') });
       // do background
       (async () => { for await (const _ of handler) {} })();
     });

@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
-import handle_rtmp, { AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-accepter.mts';
+import handle_rtmp from '../../01-tiny-rtmp-server/src/rtmp-accepter.mts';
+import { AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
 import intercepter from '../../01-tiny-rtmp-server/src/rtmp-intercepter.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';

@@ -7,7 +7,8 @@ import type { ParseArgsOptionsConfig } from 'node:util';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 
-import handle_rtmp, { AuthConfiguration } from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
+import handle_rtmp from '../../02-tiny-http-flv-server/src/rtmp-accepter.mts';
+import { AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
 
 import LLHLSGenerator from './llhls-generator.mts';
 

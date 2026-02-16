@@ -1,20 +1,20 @@
 import crypto, { randomBytes } from 'node:crypto';
 
-import { AuthResult } from '../../01-tiny-rtmp-server/src/rtmp-accepter.mts';
-import type { AuthResultWithDescription, AuthConfiguration } from '../../01-tiny-rtmp-server/src/rtmp-accepter.mts';
+import { AuthResult } from '../../01-tiny-rtmp-server/src/auth.mts';
+import type { AuthResultWithDescription, AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
 
 const MAX_SESSIONS = 1000; // MEMO: アプリケーション変数
 const SESSION_EXPIRES = 60 * 1000; // MEMO: アプリケーション変数
 
-export type AdobeAuthSessionInformation = {
+export type AdobeAuthInformation = {
   salt: Buffer;
   challenge: Buffer;
   timeoutId: NodeJS.Timeout;
 };
 
-export default class AdobeAuthSession implements AuthConfiguration {
+export default class AdobeAuth implements AuthConfiguration {
   private passwordFn: (user: string) => Promise<string | null> | (string | null);
-  private sessions = new Map<string, AdobeAuthSessionInformation>();
+  private sessions = new Map<string, AdobeAuthInformation>();
   private lock = new Set<string>();
 
   constructor(passwordFn: (user: string) => Promise<string | null> | (string | null)) {
@@ -71,7 +71,7 @@ export default class AdobeAuthSession implements AuthConfiguration {
       timeoutId: setTimeout(() => {
         this.sessions.delete(challenge_base64);
       }, SESSION_EXPIRES),
-    } satisfies AdobeAuthSessionInformation;
+    } satisfies AdobeAuthInformation;
     this.sessions.set(challenge_base64, session);
 
     // FFmpeg (8.0.1) 内臓の Adobe Auth は response の計算に opaque があったら challenge の代わりに opaque を使う

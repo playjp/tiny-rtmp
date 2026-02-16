@@ -8,7 +8,7 @@ import intercepter from '../../01-tiny-rtmp-server/src/rtmp-intercepter.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
 import { logger } from '../../01-tiny-rtmp-server/src/logger.mts';
 
-import AdobeAuthSession from './auth-session.mts';
+import AdobeAuth from './adobe-auth.mts';
 
 const options = {
   port: {
@@ -47,7 +47,7 @@ const user = args.user;
 const password = args.password;
 const output = args.flv == null ? null : args.flv === '-' ? process.stdout : fs.createWriteStream(args.flv);
 const intercept = args.intercept;
-const auth = new AdobeAuthSession((userName) => user === userName ? password : null);
+const auth = new AdobeAuth((userName) => user === userName ? password : null);
 
 const server = net.createServer({ noDelay: true }, async (connection) => {
   await run(async () => {
