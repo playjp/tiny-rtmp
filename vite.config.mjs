@@ -4,7 +4,7 @@ export default defineConfig({
   build: {
     emptyOutDir: true,
 
-    rollupOptions: {
+    rolldownOptions: {
       external: [
         /^node:/, // Node.js built-in modules (node:*)
       ],
