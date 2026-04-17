@@ -1,4 +1,4 @@
-import EBSPBitBuilder from './ebsp-bit-builder.mts'
+import EBSPBitBuilder from './ebsp-bit-builder.mts';
 
 const y_pos = (x: number, y: number, width: number, height: number): number => {
   return y * width + x;
@@ -24,7 +24,7 @@ const ref_pic_list_modification = (writer: EBSPBitBuilder): void => {
 const dec_ref_pic_marking = (writer: EBSPBitBuilder): void => {
   writer.writeBool(false); // no_output_of_prior_pics_flag
   writer.writeBool(false); // long_term_reference_flag
-}
+};
 
 const slice_header = (writer: EBSPBitBuilder): void => {
   writer.writeUEG(0); // first_mb_in_slice
@@ -43,7 +43,7 @@ const macroblock_layer = (y: Buffer, u: Buffer, v: Buffer, writer: EBSPBitBuilde
   for (const raw of y) { writer.writeByte(raw); }
   for (const raw of u) { writer.writeByte(raw); }
   for (const raw of v) { writer.writeByte(raw); }
-}
+};
 
 const slice_data = (yuv: Buffer, width: number, height: number, writer: EBSPBitBuilder): void => {
   const width_mb_length = Math.ceil(width / 16);
@@ -68,7 +68,7 @@ const slice_data = (yuv: Buffer, width: number, height: number, writer: EBSPBitB
 
     macroblock_layer(y_data, u_data, v_data, writer);
   }
-}
+};
 
 export default (yuv: Buffer, width: number, height: number): Buffer => {
   const writer = new EBSPBitBuilder();

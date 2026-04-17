@@ -1,4 +1,4 @@
-import BitBuilder from "../../03-tiny-http-ts-server/src/bit-builder.mts";
+import BitBuilder from '../../03-tiny-http-ts-server/src/bit-builder.mts';
 
 export default class EBSPBitBuilder extends BitBuilder {
   protected fill(): void {

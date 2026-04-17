@@ -28,10 +28,10 @@ export const ColorbarConfig = {
 
     return {
       width,
-      height
+      height,
     } as ColorbarConfig;
-  }
-}
+  },
+};
 
 export default ({ width, height }: ColorbarConfig): Buffer => {
   const yuv = Buffer.alloc(Math.floor(width * height * 3 / 2));
@@ -120,4 +120,4 @@ export default ({ width, height }: ColorbarConfig): Buffer => {
   }
 
   return yuv;
-}
+};

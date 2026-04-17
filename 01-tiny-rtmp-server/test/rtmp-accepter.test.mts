@@ -67,7 +67,7 @@ describe('Regression Test', () => {
           type: 'nonprivate',
           flashVer: 'FMLE/3.0 (compatible; Lavf61.7.100)',
           tcUrl: 'rtmp://localhost:1935/app',
-        }
+        },
       ];
       writer.write({
         message_type_id: MessageType.CommandAMF0,
@@ -129,7 +129,7 @@ describe('Regression Test', () => {
       const connect = [
         'createStream',
         4,
-        null
+        null,
       ];
       writer.write({
         message_type_id: MessageType.CommandAMF0,
@@ -154,7 +154,7 @@ describe('Regression Test', () => {
         5,
         null,
         'key',
-        'live'
+        'live',
       ];
       writer.write({
         message_type_id: MessageType.CommandAMF0,

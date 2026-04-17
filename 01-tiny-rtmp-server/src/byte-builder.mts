@@ -1,35 +1,35 @@
 type Query = {
-  operation: 'UIntBE',
+  operation: 'UIntBE';
   value: number;
-  byteLength: number,
+  byteLength: number;
 } | {
-  operation: 'UIntLE',
+  operation: 'UIntLE';
   value: number;
-  byteLength: number,
+  byteLength: number;
 } | {
-  operation: 'IntBE',
-  value: number
-  byteLength: number,
+  operation: 'IntBE';
+  value: number;
+  byteLength: number;
 } | {
-  operation: 'IntLE',
-  value: number
-  byteLength: number,
+  operation: 'IntLE';
+  value: number;
+  byteLength: number;
 } | {
   operation: 'F32BE';
-  value: number
-  byteLength: 4,
+  value: number;
+  byteLength: 4;
 } | {
   operation: 'F32LE';
-  value: number
-  byteLength: 4,
+  value: number;
+  byteLength: 4;
 } | {
   operation: 'F64BE';
-  value: number
-  byteLength: 8,
+  value: number;
+  byteLength: 8;
 } | {
   operation: 'F64LE';
-  value: number
-  byteLength: 8,
+  value: number;
+  byteLength: 8;
 } | {
   operation: 'Buffer';
   value: Buffer;
@@ -185,7 +185,7 @@ export default class ByteBuilder {
     const buffer = Buffer.alloc(this.length);
 
     let offset = 0;
-    for (const { operation, value, byteLength, } of this.queries) {
+    for (const { operation, value, byteLength } of this.queries) {
       switch (operation) {
         case 'UIntBE': buffer.writeUIntBE(value, offset, byteLength); break;
         case 'UIntLE': buffer.writeUIntLE(value, offset, byteLength); break;

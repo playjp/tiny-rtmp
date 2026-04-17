@@ -1,4 +1,4 @@
-import EBSPBitBuilder from './ebsp-bit-builder.mts'
+import EBSPBitBuilder from './ebsp-bit-builder.mts';
 
 const rbsp_trailing_bit = (writer: EBSPBitBuilder): void => {
   writer.writeBits(1, 1); // rbsp_stop_one_bit

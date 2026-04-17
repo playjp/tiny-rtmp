@@ -172,10 +172,10 @@ export type Message = Omit<SerializedMessage, 'message_type_id' | 'data'> & ({
   };
 } | {
   message_type_id: typeof MessageType.CommandAMF0;
-  data: ReturnType<typeof read_amf0>,
+  data: ReturnType<typeof read_amf0>;
 } | {
   message_type_id: typeof MessageType.DataAMF0;
-  data: ReturnType<typeof read_amf0>,
+  data: ReturnType<typeof read_amf0>;
 } | {
   message_type_id: Exclude<AllMessageType, ControlMessageType | AMF0MessageType>;
   data: Buffer;
