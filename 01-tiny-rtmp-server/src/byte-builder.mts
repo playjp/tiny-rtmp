@@ -195,7 +195,7 @@ export default class ByteBuilder {
         case 'F32LE': buffer.writeFloatLE(value, offset); break;
         case 'F64BE': buffer.writeDoubleBE(value, offset); break;
         case 'F64LE': buffer.writeDoubleLE(value, offset); break;
-        case 'Buffer': buffer.set(value, offset);
+        case 'Buffer': buffer.set(value, offset); break;
       }
       offset += byteLength;
     }
