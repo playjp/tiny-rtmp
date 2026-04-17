@@ -4,6 +4,8 @@
     "target": "es2024",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
+    /* types */
+    "types": ["node"],
     /* Interop Constraints */
     "esModuleInterop": true,
     "erasableSyntaxOnly": true,
