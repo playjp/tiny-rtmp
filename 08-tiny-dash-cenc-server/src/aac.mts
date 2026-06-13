@@ -21,7 +21,7 @@ export const write_mp4_aac_track_information = (track_id: number, timescale: num
         });
         sinf(vector, (vector) => {
           frma('mp4a', vector);
-          schm(encryptionFormat.scheme, 0x100, vector);
+          schm(encryptionFormat.scheme, 0x00010000, vector);
           schi(vector, (vector) => {
             tenc(encryptionFormat, keyId, ivType, vector);
           });

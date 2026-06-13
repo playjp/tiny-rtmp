@@ -27,10 +27,10 @@ export const frma = (original_format: string, vector: ByteVector, cb?: callback)
   });
 };
 
-export const schm = (scheme_type: string, version: number, vector: ByteVector, cb?: callback): void => {
+export const schm = (scheme_type: string, scheme_version: number, vector: ByteVector, cb?: callback): void => {
   fullbox('schm', 0, 0x000000, vector, (vector) => {
     vector.write(Buffer.from(scheme_type, 'ascii'));
-    vector.writeU32BE(version);
+    vector.writeU32BE(scheme_version);
     cb?.(vector);
   });
 };

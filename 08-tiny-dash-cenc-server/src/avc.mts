@@ -282,7 +282,7 @@ export const write_mp4_avc_track_information = (track_id: number, timescale: num
         avcC(avc_decoder_configuration_record, vector);
         sinf(vector, (vector) => {
           frma('avc1', vector);
-          schm(encryptionFormat.scheme, 0x10000, vector);
+          schm(encryptionFormat.scheme, 0x00010000, vector);
           schi(vector, (vector) => {
             tenc(encryptionFormat, keyId, ivType, vector);
           });
