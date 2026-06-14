@@ -132,7 +132,7 @@ const web_server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       'content-type': 'text/html',
       'access-control-allow-origin': '*',
-      'cache-control': 'maxage=0',
+      'cache-control': 'max-age=0',
     });
     res.write(page);
     res.end();
@@ -148,7 +148,7 @@ const web_server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       'content-type': 'application/vnd.apple.mpegurl',
       'access-control-allow-origin': '*',
-      'cache-control': 'maxage=0',
+      'cache-control': 'max-age=0',
     });
     res.write(rtmp_to_hls.m3u8());
     res.end();
@@ -161,7 +161,7 @@ const web_server = http.createServer(async (req, res) => {
     if (segment == null) {
       res.writeHead(404, {
         'access-control-allow-origin': '*',
-        'cache-control': 'maxage=0',
+        'cache-control': 'max-age=0',
       });
       res.end();
       return;
@@ -170,7 +170,7 @@ const web_server = http.createServer(async (req, res) => {
     res.writeHead(200, {
       'content-type': 'video/mp2t',
       'access-control-allow-origin': '*',
-      'cache-control': `maxage=${maxage}`,
+      'cache-control': `max-age=${maxage}`,
     });
     res.write(segment);
     res.end();

@@ -139,7 +139,7 @@ const web_server = http2.createSecureServer({ key, cert }, async (req, res) => {
       res.writeHead(200, {
         'content-type': 'application/vnd.apple.mpegurl',
         'access-control-allow-origin': '*',
-        'cache-control': 'maxage=0',
+        'cache-control': 'max-age=0',
       });
       res.write(rtmp_to_llhls.m3u8());
       res.end();
@@ -149,7 +149,7 @@ const web_server = http2.createSecureServer({ key, cert }, async (req, res) => {
       res.writeHead(200, {
         'content-type': 'application/vnd.apple.mpegurl',
         'access-control-allow-origin': '*',
-        'cache-control': 'maxage=0',
+        'cache-control': 'max-age=0',
       });
       res.write(rtmp_to_llhls.m3u8());
       res.end();
@@ -161,7 +161,7 @@ const web_server = http2.createSecureServer({ key, cert }, async (req, res) => {
     res.writeHead(200, {
       'content-type': 'application/vnd.apple.mpegurl',
       'access-control-allow-origin': '*',
-      'cache-control': `maxage=${maxage}`,
+      'cache-control': `max-age=${maxage}`,
     });
     await rtmp_to_llhls.block(msn, part);
     res.write(rtmp_to_llhls.m3u8());
@@ -176,13 +176,13 @@ const web_server = http2.createSecureServer({ key, cert }, async (req, res) => {
       if (!found) {
         res.writeHead(404, {
           'access-control-allow-origin': '*',
-          'cache-control': 'maxage=0',
+          'cache-control': 'max-age=0',
         });
       } else {
         res.writeHead(200, {
           'content-type': 'video/mp2t',
           'access-control-allow-origin': '*',
-          'cache-control': `maxage=${maxage}`,
+          'cache-control': `max-age=${maxage}`,
         });
       }
     };
