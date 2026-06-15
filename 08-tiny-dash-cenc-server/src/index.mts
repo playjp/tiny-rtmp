@@ -60,10 +60,10 @@ if (args.streamKey == null) {
 if (args.encryptionScheme == null || !(args.encryptionScheme === 'cenc' || args.encryptionScheme === 'cbcs')) {
   console.error('Please Specify valid encryptionScheme'); process.exit(1);
 }
-if (args.encryptionKeyId == null || !/[0-9a-zA-Z]{32}/.test(args.encryptionKeyId)) {
+if (args.encryptionKeyId == null || !/^[0-9a-fA-F]{32}$/.test(args.encryptionKeyId)) {
   console.error('Please Specify valid encryptionKeyId'); process.exit(1);
 }
-if (args.encryptionKey == null || !/[0-9a-zA-Z]{32}/.test(args.encryptionKey)) {
+if (args.encryptionKey == null || !/^[0-9a-fA-F]{32}$/.test(args.encryptionKey)) {
   console.error('Please Specify valid encryptionKey'); process.exit(1);
 }
 if (args.bandwidth != null && Number.isNaN(Number.parseInt(args.bandwidth, 10))) {
