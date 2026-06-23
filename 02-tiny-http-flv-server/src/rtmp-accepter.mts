@@ -72,9 +72,9 @@ const TRANSITION = {
     const app = command[2]['app'];
     if (!isAMF0String(app)) { return STATE.WAITING_CONNECT; }
 
-    const [authResult, description] = await (() => {
+    const [authResult, description] = await (async () => {
       try {
-        return auth.connect(strip_query(app), collect_query(app));
+        return await auth.connect(strip_query(app), collect_query(app));
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
         logger.error('Connect Auth Failed');
@@ -158,9 +158,9 @@ const TRANSITION = {
     if (!isAMF0String(command[3])) { return STATE.WAITING_PUBLISH; }
     const stream = command[3];
 
-    const [authResult, description] = await (() => {
+    const [authResult, description] = await (async () => {
       try {
-        return auth.publish(load()!.app!, strip_query(stream), collect_query(stream));
+        return await auth.publish(load()!.app!, strip_query(stream), collect_query(stream));
       } catch {
         // 認証で不測のエラーが起きた場合は切断する
         logger.error('Publish Auth Failed');
@@ -297,11 +297,11 @@ export default async function* handle_rtmp(connection: Duplex, option?: RTMPOpti
           break;
         }
         if (state !== STATE.PUBLISHED) { continue; }
-        const keepalive = await (() => {
+        const keepalive = await (async () => {
           try {
             // PUBLISHED なら session 内であり app と stream は必ず存在する
             const session = load()!;
-            return auth.keepalive(session.app!, session.stream!, session.query);
+            return await auth.keepalive(session.app!, session.stream!, session.query);
           } catch {
             // keepalive 自体が不測の事態で失敗した場合は可用性を優先して切断しない
             logger.error('Auth keepalive Failed');
