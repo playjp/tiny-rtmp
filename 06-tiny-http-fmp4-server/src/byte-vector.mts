@@ -160,7 +160,7 @@ export default class ByteVector {
   public writeF32LE(float: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + 4);
@@ -171,7 +171,7 @@ export default class ByteVector {
   public writeF64LE(double: number, position?: number): void {
     position ??= this.length;
     position = position < 0 ? this.length + position : position;
-    if (position < 0) {
+    if (position < 0 || position > this.length) {
       throw new RangeError('Attempt to access memory outside buffer bounds');
     }
     this.extend(position + 8);
