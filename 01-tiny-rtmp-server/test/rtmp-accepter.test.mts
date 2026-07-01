@@ -2,14 +2,27 @@ import { describe, expect, test, vi } from 'vitest';
 import { Duplex, PassThrough, Readable, Writable } from 'node:stream';
 
 import AsyncByteReader from '../src/async-byte-reader.mts';
-import read_amf0 from '../src/amf0-reader.mts';
-import write_amf0 from '../src/amf0-writer.mts';
+import { isAMF0Array, isAMF0Object, type AMF0Value } from '../src/amf0-reader.mts';
 import read_message from '../src/message-reader.mts';
 import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../src/message.mts';
 import MessageWriter from '../src/message-writer.mts';
 import handle_rtmp from '../src/rtmp-accepter.mts';
 import { AuthConfiguration } from '../src/auth.mts';
 import { run } from '../src/rtmp-session.mts';
+
+const strip = (value: AMF0Value): AMF0Value => {
+  if (isAMF0Array(value)) {
+    return value.map((elem) => strip(elem));
+  } else if (isAMF0Object(value)) {
+    const obj = Object.create(null);
+    for (const [k, v] of Object.entries(value)) {
+      obj[k] = strip(v);
+    }
+    return obj;
+  } else {
+    return value;
+  }
+}
 
 describe('Regression Test', () => {
   test('Publish Success', async () => {
@@ -122,7 +135,7 @@ describe('Regression Test', () => {
           objectEncoding: 0,
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // createStream
     {
@@ -145,7 +158,7 @@ describe('Regression Test', () => {
         null,
         1,
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // publish
     {
@@ -186,7 +199,7 @@ describe('Regression Test', () => {
           level: 'status',
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // send data
     {

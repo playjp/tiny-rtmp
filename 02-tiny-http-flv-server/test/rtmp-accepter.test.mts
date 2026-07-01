@@ -2,14 +2,27 @@ import { describe, expect, test, vi } from 'vitest';
 import { Duplex, PassThrough, Readable } from 'stream';
 
 import AsyncByteReader from '../../01-tiny-rtmp-server/src/async-byte-reader.mts';
-import read_amf0 from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
-import write_amf0 from '../../01-tiny-rtmp-server/src/amf0-writer.mts';
+import { isAMF0Array, isAMF0Object, type AMF0Value } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import read_message from '../../01-tiny-rtmp-server/src/message-reader.mts';
 import { MessageType, SetPeerBandwidth, StreamBegin, UserControlType, WindowAcknowledgementSize } from '../../01-tiny-rtmp-server/src/message.mts';
 import MessageWriter from '../../01-tiny-rtmp-server/src/message-writer.mts';
 import handle_rtmp from '../src/rtmp-accepter.mts';
 import { AuthConfiguration } from '../../01-tiny-rtmp-server/src/auth.mts';
 import { run } from '../../01-tiny-rtmp-server/src/rtmp-session.mts';
+
+const strip = (value: AMF0Value): AMF0Value => {
+  if (isAMF0Array(value)) {
+    return value.map((elem) => strip(elem));
+  } else if (isAMF0Object(value)) {
+    const obj = Object.create(null);
+    for (const [k, v] of Object.entries(value)) {
+      obj[k] = strip(v);
+    }
+    return obj;
+  } else {
+    return value;
+  }
+}
 
 
 describe('Regression Test', () => {
@@ -118,7 +131,7 @@ describe('Regression Test', () => {
           level: 'status',
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // createStream
     {
@@ -140,7 +153,7 @@ describe('Regression Test', () => {
         null,
         1,
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // publish
     {
@@ -179,7 +192,7 @@ describe('Regression Test', () => {
           level: 'status',
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
   });
 
@@ -307,7 +320,7 @@ describe('Regression Test', () => {
             level: 'status',
           },
         ];
-        expect(data).toStrictEqual(expected);
+        expect(data).toStrictEqual(strip(expected));
       }
       // createStream
       {
@@ -329,7 +342,7 @@ describe('Regression Test', () => {
           null,
           1,
         ];
-        expect(data).toStrictEqual(expected);
+        expect(data).toStrictEqual(strip(expected));
       }
       // publish
       {
@@ -374,7 +387,7 @@ describe('Regression Test', () => {
             level: 'error',
           },
         ];
-        expect(data).toStrictEqual(expected);
+        expect(data).toStrictEqual(strip(expected));
       }
     }
   });
@@ -503,7 +516,7 @@ describe('Regression Test', () => {
             level: 'status',
           },
         ];
-        expect(data).toStrictEqual(expected);
+        expect(data).toStrictEqual(strip(expected));
       }
       // createStream
       {
@@ -525,7 +538,7 @@ describe('Regression Test', () => {
           null,
           1,
         ];
-        expect(data).toStrictEqual(expected);
+        expect(data).toStrictEqual(strip(expected));
       }
       // publish
       {
@@ -564,7 +577,7 @@ describe('Regression Test', () => {
             level: 'status',
           },
         ];
-        expect(data).toStrictEqual(expected);
+        expect(data).toStrictEqual(strip(expected));
       }
     }
   });
@@ -674,7 +687,7 @@ describe('Regression Test', () => {
           level: 'status',
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // createStream
     {
@@ -696,7 +709,7 @@ describe('Regression Test', () => {
         null,
         1,
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
     // publish
     {
@@ -724,7 +737,7 @@ describe('Regression Test', () => {
           level: 'error',
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
   });
 
@@ -830,7 +843,7 @@ describe('Regression Test', () => {
           level: 'error',
         },
       ];
-      expect(data).toStrictEqual(expected);
+      expect(data).toStrictEqual(strip(expected));
     }
   });
 });

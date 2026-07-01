@@ -2,6 +2,21 @@ import { describe, expect, test } from 'vitest';
 
 import AsyncByteReader from '../src/async-byte-reader.mts';
 import read_message from '../src/message-reader.mts';
+import { isAMF0Array, isAMF0Object, type AMF0Value } from '../src/amf0-reader.mts';
+
+const strip = (value: AMF0Value): AMF0Value => {
+  if (isAMF0Array(value)) {
+    return value.map((elem) => strip(elem));
+  } else if (isAMF0Object(value)) {
+    const obj = Object.create(null);
+    for (const [k, v] of Object.entries(value)) {
+      obj[k] = strip(v);
+    }
+    return obj;
+  } else {
+    return value;
+  }
+}
 
 describe('Regression Test', () => {
   test('Messaging (FFmpeg)', async () => {
@@ -46,7 +61,7 @@ describe('Regression Test', () => {
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'connect',
         1,
         {
@@ -55,55 +70,55 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
           type: 'nonprivate',
         },
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'releaseStream',
         2,
         null,
         'key',
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'FCPublish',
         3,
         null,
         'key',
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'createStream',
         4,
         null,
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(1);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'publish',
         5,
         null,
         'key',
         'live',
-      ]);
+      ]));
     }
   });
 
@@ -152,7 +167,7 @@ describe('Regression Test', () => {
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'connect',
         1,
         {
@@ -162,55 +177,55 @@ describe('Regression Test', () => {
           tcUrl: 'rtmp://localhost:1935/app',
           type: 'nonprivate',
         },
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'releaseStream',
         2,
         null,
         'key',
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'FCPublish',
         3,
         null,
         'key',
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(0);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'createStream',
         4,
         null,
-      ]);
+      ]));
     }
     {
       const message = (await gen.next()).value;
       expect(message.message_type_id).toStrictEqual(20);
       expect(message.message_stream_id).toStrictEqual(1);
       expect(message.timestamp).toStrictEqual(0);
-      expect(message.data).toStrictEqual([
+      expect(message.data).toStrictEqual(strip([
         'publish',
         5,
         null,
         'key',
         'live',
-      ]);
+      ]));
     }
   });
 });

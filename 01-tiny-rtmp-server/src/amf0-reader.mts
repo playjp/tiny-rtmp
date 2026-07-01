@@ -47,7 +47,9 @@ const longstring = (reader: ByteReader): string => {
 };
 
 const object = (reader: ByteReader): AMF0Object => {
-  const object: AMF0Object = {};
+  // 外部からの入力値なので prototype に __proto__ で触れてしまう
+  // Object.create(null) で prototype なしとする
+  const object: AMF0Object = Object.create(null);
   while (true) {
     const name = string(reader);
     const val = value(reader);

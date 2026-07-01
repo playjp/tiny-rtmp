@@ -1,5 +1,19 @@
 import { describe, expect, test } from 'vitest';
-import read_amf0, { isAMF0Array, isAMF0Boolean, isAMF0Date, isAMF0Number, isAMF0Object, isAMF0String } from '../src/amf0-reader.mts';
+import read_amf0, { isAMF0Array, isAMF0Boolean, isAMF0Date, isAMF0Number, isAMF0Object, isAMF0String, type AMF0Object, type AMF0Value } from '../src/amf0-reader.mts';
+
+const strip = (value: AMF0Value): AMF0Value => {
+  if (isAMF0Array(value)) {
+    return value.map((elem) => strip(elem));
+  } else if (isAMF0Object(value)) {
+    const obj = Object.create(null);
+    for (const [k, v] of Object.entries(value)) {
+      obj[k] = strip(v);
+    }
+    return obj;
+  } else {
+    return value;
+  }
+}
 
 describe('Unit Test', () => {
   test.each([
@@ -7,10 +21,10 @@ describe('Unit Test', () => {
     ['Type: 1 (boolean: true)', { value: Buffer.from('0101', 'hex'), expected: [true] }],
     ['Type: 1 (boolean: false)', { value: Buffer.from('0100', 'hex'), expected: [false] }],
     ['Type: 2 (string)', { value: Buffer.from('02000974696e792d72746d70', 'hex'), expected: ['tiny-rtmp'] }],
-    ['Type: 3 (object)', { value: Buffer.from('03000009', 'hex'), expected: [{}] }],
+    ['Type: 3 (object)', { value: Buffer.from('03000009', 'hex'), expected: strip([{}]) }],
     ['Type: 5 (null)', { value: Buffer.from('05', 'hex'), expected: [null] }],
     ['Type: 6 (undefined)', { value: Buffer.from('06', 'hex'), expected: [undefined] }],
-    ['type: 8 (mixed Array)', { value: Buffer.from('0800000000000009', 'hex'), expected: [{}] }],
+    ['type: 8 (mixed Array)', { value: Buffer.from('0800000000000009', 'hex'), expected: strip([{}]) }],
     ['type: 10 (strict array)', { value: Buffer.from('0a00000000', 'hex'), expected: [[]] }],
     ['type: 12 (long string)', { value: Buffer.from('0c0000000974696e792d72746d70', 'hex'), expected: ['tiny-rtmp'] }],
   ])('%s', (_, { value, expected }) => {
@@ -136,7 +150,7 @@ describe('Regression Test (AMF0Command)', () => {
       },
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('createStream _result', () => {
@@ -177,7 +191,7 @@ describe('Regression Test (AMF0Command)', () => {
       },
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 });
 
@@ -206,7 +220,7 @@ describe('Regression Test (FFmpeg)', () => {
       },
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('releaseStream', () => {
@@ -222,7 +236,7 @@ describe('Regression Test (FFmpeg)', () => {
       'key',
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('FCPublish', () => {
@@ -238,7 +252,7 @@ describe('Regression Test (FFmpeg)', () => {
       'key',
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('createStream', () => {
@@ -253,7 +267,7 @@ describe('Regression Test (FFmpeg)', () => {
       null,
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('publish', () => {
@@ -271,7 +285,7 @@ describe('Regression Test (FFmpeg)', () => {
       'live',
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('onMetadata', () => {
@@ -318,7 +332,7 @@ describe('Regression Test (FFmpeg)', () => {
       },
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 });
 
@@ -350,7 +364,7 @@ describe('Regression Test (OBS)', () => {
       },
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('releaseStream', () => {
@@ -366,7 +380,7 @@ describe('Regression Test (OBS)', () => {
       'key',
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('FCPublish', () => {
@@ -382,7 +396,7 @@ describe('Regression Test (OBS)', () => {
       'key',
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('createStream', () => {
@@ -397,7 +411,7 @@ describe('Regression Test (OBS)', () => {
       null,
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('publish', () => {
@@ -415,7 +429,7 @@ describe('Regression Test (OBS)', () => {
       'live',
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 
   test('onMetadata', () => {
@@ -475,6 +489,6 @@ describe('Regression Test (OBS)', () => {
       },
     ];
 
-    expect(read_amf0(target)).toStrictEqual(expected);
+    expect(read_amf0(target)).toStrictEqual(strip(expected));
   });
 });
