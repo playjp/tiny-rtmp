@@ -36,7 +36,7 @@ export default (duplex: Duplex) => {
       write(data, _, cb) { reader.feed(data); cb(); },
     }));
     input.addListener('close', () => { controller.abort(); });
-    (async () => {
+    void (async () => {
       try {
         await reader.read(1);
         logger.debug('CLIENT -> SERVER C0');
@@ -60,7 +60,7 @@ export default (duplex: Duplex) => {
       write(data, _, cb) { reader.feed(data); cb(); },
     }));
     output.addListener('close', () => { controller.abort(); });
-    (async () => {
+    void (async () => {
       try {
         await reader.read(1);
         logger.debug('SERVER -> CLIENT S0');
