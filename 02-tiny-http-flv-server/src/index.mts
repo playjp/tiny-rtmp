@@ -115,7 +115,7 @@ const handle = async (connection: Duplex) => {
         default: continue;
       }
 
-      for (const stream of streaming.values()){
+      for (const stream of streaming.values()) {
         const [write, _, initialize] = stream;
         if (initialize) {
           for (const message of [onMetadataMessage, avcConfigMessage, aacConfigMessage]) {

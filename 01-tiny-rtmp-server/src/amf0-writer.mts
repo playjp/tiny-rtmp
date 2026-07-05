@@ -38,7 +38,7 @@ const date = (dst: ByteBuilder, data: Date): void => {
 
 const value = (dst: ByteBuilder, data: unknown): void => {
   if (data === null) { dst.writeU8(0x05); return; }
-  if (data === undefined){ dst.writeU8(0x06); return; }
+  if (data === undefined) { dst.writeU8(0x06); return; }
   if (Array.isArray(data)) { dst.writeU8(0x0a); array(dst, data); return; }
   if (data instanceof Date) { dst.writeU8(0x0b); date(dst, data); return; }
   switch (typeof data) {

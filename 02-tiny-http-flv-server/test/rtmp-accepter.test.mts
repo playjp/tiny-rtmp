@@ -22,7 +22,7 @@ const strip = (value: AMF0Value): AMF0Value => {
   } else {
     return value;
   }
-}
+};
 
 
 describe('Regression Test', () => {

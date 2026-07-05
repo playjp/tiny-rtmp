@@ -17,6 +17,7 @@ export default [
       "@stylistic/semi-spacing": ["error",  { "before": false, "after": true }],
       "@stylistic/key-spacing": ["error", { "beforeColon": false }],
       "@stylistic/block-spacing": ["error", "always"],
+      "@stylistic/space-before-blocks": ["error", "always"],
       "@stylistic/space-before-function-paren": ["error", { "anonymous": "always", "named": "never" }],
       "@stylistic/array-bracket-spacing": ["error", "never"],
       "@stylistic/arrow-spacing": ["error", { "before": true, "after": true }],

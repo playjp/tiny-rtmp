@@ -71,7 +71,7 @@ const handle = async (connection: Duplex) => {
       const frag = rtmp_to_fmp4.feed(message);
       if (frag == null) { continue; }
 
-      for (const stream of streaming.values()){
+      for (const stream of streaming.values()) {
         const [write] = stream;
         if (stream[2]) {
           const init = rtmp_to_fmp4.initialize();
