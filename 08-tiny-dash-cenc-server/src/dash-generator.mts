@@ -15,8 +15,8 @@ import SegmentTimeline from '../../07-tiny-dash-server/src/segment-timeline.mts'
 import { serializeXML, XMLNode } from '../../07-tiny-dash-server/src/xml.mts';
 import { aacMimeTypeCodec, avcMimeTypeCodec } from '../../07-tiny-dash-server/src/mimetype.mts';
 
-import { encrypt_avc, write_mp4_avc_track_information }from './avc.mts';
-import { encrypt_aac, write_mp4_aac_track_information }from './aac.mts';
+import { encrypt_avc, write_mp4_avc_track_information } from './avc.mts';
+import { encrypt_aac, write_mp4_aac_track_information } from './aac.mts';
 import { EncryptionFormat, fragment, IVType, pssh } from './cenc.mts';
 
 type VideoInformation = {

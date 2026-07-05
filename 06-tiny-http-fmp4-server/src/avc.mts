@@ -110,7 +110,7 @@ const skip_hrd_parameters = (reader: BitReader): void => {
   const cpb_cnt_minus1 = reader.readUEG();
   const bit_rate_scale = reader.readBits(4);
   const cpb_size_scale = reader.readBits(4);
-  for(let SchedSelIdx = 0; SchedSelIdx <= cpb_cnt_minus1; SchedSelIdx++) {
+  for (let SchedSelIdx = 0; SchedSelIdx <= cpb_cnt_minus1; SchedSelIdx++) {
     const bit_rate_value_minus1/*[SchedSelIdx]*/ = reader.readUEG();
     const cpb_size_value_minus1/*[SchedSelIdx]*/ = reader.readUEG();
     const cbr_flag/*[SchedSelIdx]*/ = reader.readBool();
@@ -162,7 +162,7 @@ const read_vui_parameters = (reader: BitReader): VUIParameters => {
     }
   }
   const chroma_loc_info_present_flag = reader.readBool();
-  if(chroma_loc_info_present_flag) {
+  if (chroma_loc_info_present_flag) {
     const chroma_sample_loc_type_top_field = reader.readUEG();
     const chroma_sample_loc_type_bottom_field = reader.readUEG();
   }
@@ -411,17 +411,17 @@ export const read_pic_parameter_set_data = (reader: BitReader): PictureParameter
     if (num_slice_groups_minus1 > 0) {
       const slice_group_map_type = reader.readUEG();
       if (slice_group_map_type === 0) {
-        for(let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
+        for (let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
           reader.skipUEG(); // run_length_minus1[iGroup]
         }
       } else if (slice_group_map_type === 1) {
-        for(let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
+        for (let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
           reader.skipUEG(); // top_left[iGroup]
           reader.skipUEG(); // bottom_right[iGroup]
         }
       } else if (3 <= slice_group_map_type && slice_group_map_type <= 5) {
         reader.skipBool(); // slice_group_change_direction_flag
-        const slice_group_change_rate_minus1= reader.readUEG();
+        const slice_group_change_rate_minus1 = reader.readUEG();
 
         return {
           has_slice_group_map_type: true,

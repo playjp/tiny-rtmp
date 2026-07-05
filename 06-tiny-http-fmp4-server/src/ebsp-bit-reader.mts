@@ -11,7 +11,7 @@ export default class EBSPBitReader extends BitReader {
   }
 
   protected fill(): void {
-    let byte: number | null | typeof unescaped = !this.reader.isEOF() ?this.reader.readU8() : null;
+    let byte: number | null | typeof unescaped = !this.reader.isEOF() ? this.reader.readU8() : null;
 
     // unescape ebsp to rbsp
     if (this.fst_byte === 0 && this.snd_byte === 0 && byte === 3) {

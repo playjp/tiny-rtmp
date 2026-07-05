@@ -237,13 +237,13 @@ export const skip_slice_header = ({ nal_ref_idc, nal_unit_type }: NALUnitHeader,
     skip_ref_pic_list_modification(slice_type, reader);
   }
 
-  if((pps.weighted_pred_flag && (is_p_slice(slice_type) || is_sp_slice(slice_type))) || (pps.weighted_bipred_idc === 1 && is_b_slice(slice_type))) {
+  if ((pps.weighted_pred_flag && (is_p_slice(slice_type) || is_sp_slice(slice_type))) || (pps.weighted_bipred_idc === 1 && is_b_slice(slice_type))) {
     skip_pred_weight_table(slice_type, num_ref_idx_l0_active_minus1, num_ref_idx_l1_active_minus1, sps, reader);
   }
-  if(nal_ref_idc !== 0) {
+  if (nal_ref_idc !== 0) {
     skip_dec_ref_pic_marking(nal_unit_type, reader);
   }
-  if(pps.entropy_coding_mode_flag && !is_i_slice(slice_type) && !is_si_slice(slice_type)) {
+  if (pps.entropy_coding_mode_flag && !is_i_slice(slice_type) && !is_si_slice(slice_type)) {
     reader.skipUEG(); // cabac_init_idc
   }
   reader.skipSEG(); // slice_qp_delta
@@ -253,7 +253,7 @@ export const skip_slice_header = ({ nal_ref_idc, nal_unit_type }: NALUnitHeader,
     }
     reader.skipSEG(); //slice_qs_delta
   }
-  if(pps.deblocking_filter_control_present_flag) {
+  if (pps.deblocking_filter_control_present_flag) {
     const disable_deblocking_filter_idc = reader.readUEG(); // disable_deblocking_filter_idc
     if (disable_deblocking_filter_idc !== 1) {
       reader.skipSEG(); // slice_alpha_c0_offset_div2

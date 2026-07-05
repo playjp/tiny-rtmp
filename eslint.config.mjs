@@ -19,6 +19,7 @@ export default [
       "@stylistic/block-spacing": ["error", "always"],
       "@stylistic/space-before-blocks": ["error", "always"],
       "@stylistic/space-before-function-paren": ["error", { "anonymous": "always", "named": "never" }],
+      "@stylistic/space-infix-ops": "error",
       "@stylistic/array-bracket-spacing": ["error", "never"],
       "@stylistic/arrow-spacing": ["error", { "before": true, "after": true }],
       "@stylistic/comma-spacing": ["error", { "before": false, "after": true }],
@@ -42,6 +43,8 @@ export default [
       "@stylistic/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
       "@stylistic/member-delimiter-style": ["error", { "multiline": { "delimiter": "semi", "requireLast": true }, "singleline": { "delimiter": "semi", "requireLast": true }}],
       "@stylistic/rest-spread-spacing": ["error", "always"],
+      "@stylistic/no-trailing-spaces": "error",
+      "@stylistic/keyword-spacing": ["error", { "before": true, "after": true }],
       "eqeqeq": ["error", "always", {"null": "ignore"}]
     }
   }

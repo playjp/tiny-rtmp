@@ -6,8 +6,8 @@ import { isAMF0Object } from '../../01-tiny-rtmp-server/src/amf0-reader.mts';
 import { read_audio_specific_config } from '../../03-tiny-http-ts-server/src/aac.mts';
 import handle_rtmp_payload, { FrameType } from '../../03-tiny-http-ts-server/src/rtmp-handler.mts';
 
-import { write_mp4_avc_track_information }from '../../06-tiny-http-fmp4-server/src/avc.mts';
-import { write_mp4_aac_track_information }from '../../06-tiny-http-fmp4-server/src/aac.mts';
+import { write_mp4_avc_track_information } from '../../06-tiny-http-fmp4-server/src/avc.mts';
+import { write_mp4_aac_track_information } from '../../06-tiny-http-fmp4-server/src/aac.mts';
 
 import SegmentTimeline from './segment-timeline.mts';
 import { fragment, initialize, make } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';

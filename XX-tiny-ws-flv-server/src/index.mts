@@ -105,7 +105,7 @@ const handle = async (connection: Duplex) => {
         case MessageType.DataAMF0: {
           const command = message.data;
           if (command.length !== 3 || command[0] !== '@setDataFrame' || command[1] !== 'onMetaData') { continue; }
-          onMetadataMessage ={ ... message, data: write_amf0(command[1], command[2]) };
+          onMetadataMessage = { ... message, data: write_amf0(command[1], command[2]) };
           break;
         }
         default: continue;
