@@ -253,7 +253,7 @@ web_server.addListener('upgrade', (req, socket, _) => {
     if (chunk.byteLength >= 2 ** 16) {
       socket.write(Buffer.from([127])); // NoMASK and 8 bytes
       const length = Buffer.alloc(8);
-      length.writeBigInt64BE(BigInt(chunk.byteLength), 0);
+      length.writeBigUInt64BE(BigInt(chunk.byteLength), 0);
       socket.write(length);
     } else if (chunk.byteLength >= 126) {
       socket.write(Buffer.from([126])); // NoMASK and 8 bytes
