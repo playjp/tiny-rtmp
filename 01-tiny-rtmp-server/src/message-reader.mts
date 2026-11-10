@@ -123,7 +123,6 @@ export default async function* read_message(reader: AsyncByteReader, option?: Me
             const cs_id = message.data.chunk_stream_id;
             buffered -= chunks.get(cs_id)?.byteLength() ?? 0;
             chunks.delete(cs_id);
-            informations.delete(cs_id);
             break;
           }
           default: {
