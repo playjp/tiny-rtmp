@@ -261,7 +261,7 @@ export const skip_slice_header = ({ nal_ref_idc, nal_unit_type }: NALUnitHeader,
     }
   }
   if (pps.has_slice_group_map_type && pps.has_slice_group_change_rate_minus1) {
-    const slice_group_change_cycle_bits = sufficient_bits(sps.pic_size_in_map_units / (pps.slice_group_change_rate_minus1 + 1));
+    const slice_group_change_cycle_bits = sufficient_bits(sps.pic_size_in_map_units / (pps.slice_group_change_rate_minus1 + 1) + 1);
     reader.skipBits(slice_group_change_cycle_bits);
   }
 };

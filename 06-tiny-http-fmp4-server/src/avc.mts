@@ -236,7 +236,7 @@ type PicOrderCntType = ({
 
 export const sufficient_bits = (value: number): number => {
   let bits = 0;
-  while (value >= 2 ** bits) {
+  while (value > 2 ** bits) {
     bits += 1;
   }
   return bits;
