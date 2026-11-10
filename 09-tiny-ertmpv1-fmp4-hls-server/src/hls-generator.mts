@@ -98,13 +98,14 @@ export default class HLSGenerator {
 
     const has_video = this.videoTrack != null;
     const has_audio = this.audioTrack != null;
+    const is_audio_only = !has_video && has_audio;
     const video_ready = this.onMetadata.videocodecid == null || has_video;
     const audio_ready = this.onMetadata.audiocodecid == null || has_audio;
     if (!video_ready || !audio_ready) { return; }
 
     if (has_video && payload.kind === 'Video' && payload.frameType === FrameType.KEY_FRAME) {
       this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
-    } else if (has_audio && payload.kind === 'Audio') {
+    } else if (is_audio_only && payload.kind === 'Audio') {
       this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
     }
 
