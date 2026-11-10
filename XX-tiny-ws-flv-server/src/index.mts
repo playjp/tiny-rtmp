@@ -281,9 +281,7 @@ web_server.addListener('upgrade', (req, socket, _) => {
   const entry = [write, exit, true] satisfies StreamingInformation;
   streaming.set(viewer, entry);
 
-  req.on('close', exit);
   socket.on('close', exit);
-  req.on('error', exit);
   socket.on('error', exit);
 });
 web_server.listen({ port: web });
