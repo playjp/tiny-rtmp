@@ -1,4 +1,4 @@
-import { Duplex, PassThrough, Writable } from 'node:stream';
+import { Duplex, PassThrough, Writable, pipeline } from 'node:stream';
 import AsyncByteReader from './async-byte-reader.mts';
 import read_message from './message-reader.mts';
 import { logger } from './logger.mts';
@@ -47,6 +47,8 @@ export default (duplex: Duplex) => {
         for await (const message of read_message(reader)) {
           logger.debug(`CLIENT -> SERVER ${message_name(message)}`, message);
         }
+      } catch {
+        // ignore
       } finally {
         reader.feedEOF();
       }
@@ -71,14 +73,17 @@ export default (duplex: Duplex) => {
         for await (const message of read_message(reader)) {
           logger.debug(`SERVER -> CLIENT ${message_name(message)}`, message);
         }
+      } catch {
+        // ignore
       } finally {
         reader.feedEOF();
       }
     })();
   }
 
-  duplex.pipe(input);
-  output.pipe(duplex);
+  const ignore = () => {};
+  pipeline(duplex, input, ignore);
+  pipeline(output, duplex, ignore);
 
   return proxy;
 };
