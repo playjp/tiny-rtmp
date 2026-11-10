@@ -134,8 +134,8 @@ export default async function* read_message(reader: AsyncByteReader, option?: Me
         logger.error('Message Decoding Failed, ignore it', information);
       }
 
+      buffered -= chunks.get(cs_id)?.byteLength() ?? 0;
       chunks.delete(cs_id);
-      buffered -= data.byteLength;
     }
     informations.set(cs_id, information);
   }
