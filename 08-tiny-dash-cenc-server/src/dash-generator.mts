@@ -159,12 +159,6 @@ export default class DASHGenerator {
           this.avcDecoderConfigurationRecord = payload.avcDecoderConfigurationRecord;
           return;
         }
-        if (payload.frameType === FrameType.KEY_FRAME) {
-          this.videoTimeline?.append(payload.timestamp);
-          if (this.aacLatestTimestamp != null) {
-            this.audioTimeline?.append(this.aacLatestTimestamp);
-          }
-        }
         break;
       case 'Audio':
         if (payload.codec !== 'AAC') { return; }
@@ -227,6 +221,13 @@ export default class DASHGenerator {
               vector
             );
           }));
+
+          if (payload.frameType === FrameType.KEY_FRAME) {
+            this.videoTimeline?.append(payload.timestamp);
+            if (this.aacLatestTimestamp != null) {
+              this.audioTimeline?.append(this.aacLatestTimestamp);
+            }
+          }
         }
         this.previousVideoInformation = {
           type: payload.frameType,

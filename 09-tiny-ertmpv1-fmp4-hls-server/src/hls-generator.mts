@@ -103,12 +103,6 @@ export default class HLSGenerator {
     const audio_ready = this.onMetadata.audiocodecid == null || has_audio;
     if (!video_ready || !audio_ready) { return; }
 
-    if (has_video && payload.kind === 'Video' && payload.frameType === FrameType.KEY_FRAME) {
-      this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
-    } else if (is_audio_only && payload.kind === 'Audio') {
-      this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
-    }
-
     if (this.initialization == null) {
       this.initialization = make((vector) => {
         initialize(RTMP_TIMESCALE, [... (has_video ? [1] : []), ... (has_audio ? [2] : [])], vector, (vector) => {
@@ -133,7 +127,7 @@ export default class HLSGenerator {
           cto: payload.compositionTimeOffset,
           data: payload.data,
         };
-        return;
+        break;
       case 'Audio':
         // FIXME: これは手抜き 各音声コーデックで sample 数から duration を厳密に求めるべき
         if (this.previousAudioInformation != null) {
@@ -147,7 +141,13 @@ export default class HLSGenerator {
           dts: payload.timestamp,
           data: payload.data,
         };
-        return;
+        break;
+    }
+
+    if (has_video && payload.kind === 'Video' && payload.frameType === FrameType.KEY_FRAME) {
+      this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
+    } else if (is_audio_only && payload.kind === 'Audio') {
+      this.playlist.append(PlaylistTimestamp.fromRTMP(payload.timestamp));
     }
   }
 }
