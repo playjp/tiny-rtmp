@@ -172,6 +172,8 @@ const TRANSITION = {
     const publishAccepted = authResult === AuthResult.OK;
 
     if (publishAccepted) {
+      // 内部状態は Publish 送る前に Publish したことにしておく
+      store({ stream: strip_query(stream), query: collect_query(stream) });
       // 利用開始する Message Stream ID を Stream Begin で伝達する
       writer.write(StreamBegin.from({ message_stream_id: PUBLISH_MESSAGE_STREAM, timestamp: 0 }));
     }
@@ -193,10 +195,6 @@ const TRANSITION = {
       timestamp: 0,
       data: ['onStatus', transaction_id, null, info],
     });
-
-    if (publishAccepted) {
-      store({ stream: strip_query(stream), query: collect_query(stream) });
-    }
 
     const next = {
       [AuthResult.OK]: STATE.PUBLISHED,
