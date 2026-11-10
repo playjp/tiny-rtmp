@@ -106,8 +106,8 @@ const web_server = http.createServer({ highWaterMark }, (req, res) => {
     res.end();
     return;
   }
-  const url = new URL(req.url, `http://localhost:${web}`);
-  if (!(req.method === 'GET' && url.pathname === `/${app}/${streamKey}`)) {
+  const url = URL.parse(req.url, `http://localhost:${web}`);
+  if (url == null || !(req.method === 'GET' && url.pathname === `/${app}/${streamKey}`)) {
     res.writeHead(404, { 'access-control-allow-origin': '*' });
     res.end();
     return;

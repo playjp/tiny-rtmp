@@ -132,8 +132,8 @@ const web_server = https.createServer({ key, cert }, async (req, res) => {
     notfound();
     return;
   }
-  const url = new URL(req.url, `http://localhost:${web}`);
-  if (!(req.method === 'GET' && url.pathname.startsWith(`/${app}/${streamKey}/`))) {
+  const url = URL.parse(req.url, `http://localhost:${web}`);
+  if (url == null || !(req.method === 'GET' && url.pathname.startsWith(`/${app}/${streamKey}/`))) {
     notfound();
     return;
   }
