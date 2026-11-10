@@ -156,7 +156,7 @@ const pingpong = async (reader: AsyncByteReader, writable: Writable): Promise<vo
       if (payload_len === 126n) {
         payload_len = BigInt(await reader.readU16BE());
       } else if (payload_len === 127n) {
-        payload_len = (await reader.read(8)).readBigInt64BE(0);
+        payload_len = (await reader.read(8)).readBigUInt64BE(0);
       }
       if (payload_len > Number.MAX_SAFE_INTEGER) {
         writable.end();
@@ -175,7 +175,7 @@ const pingpong = async (reader: AsyncByteReader, writable: Writable): Promise<vo
       if (payload.byteLength >= 2 ** 16) {
         writable.write(Buffer.from([127])); // NoMASK and 8 bytes
         const length = Buffer.alloc(8);
-        length.writeBigInt64BE(BigInt(payload.byteLength), 0);
+        length.writeBigUInt64BE(BigInt(payload.byteLength), 0);
         writable.write(length);
       } else if (payload.byteLength >= 126) {
         writable.write(Buffer.from([126])); // NoMASK and 8 bytes
