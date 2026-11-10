@@ -48,6 +48,8 @@ export const write_annexb_avc = (sizedNalus: Buffer, avcDecoderConfigurationReco
   let hasIDR = false;
   while (!reader.isEOF()) {
     const length = reader.readUIntBE(avcDecoderConfigurationRecord.lengthSize);
+    // NALu Length が 0 だった場合は違反なので、明示的に例外投げたほうが行儀がいい
+    // ここでは NALu にアクセスして RangeError が出て切断される
     const nalu = reader.read(length);
     const naluType = nalu.readUInt8(0) & 0x1F;
 
