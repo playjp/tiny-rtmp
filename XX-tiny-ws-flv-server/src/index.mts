@@ -200,6 +200,9 @@ rtmp_server.listen(port);
 let viewers = 0;
 const web_server = http.createServer();
 web_server.addListener('upgrade', (req, socket, _) => {
+  const noop = () => {};
+  socket.on('error', noop); // ignore error before streaming
+
   const response = (status: number, message: string, headers?: Record<string, string>) => {
     const newline = '\r\n';
     socket.write(`HTTP/1.1 ${status} ${message}` + newline);
