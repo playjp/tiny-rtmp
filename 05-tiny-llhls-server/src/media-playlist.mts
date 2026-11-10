@@ -121,7 +121,7 @@ export default class MediaPlaylist {
       for (const [index, part] of segment.enumerate()) {
         m3u8 += `#EXT-X-PART:DURATION=${part.extinf()!.toFixed(6)},URI="${i}_${index}.ts"` + (part.independent() ? ',INDEPENDENT=YES' : '') + '\n';
       }
-      m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)}\n`;
+      m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)},\n`;
       m3u8 += `${i}.ts\n`;
     }
 

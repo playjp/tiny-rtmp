@@ -97,7 +97,7 @@ export default class MediaPlaylist {
     m3u8 += '\n';
     for (let i = Math.max(0, this.sequenceNumber - this.liveWindowLength); i < this.sequenceNumber; i++) {
       const segment = this.segmentMap.get(i)!;
-      m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)}\n`;
+      m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)},\n`;
       m3u8 += `${i}.ts\n`;
     }
 

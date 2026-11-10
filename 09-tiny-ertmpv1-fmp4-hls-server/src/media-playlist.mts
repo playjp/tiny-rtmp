@@ -101,7 +101,7 @@ export default class MediaPlaylist {
       if (i === (this.sequenceNumber - this.liveWindowLength)) {
         m3u8 += '#EXT-X-MAP:URI="init.mp4"\n';
       }
-      m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)}\n`;
+      m3u8 += `#EXTINF:${segment.extinf()!.toFixed(6)},\n`;
       m3u8 += `${i}.m4s\n`;
     }
 
