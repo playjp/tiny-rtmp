@@ -18,12 +18,14 @@ import AckCounter from '../../01-tiny-rtmp-server/src/ack-counter.mts';
 
 const simple_handshake_C1S1C2S2 = async (c1: Buffer, reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   // simple handshake
+  const c1_time = c1.subarray(0, 4);
   const c1_random = c1.subarray(8);
+  const s1_time = Buffer.alloc(4);
   const s1_random = randomBytes(1536 - 8);
-  const s1 = Buffer.concat([Buffer.alloc(8), s1_random]);
+  const s1 = Buffer.concat([s1_time, Buffer.alloc(4), s1_random]);
   connection.write(s1); // write S1
 
-  const s2 = Buffer.concat([Buffer.alloc(8), c1_random]);
+  const s2 = Buffer.concat([c1_time, s1_time, c1_random]);
   connection.write(s2); // write S2
   const c2 = await reader.read(1536); // read C2
   const c2_random_echo = c2.subarray(8);
@@ -48,7 +50,8 @@ const verifyC1 = (c1: Buffer, offset: number): boolean => {
 
 const handshake_C1S1C2S2 = async (reader: AsyncByteReader, connection: Duplex): Promise<boolean> => {
   const c1 = await reader.read(1536); // read C1
-  const s1 = Buffer.concat([Buffer.alloc(8), randomBytes(1536 - 8)]);
+  const s1_time = Buffer.alloc(4);
+  const s1 = Buffer.concat([s1_time, Buffer.alloc(4), randomBytes(1536 - 8)]);
 
   for (const offset of [0, 764]) { // Scheme 0 / Scheme 1
     if (!verifyC1(c1, offset)) { continue; }

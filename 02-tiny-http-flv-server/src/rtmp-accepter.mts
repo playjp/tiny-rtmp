@@ -23,12 +23,14 @@ const handle_handshake = async (reader: AsyncByteReader, connection: Duplex): Pr
   connection.write(Buffer.from([0x03])); // Write S0 (Version: 3)
   // C1/S1
   const c1 = await reader.read(1536); // read C1
+  const c1_time = c1.subarray(0, 4);
   const c1_random = c1.subarray(8);
+  const s1_time = Buffer.alloc(4);
   const s1_random = randomBytes(1536 - 8);
-  const s1 = Buffer.concat([Buffer.alloc(8), s1_random]);
+  const s1 = Buffer.concat([s1_time, Buffer.alloc(4), s1_random]);
   connection.write(s1); // write S1
   // C2/S2
-  const s2 = Buffer.concat([Buffer.alloc(8), c1_random]);
+  const s2 = Buffer.concat([c1_time, s1_time, c1_random]);
   connection.write(s2); // write S2
   const c2 = await reader.read(1536); // read C2
   const c2_random_echo = c2.subarray(8);
