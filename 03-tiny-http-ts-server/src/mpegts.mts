@@ -119,7 +119,7 @@ export const write_pmt = (pmt: PMT) => {
 };
 
 export const write_pes = (data: Buffer, stream_id: number, pts: number | null, dts: number | null, omit_length = false) => {
-  if (pts == null) { dts = null; }
+  if (pts == null || pts === dts) { dts = null; }
 
   const builder = new BitBuilder();
   const PES_header_data_length = (pts != null ? 5 : 0) + (dts != null ? 5 : 0);
