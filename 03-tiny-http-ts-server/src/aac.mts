@@ -11,7 +11,16 @@ export type AudioSpecificConfig = {
   samplingFrequencyIndex: number;
   samplingFrequency: number;
   channelConfiguration: number;
-};
+} & ({
+  extensionAudioObjectType: 0;
+} | {
+  extensionAudioObjectType: 5;
+  sbrPresent: true;
+  psPresent: boolean;
+  extensionSamplingFrequencyIndex: number;
+  extensionSamplingFrequency: number;
+  extensionChannelConfiguration?: number;
+});
 
 export const read_audio_specific_config = (audioSpecificConfig: Buffer): AudioSpecificConfig => {
   const reader = new BitReader(audioSpecificConfig);
@@ -23,11 +32,35 @@ export const read_audio_specific_config = (audioSpecificConfig: Buffer): AudioSp
   const samplingFrequency = samplingFrequencyIndex === 0x0f ? reader.readBits(24) : samplingFrequencyTable[samplingFrequencyIndex];
   const channelConfiguration = reader.readBits(4);
 
+  const extensionAudioObjectType = (audioObjectType === 5 || audioObjectType === 29) ? 5 : 0;
+  if (extensionAudioObjectType === 0) {
+    return {
+      audioObjectType,
+      samplingFrequencyIndex,
+      samplingFrequency,
+      channelConfiguration,
+      extensionAudioObjectType,
+    };
+  }
+
+  const psPresent = audioObjectType === 29;
+  const extensionSamplingFrequencyIndex = reader.readBits(4);
+  const extensionSamplingFrequency = extensionSamplingFrequencyIndex === 0x0f ? reader.readBits(24) : samplingFrequencyTable[extensionSamplingFrequencyIndex];
+  audioObjectType = reader.readBits(5);
+  if (audioObjectType === 31) { audioObjectType = 32 + reader.readBits(6); }
+  const extensionChannelConfiguration = audioObjectType === 22 ? reader.readBits(4) : undefined;
+
   return {
     audioObjectType,
     samplingFrequencyIndex,
     samplingFrequency,
     channelConfiguration,
+    extensionAudioObjectType,
+    sbrPresent: true,
+    psPresent,
+    extensionSamplingFrequencyIndex,
+    extensionSamplingFrequency,
+    extensionChannelConfiguration,
   };
 };
 

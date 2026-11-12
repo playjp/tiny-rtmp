@@ -10,7 +10,8 @@ export const avcMimeTypeCodec = (avcDecoderConfigurationRecord: AVCDecoderConfig
 };
 
 export const aacMimeTypeCodec = (audio_specific_config: AudioSpecificConfig): string => {
-  const object_type = audio_specific_config.audioObjectType;
+  const extension = audio_specific_config.extensionAudioObjectType === 5;
+  const object_type = extension ? (audio_specific_config.psPresent ? 29 : 5) : audio_specific_config.audioObjectType;
 
   return `mp4a.40.${object_type}`;
 };
