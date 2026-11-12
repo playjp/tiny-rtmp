@@ -16,7 +16,6 @@ export type MediaPlaylistOption = {
 export const MediaPlaylistOption = {
   from(option?: Partial<MediaPlaylistOption>): MediaPlaylistOption {
     return {
-      ... option,
       liveWindowLength: Math.max(option?.liveWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       orphanedWindowLength: Math.max(option?.orphanedWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       partialSegmentDuration: Math.max(option?.partialSegmentDuration ?? 0.25, 0.25),

@@ -12,9 +12,8 @@ export type BandwidthEstimatorOption = {
 export const BandwidthEstimatorOption = {
   from(option?: Partial<BandwidthEstimatorOption>): BandwidthEstimatorOption {
     return {
-      intervalMills: 100,
-      movingAverageLength: 10,
-      ... option,
+      intervalMills: option?.intervalMills ?? 100,
+      movingAverageLength: option?.movingAverageLength ?? 10,
     };
   },
 };

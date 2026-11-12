@@ -49,9 +49,8 @@ export type LLHLSGeneratorOption = {
 export const LLHLSGeneratorOption = {
   from(option?: Partial<LLHLSGeneratorOption>): LLHLSGeneratorOption {
     return {
-      liveWindowLength: 3,
-      partialSegmentDuration: 1,
-      ... option,
+      liveWindowLength: option?.liveWindowLength ?? 3,
+      partialSegmentDuration: option?.partialSegmentDuration ?? 1,
     };
   },
 };

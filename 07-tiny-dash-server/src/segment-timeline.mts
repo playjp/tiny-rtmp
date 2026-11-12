@@ -13,7 +13,6 @@ export type SegmentTimelineOption = {
 export const SegmentTimelineOption = {
   from(option?: Partial<SegmentTimelineOption>): SegmentTimelineOption {
     return {
-      ... option,
       liveWindowLength: Math.max(option?.liveWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       orphanedWindowLength: Math.max(option?.orphanedWindowLength ?? MINIMUM_LIVE_WINDOW_LENGTH, MINIMUM_LIVE_WINDOW_LENGTH),
       minimumSegmentDuration: Math.max(option?.minimumSegmentDuration ?? 1, 1),
