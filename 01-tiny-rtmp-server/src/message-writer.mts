@@ -146,9 +146,8 @@ export default class MessageWriter {
       this.sending_notify = resolve;
 
       let all_empty = true;
-      const empty_set = new Set<number>();
-      for (const [cs_id, queue] of this.sending_cs_id_queues.entries()) {
-        if (queue.empty()) { empty_set.add(cs_id); continue; }
+      for (const queue of this.sending_cs_id_queues.values()) {
+        if (queue.empty()) { continue; }
         all_empty = false;
 
         const message = queue.peek()!;
@@ -221,8 +220,13 @@ export default class MessageWriter {
         }
       }
 
-      // 消しこみ
-      for (const cs_id of empty_set) {
+      // 消しこみ (Map は tombstone を使うので entries 中にキーを消しても問題がない)
+      // 理由: delete は key, value を EMPTY で上書きする + iterator は EMPTY の場合スキップする
+      // さらに: compaction が起きても順序や現在の状態を維持する(ように実装しないと仕様に違反する)から、問題がない
+      // link: https://tc39.es/ecma262/multipage/keyed-collections.html#sec-map.prototype.delete
+      // link: https://tc39.es/ecma262/multipage/keyed-collections.html#sec-createmapiterator
+      for (const [cs_id, queue] of this.sending_cs_id_queues.entries()) {
+        if (!queue.empty()) { continue; }
         this.sending_cs_id_queues.delete(cs_id);
       }
 
