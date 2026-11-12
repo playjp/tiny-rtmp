@@ -114,9 +114,7 @@ const web_server = http.createServer({ highWaterMark }, (req, res) => {
   const entry = [write, exit] satisfies StreamingHandlers;
   streaming.set(viewer, entry);
 
-  req.on('close', exit);
   res.on('close', exit);
-  req.on('error', exit);
-  res.on('error', exit);
+  res.on('error', exit); // noop で ignore しても close は呼ばれるので OK
 });
 web_server.listen({ port: web });
