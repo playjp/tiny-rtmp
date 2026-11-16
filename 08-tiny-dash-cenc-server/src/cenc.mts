@@ -1,5 +1,5 @@
 import type ByteVector from '../../06-tiny-http-fmp4-server/src/byte-vector.mts';
-import { audioSampleEntry, box, fullbox, mdat, mfhd, moof, tfdt, tfhd, traf, trun, visualSampleEntry, type callback, type FragmentInformation } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
+import { audioSampleEntry, box, fullbox, mdat, mfhd, moof, sampleTable, tfdt, tfhd, traf, trun, visualSampleEntry, type callback, type FragmentInformation } from '../../06-tiny-http-fmp4-server/src/fmp4.mts';
 
 export const pssh = (system_id: Buffer, kids: Buffer[], data: Buffer, vector: ByteVector, cb?: callback): void => {
   fullbox('pssh', 1, 0x000000, vector, (vector) => {
@@ -128,14 +128,19 @@ export const tenc = (format: EncryptionFormat, keyId: Buffer, ivType: IVType, ve
 };
 
 export const encv = (width: number, height: number, vector: ByteVector, cb?: callback): void => {
-  box('encv', vector, (vector) => {
-    visualSampleEntry(width, height, vector, cb);
+  sampleTable(vector, 0, (vector) => {
+    box('encv', vector, (vector) => {
+      visualSampleEntry(width, height, vector, cb);
+    });
   });
 };
 
 export const enca = (channel_count: number, sample_size: number, sample_rate: number, vector: ByteVector, cb?: callback): void => {
-  box('enca', vector, (vector) => {
-    audioSampleEntry(channel_count, sample_size, sample_rate, vector, cb);
+  const version = sample_rate >= 2 ** 16 ? 1 : 0;
+  sampleTable(vector, version, (vector) => {
+    box('enca', vector, (vector) => {
+      audioSampleEntry(version, channel_count, sample_size, sample_rate, vector, cb);
+    });
   });
 };
 

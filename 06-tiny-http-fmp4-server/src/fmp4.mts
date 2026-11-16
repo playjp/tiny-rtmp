@@ -201,15 +201,15 @@ export const stco = (vector: ByteVector, cb?: callback): void => {
     cb?.(vector);
   });
 };
-export const stsd = (vector: ByteVector, cb?: callback): void => {
-  fullbox('stsd', 0, 0x000000, vector, (vector) => {
+export const stsd = (vector: ByteVector, version: number, cb?: callback): void => {
+  fullbox('stsd', version, 0x000000, vector, (vector) => {
     vector.writeU32BE(1);
     cb?.(vector);
   });
 };
-export const sampleTable = (vector: ByteVector, cb?: callback): void => {
+export const sampleTable = (vector: ByteVector, version: 0 | 1, cb?: callback): void => {
   stbl(vector, (vector) => {
-    stsd(vector, cb);
+    stsd(vector, version, cb);
     stts(vector);
     stsc(vector);
     stsz(vector);
@@ -230,24 +230,33 @@ export const srat = (sample_rate: number, vector: ByteVector, cb?: callback): vo
   });
 };
 
-export const audioSampleEntry = (channel_count: number, sample_size: number, sample_rate: number, vector: ByteVector, cb?: callback): void => {
+export const audioSampleEntry = (version: 0 | 1, channel_count: number, sample_size: number, sample_rate: number, vector: ByteVector, cb?: callback): void => {
   sampleEntry(vector);
-  vector.write(Buffer.alloc(8)); // reserved
+  vector.writeU16BE(version); // version 1 では entry version, version 0 では reserved
+  vector.write(Buffer.alloc(6)); // reserved
   vector.writeU16BE(channel_count); // 0: unknown, 1: mono, 2: stereo
   vector.writeU16BE(sample_size); // bit数 (8, 16, 24, ...)
   vector.writeU32BE(0); // reserved
-  fixed_point_U16BE(sample_rate, 0, vector); // sample_rate
-  if (sample_rate >= 2 ** 16) { // 16bit で収まらない sample_rate は srat box で記載
-    srat(sample_rate, vector);
+  if (version === 0) {
+    let nominal = sample_rate;
+    while (nominal >= 2 ** 16) { nominal = Math.floor(nominal / 2); }
+    fixed_point_U16BE(nominal, 0, vector); // sample_rate (16bit に収まるまで割る)
+  } else {
+    fixed_point_U16BE(1, 0, vector); // v1 ではこの値はダミー
+    srat(sample_rate, vector); // v1 では srat で実rate を示す
   }
+
   // MEMO: MSE 実装だと chnl box が基本ないけど、いる場合はあるの?
   // コーデック情報がない PCM (Safari 18 は ipcm サポートあり) ではマルチチャンネル時にいりそうな気が...
   cb?.(vector);
 };
 
 export const mp4a = (channel_count: number, sample_size: number, sample_rate: number, vector: ByteVector, cb?: callback): void => {
-  box('mp4a', vector, (vector) => {
-    audioSampleEntry(channel_count, sample_size, sample_rate, vector, cb);
+  const version = sample_rate >= 2 ** 16 ? 1 : 0;
+  sampleTable(vector, version, (vector) => {
+    box('mp4a', vector, (vector) => {
+      audioSampleEntry(version, channel_count, sample_size, sample_rate, vector, cb);
+    });
   });
 };
 
@@ -272,7 +281,7 @@ export const esds = (audioSpecificConfig: Buffer, vector: ByteVector, cb?: callb
 };
 
 export const visualSampleEntry = (width: number, height: number, vector: ByteVector, cb?: callback): void => {
-  sampleEntry(vector);
+  sampleEntry(vector); // video には version 0 しかない
   vector.writeU16BE(0); // pre_defined
   vector.writeU16BE(0); // reserved
   vector.write(Buffer.alloc(12)); // pre_defined
@@ -289,8 +298,10 @@ export const visualSampleEntry = (width: number, height: number, vector: ByteVec
 };
 
 export const avc1 = (width: number, height: number, vector: ByteVector, cb?: callback): void => {
-  box('avc1', vector, (vector) => {
-    visualSampleEntry(width, height, vector, cb);
+  sampleTable(vector, 0, (vector) => {
+    box('avc1', vector, (vector) => {
+      visualSampleEntry(width, height, vector, cb);
+    });
   });
 };
 export const avcC = (avcDecoderConfigurationRecord: Buffer, vector: ByteVector, cb?: callback): void => {
@@ -313,7 +324,7 @@ export const track = (track_id: number, width: number, height: number, timescale
           default: nmhd(vector); break;
         }
         dataInformation(vector);
-        sampleTable(vector, cb);
+        cb?.(vector);
       });
     });
   });
