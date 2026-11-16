@@ -170,6 +170,8 @@ const pingpong = async (reader: AsyncByteReader, writable: Writable): Promise<vo
         payload[i] = payload[i] ^ maskingKey[i % 4];
       }
 
+      if (opcode === 0x08) { return; }
+
       if (opcode !== 0x09) { continue; } // Ping
       writable.write(Buffer.from([0x8a])); // FIN + Opcode(Pong)
       if (payload.byteLength >= 2 ** 16) {
@@ -246,9 +248,8 @@ web_server.addListener('upgrade', (req, socket, _) => {
   socket.on('close', () => {
     reader.feedEOF();
   });
-  pingpong(reader, socket); // do ping pong
 
-  const viewer = viewers++;
+  // write function
   const write = (chunk: Buffer) => {
     if (socket.closed) { return; }
 
@@ -269,6 +270,25 @@ web_server.addListener('upgrade', (req, socket, _) => {
     // 126 以下で 64bit length とかしようとすると、受信できないことがある
     socket.write(chunk);
   };
+
+  // connection keeping
+  const viewer = viewers++;
+  const exit = () => {
+    if (!streaming.has(viewer)) { return; }
+    if (!socket.closed) {
+      socket.write(Buffer.from([0x88])); // FIN + Opcode(Close)
+      socket.write(Buffer.from([0x00])); // Nomask and 0 bytes
+    }
+    socket.end();
+    streaming.delete(viewer);
+  };
+  const entry = [write, exit, true] satisfies StreamingInformation;
+  streaming.set(viewer, entry);
+
+  // do ping pong
+  pingpong(reader, socket).then(exit);
+
+  // send flv header
   write(Buffer.from([
     0x46, 0x4C, 0x56, // Signature (FLV)
     1,                // version
@@ -276,10 +296,6 @@ web_server.addListener('upgrade', (req, socket, _) => {
     0, 0, 0, 9,       // Header Bytes
     0, 0, 0, 0,       // PrivousTagSize0
   ]));
-
-  const exit = () => { socket.end(); streaming.delete(viewer); };
-  const entry = [write, exit, true] satisfies StreamingInformation;
-  streaming.set(viewer, entry);
 
   socket.on('close', exit);
   socket.on('error', exit);
