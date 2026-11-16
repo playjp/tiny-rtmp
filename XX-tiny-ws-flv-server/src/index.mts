@@ -276,8 +276,10 @@ web_server.addListener('upgrade', (req, socket, _) => {
   const exit = () => {
     if (!streaming.has(viewer)) { return; }
     if (!socket.closed) {
+      const payload = Buffer.from([0x03, 0xE8]); // 1000 (一応 1000 の正常終了としてる)
       socket.write(Buffer.from([0x88])); // FIN + Opcode(Close)
-      socket.write(Buffer.from([0x00])); // Nomask and 0 bytes
+      socket.write(Buffer.from([payload.byteLength])); // Nomask and byteLength
+      socket.write(payload); // payload
     }
     socket.end();
     streaming.delete(viewer);
