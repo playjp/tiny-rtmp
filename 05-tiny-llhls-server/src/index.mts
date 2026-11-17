@@ -176,13 +176,14 @@ const web_server = http.createServer(async (req, res) => {
     }
     const msn = Number.parseInt(msn_str, 10);
     const part = part_str == null ? 0 : Number.parseInt(part_str, 10);
-
+    const cacheable = await rtmp_to_llhls.block(msn, part);
+    // MEMO: 本当は 200 とかすぐ送信したい
+    // だけど、結局 blocking request でステータスコード変えるし、await 待つのはしゃあない
     res.writeHead(200, {
       'content-type': 'application/vnd.apple.mpegurl',
       'access-control-allow-origin': '*',
-      'cache-control': `max-age=${maxage}`,
+      'cache-control': `max-age=${cacheable ? maxage : 0}`,
     });
-    await rtmp_to_llhls.block(msn, part);
     res.write(rtmp_to_llhls.m3u8());
     res.end();
     return;

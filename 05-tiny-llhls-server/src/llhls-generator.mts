@@ -86,7 +86,7 @@ export default class LLHLSGenerator {
     return this.playlist.stream(msn, part, writable, cb);
   }
 
-  public block(msn: number, part: number | null): Promise<void> {
+  public block(msn: number, part: number | null): Promise<boolean> {
     return this.playlist.block(msn, part);
   }
 

@@ -164,17 +164,15 @@ export default class MediaPlaylist {
     return;
   }
 
-  public block(msn: number, part: number | null): Promise<void> {
-    if (msn !== this.sequenceNumber || this.currentSegment == null) {
-      return Promise.resolve();
-    }
+  public block(msn: number, part: number | null): Promise<boolean> {
+    if (msn < this.sequenceNumber) { return Promise.resolve(true); }
+    if (msn > this.sequenceNumber) { return Promise.resolve(false); }
+    if (this.currentSegment == null) { return Promise.resolve(false); }
     if (part == null) {
-      return this.currentSegment.promise();
+      return this.currentSegment.promise().then(() => Promise.resolve(true));
     }
     const partial = this.currentSegment.partial(part);
-    if (partial == null) {
-      return Promise.resolve();
-    }
-    return partial.promise();
+    if (partial == null) { return Promise.resolve(false); }
+    return partial.promise().then(() => Promise.resolve(true));
   }
 }
