@@ -414,8 +414,8 @@ export const read_pic_parameter_set_data = (reader: BitReader): PictureParameter
         for (let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
           reader.skipUEG(); // run_length_minus1[iGroup]
         }
-      } else if (slice_group_map_type === 1) {
-        for (let iGroup = 0; iGroup <= num_slice_groups_minus1; iGroup++) {
+      } else if (slice_group_map_type === 2) {
+        for (let iGroup = 0; iGroup < num_slice_groups_minus1; iGroup++) {
           reader.skipUEG(); // top_left[iGroup]
           reader.skipUEG(); // bottom_right[iGroup]
         }
