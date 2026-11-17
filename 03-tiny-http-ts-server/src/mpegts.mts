@@ -271,7 +271,7 @@ export class PCRPacketizer {
     builder.writeBits(PACKET_SIZE - HEADER_SIZE - 1, 8); // adaptation field length
     builder.writeBits(0x10, 8); // PCR is Present
     builder.writeBits(pcr, 33); // PCR base
-    builder.writeBits(0, 6); // reserved
+    builder.writeBits(0b111111, 6); // reserved
     builder.writeBits(0, 9); // PCR extension
 
     builder.build().copy(packet);
