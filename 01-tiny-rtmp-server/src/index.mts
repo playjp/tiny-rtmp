@@ -39,7 +39,7 @@ const server = net.createServer({ noDelay: true }, async (connection) => {
       await handle_rtmp(proxy, auth, output ?? undefined);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      logger.error(`RTMP session error: ${message}`, e instanceof Error ? { stack: e.stack } : undefined);
+      logger.error(`RTMP session error: ${message}`, e);
     }
   });
 });

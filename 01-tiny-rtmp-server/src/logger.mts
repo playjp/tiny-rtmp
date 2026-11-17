@@ -1,4 +1,4 @@
-import { inspect, styleText } from 'node:util';
+import { formatWithOptions, inspect, styleText } from 'node:util';
 
 import { load } from './rtmp-session.mts';
 
@@ -12,12 +12,12 @@ export const LogLevel = {
 } as const;
 
 export interface Logger {
-  trace(message: string, record?: Record<string, unknown>): void;
-  debug(message: string, record?: Record<string, unknown>): void;
-  info(message: string, record?: Record<string, unknown>): void;
-  warn(message: string, record?: Record<string, unknown>): void;
-  error(message: string, record?: Record<string, unknown>): void;
-  fatal(message: string, record?: Record<string, unknown>): void;
+  trace(... args: unknown[]): void;
+  debug(... args: unknown[]): void;
+  info(... args: unknown[]): void;
+  warn(... args: unknown[]): void;
+  error(... args: unknown[]): void;
+  fatal(... args: unknown[]): void;
 }
 
 export class NoopLogger implements Logger {
@@ -30,12 +30,20 @@ export class NoopLogger implements Logger {
 };
 
 const flat = (obj: unknown): string => {
-  if (obj === undefined) { return ''; }
   return inspect(obj, {
     depth: Number.POSITIVE_INFINITY,
     breakLength: Number.POSITIVE_INFINITY,
     compact: true,
   });
+};
+
+const normalize = (arg: unknown): unknown => {
+  if (!(arg instanceof Error)) { return arg; }
+  return { name: arg.name, message: arg.message, stack: arg.stack };
+};
+
+const format = (... args: unknown[]): string => {
+  return args.map((arg) => typeof arg === 'string' ? arg : flat(normalize(arg))).join(' ');
 };
 
 const datetime = (): string => {
@@ -55,69 +63,69 @@ export class ConsoleLogger implements Logger {
     this.loglevel = loglevel ?? LogLevel.INFO;
   }
 
-  trace(message: string, record?: Record<string, unknown>): void {
+  trace(... args: unknown[]): void {
     if (this.loglevel > LogLevel.TRACE) { return; }
     const level = styleText(['gray', 'bgBlack', 'dim'], '[TRACE]', { stream: process.stderr });
-    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    const record = load() ?? {};
     if (is_empty(record)) {
-      console.error(datetime(), level, message);
+      console.error(datetime(), level, format(... args));
     } else {
-      console.error(datetime(), level, message, flat(record));
+      console.error(datetime(), level, format(... args), flat(record));
     }
   }
 
-  debug(message: string, record?: Record<string, unknown>): void {
+  debug(... args: unknown[]): void {
     if (this.loglevel > LogLevel.DEBUG) { return; }
     const level = styleText(['gray', 'bgBlack'], '[DEBUG]', { stream: process.stderr });
-    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    const record = load() ?? {};
     if (is_empty(record)) {
-      console.error(datetime(), level, message);
+      console.error(datetime(), level, format(... args));
     } else {
-      console.error(datetime(), level, message, flat(record));
+      console.error(datetime(), level, format(... args), flat(record));
     }
   }
 
-  info(message: string, record?: Record<string, unknown>): void {
+  info(... args: unknown[]): void {
     if (this.loglevel > LogLevel.INFO) { return; }
     const level = styleText(['white', 'bgBlack'], '[INFO]', { stream: process.stderr });
-    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    const record = load() ?? {};
     if (is_empty(record)) {
-      console.error(datetime(), level, message);
+      console.error(datetime(), level, format(... args));
     } else {
-      console.error(datetime(), level, message, flat(record));
+      console.error(datetime(), level, format(... args), flat(record));
     }
   }
 
-  warn(message: string, record?: Record<string, unknown>): void {
+  warn(... args: unknown[]): void {
     if (this.loglevel > LogLevel.WARN) { return; }
     const level = styleText(['white', 'bgYellow'], '[WARN]', { stream: process.stderr });
-    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    const record = load() ?? {};
     if (is_empty(record)) {
-      console.error(datetime(), level, message);
+      console.error(datetime(), level, format(... args));
     } else {
-      console.error(datetime(), level, message, flat(record));
+      console.error(datetime(), level, format(... args), flat(record));
     }
   }
 
-  error(message: string, record?: Record<string, unknown>): void {
+  error(... args: unknown[]): void {
     if (this.loglevel > LogLevel.ERROR) { return; }
     const level = styleText(['white', 'bgRed'], '[ERROR]', { stream: process.stderr });
-    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    const record = load() ?? {};
     if (is_empty(record)) {
-      console.error(datetime(), level, message);
+      console.error(datetime(), level, format(... args));
     } else {
-      console.error(datetime(), level, message, flat(record));
+      console.error(datetime(), level, format(... args), flat(record));
     }
   }
 
-  fatal(message: string, record?: Record<string, unknown>): void {
+  fatal(... args: unknown[]): void {
     if (this.loglevel > LogLevel.FATAL) { return; }
     const level = styleText(['white', 'bgRed', 'bold'], '[FATAL]', { stream: process.stderr });
-    record = { ... (load() ?? {}),  ... (record ?? {}) };
+    const record = load() ?? {};
     if (is_empty(record)) {
-      console.error(datetime(), level, message);
+      console.error(datetime(), level, format(... args));
     } else {
-      console.error(datetime(), level, message, flat(record));
+      console.error(datetime(), level, format(... args), flat(record));
     }
   }
 }
@@ -128,22 +136,22 @@ export const registerLogger = (logger: Logger): void => {
 };
 
 export const logger = {
-  trace: (message: string, record?: Record<string, unknown>): void => {
-    secret.trace(message, record);
+  trace: (... args: unknown[]): void => {
+    secret.trace(... args);
   },
-  debug: (message: string, record?: Record<string, unknown>): void => {
-    secret.debug(message, record);
+  debug: (... args: unknown[]): void => {
+    secret.debug(... args);
   },
-  info: (message: string, record?: Record<string, unknown>): void => {
-    secret.info(message, record);
+  info: (... args: unknown[]): void => {
+    secret.info(... args);
   },
-  warn: (message: string, record?: Record<string, unknown>): void => {
-    secret.warn(message, record);
+  warn: (... args: unknown[]): void => {
+    secret.warn(... args);
   },
-  error: (message: string, record?: Record<string, unknown>): void => {
-    secret.error(message, record);
+  error: (... args: unknown[]): void => {
+    secret.error(... args);
   },
-  fatal: (message: string, record?: Record<string, unknown>): void => {
-    secret.fatal(message, record);
+  fatal: (... args: unknown[]): void => {
+    secret.fatal(... args);
   },
 } as const;

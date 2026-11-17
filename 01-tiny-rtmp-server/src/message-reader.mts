@@ -110,8 +110,7 @@ export default async function* read_message(reader: AsyncByteReader, option?: Me
         });
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        const record = e instanceof Error ? { stack: e.stack, ... information } : information;
-        logger.error(`Message Decoding error: ${message}`, record);
+        logger.error(`Message Decoding Error: ${message}`, information, e);
       }
 
       if (message != null) {

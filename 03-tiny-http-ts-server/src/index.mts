@@ -73,7 +73,7 @@ const handle = async (connection: Duplex) => {
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    logger.error(`RTMP session error: ${message}`, e instanceof Error ? { stack: e.stack } : undefined);
+    logger.error(`RTMP session error: ${message}`, e);
   } finally {
     for (const [_, end] of streaming.values()) { end(); }
   }
