@@ -51,7 +51,7 @@ export default class AsyncByteReader {
 
     if (!this.eof) { return; }
     while (this.promises.length > 0) {
-      const [,,reject] = this.promises[0];
+      const reject = this.promises[0][2];
       reject(this.signal.reason ?? new Error('EOF Detected'));
       this.promises.shift();
     }
