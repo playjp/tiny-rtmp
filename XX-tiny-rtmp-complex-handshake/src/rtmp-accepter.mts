@@ -315,7 +315,8 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
       cb();
     },
   }));
-  const disconnected = controller.abort.bind(controller);
+  // いったん cloes の hasError を無視するようにする
+  const disconnected = controller.abort.bind(controller, null);
   connection.addListener('close', disconnected);
   connection.addListener('error', disconnected);
 
@@ -388,6 +389,9 @@ async function* handle_rtmp(connection: Duplex, auth: AuthConfiguration): AsyncI
       keepalive_controller.abort();
     }
   } finally {
+    connection.removeListener('close', disconnected);
+    connection.removeListener('error', disconnected);
+
     writer.end();
     await writer.ended(); // 今の送信キューを flush して送信する
     connection.end();
