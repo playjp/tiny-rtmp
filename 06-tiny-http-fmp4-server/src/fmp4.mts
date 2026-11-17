@@ -1,5 +1,9 @@
 import ByteVector from './byte-vector.mts';
 
+const fixed_point_U8 = (integer: number, decimal: number, vector: ByteVector): void => {
+  vector.writeU8(integer);
+  vector.writeU8(decimal);
+};
 
 const fixed_point_U16BE = (integer: number, decimal: number, vector: ByteVector): void => {
   vector.writeU16BE(integer);
@@ -66,7 +70,7 @@ export const mvhd = (timescale: number, vector: ByteVector, cb?: callback): void
     vector.writeU32BE(timescale); // timescale
     vector.writeU32BE(0); // duration
     fixed_point_U16BE(1, 0, vector); // prefered ratio
-    vector.writeU16BE(1); // prefered volume
+    fixed_point_U8(1, 0, vector); // prefered volume
     vector.writeU16BE(0); // predefined
     vector.write(Buffer.alloc(8)); // reserved
     vector.write(unit_composition_matrix); // composition_matrix
